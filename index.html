@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Letter Frequency by Word</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2em;
+      max-width: 500px;
+      margin: auto;
+    }
+    input, button {
+      padding: 10px;
+      margin-top: 10px;
+      width: 100%;
+      font-size: 1em;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.1em;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h2>Letter Count Across Words</h2>
+  <input type="text" id="wordInput" placeholder="Enter words...">
+  <button onclick="countLetterFrequency()">Count Letters</button>
+  <div id="result"></div>
+
+  <script>
+    function countLetterFrequency() {
+      const input = document.getElementById('wordInput').value.toLowerCase();
+      const words = input.match(/\b\w+\b/g) || [];
+      const letterMap = {};
+
+      words.forEach(word => {
+        const uniqueLetters = new Set(word.replace(/[^a-z]/g, ''));
+        uniqueLetters.forEach(letter => {
+          if (!letterMap[letter]) {
+            letterMap[letter] = 1;
+          } else {
+            letterMap[letter]++;
+          }
+        });
+      });
+
+      const sortedLetters = Object.keys(letterMap).sort();
+      let resultText = "Letter counts (number of words each letter appears in):\n";
+      sortedLetters.forEach(letter => {
+        resultText += `${letter}: ${letterMap[letter]}\n`;
+      });
+
+      document.getElementById('result').innerText = resultText;
+    }
+  </script>
+</body>
+</html>

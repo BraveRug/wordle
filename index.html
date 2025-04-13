@@ -14,6 +14,14 @@
       --card-bg: #ffffff;
     }
 
+    body.light {
+      --bg: #ffffff;
+      --text: #111;
+      --accent: #0077cc;
+      --input-bg: #f0f0f0;
+      --card-bg: #ffffff;
+    }
+
     body.dark {
       --bg: #121212;
       --text: #e0e0e0;
@@ -62,60 +70,60 @@
       --card-bg: #f8bbd0;
     }
 
-    body.sky {
-      --bg: #e0f7fa;
-      --text: #006064;
-      --accent: #00acc1;
-      --input-bg: #b2ebf2;
-      --card-bg: #e0f2f1;
+    body.charcoal {
+      --bg: #1c1c1c;
+      --text: #f5f5f5;
+      --accent: #888;
+      --input-bg: #2b2b2b;
+      --card-bg: #252525;
     }
 
-    body.lavender {
+    body.bloodred {
+      --bg: #3b0000;
+      --text: #ffcccc;
+      --accent: #ff0000;
+      --input-bg: #5a0000;
+      --card-bg: #4a0000;
+    }
+
+    body.sunshine {
+      --bg: #fff9c4;
+      --text: #795548;
+      --accent: #ffeb3b;
+      --input-bg: #fff59d;
+      --card-bg: #fffde7;
+    }
+
+    body.plum {
       --bg: #f3e5f5;
       --text: #4a148c;
-      --accent: #7b1fa2;
+      --accent: #ba68c8;
       --input-bg: #e1bee7;
       --card-bg: #f8bbd0;
     }
 
-    body.sunset {
-      --bg: #fff3e0;
-      --text: #bf360c;
-      --accent: #ff7043;
-      --input-bg: #ffe0b2;
-      --card-bg: #ffccbc;
+    body.violetnight {
+      --bg: #1e1b3a;
+      --text: #e0d7ff;
+      --accent: #a18aff;
+      --input-bg: #2e264d;
+      --card-bg: #2f2b4a;
     }
 
-    body.ice {
-      --bg: #e3f2fd;
-      --text: #0d47a1;
-      --accent: #29b6f6;
-      --input-bg: #bbdefb;
-      --card-bg: #e1f5fe;
+    body.deepsea {
+      --bg: #001f3f;
+      --text: #7fdbff;
+      --accent: #39cccc;
+      --input-bg: #003366;
+      --card-bg: #002b4d;
     }
 
-    body.desert {
-      --bg: #fbe9e7;
-      --text: #4e342e;
-      --accent: #ff8a65;
-      --input-bg: #ffe0b2;
-      --card-bg: #fbe9e7;
-    }
-
-    body.mint {
-      --bg: #e0f2f1;
-      --text: #004d40;
-      --accent: #26a69a;
-      --input-bg: #b2dfdb;
-      --card-bg: #d0f0e0;
-    }
-
-    body.slate {
-      --bg: #eceff1;
-      --text: #263238;
-      --accent: #607d8b;
-      --input-bg: #cfd8dc;
-      --card-bg: #e0e0e0;
+    body.greyscale {
+      --bg: #f5f5f5;
+      --text: #333;
+      --accent: #999;
+      --input-bg: #ddd;
+      --card-bg: #eee;
     }
 
     * {
@@ -186,7 +194,6 @@
       cursor: pointer;
     }
 
-    /* Modal */
     .modal {
       position: fixed;
       top: 0;
@@ -242,6 +249,13 @@
     .peach-btn { background: #ff7f50; }
     .forest-btn { background: #2e8b57; }
     .rose-btn { background: #d81b60; }
+    .charcoal-btn { background: #444; }
+    .bloodred-btn { background: #800000; }
+    .sunshine-btn { background: #fdd835; color: #000; }
+    .plum-btn { background: #9c27b0; }
+    .violetnight-btn { background: #5c4d8b; }
+    .deepsea-btn { background: #0074d9; }
+    .greyscale-btn { background: #888; }
 
     @media (max-width: 600px) {
       .theme-option {
@@ -258,7 +272,6 @@
     <button class="theme-btn" onclick="openModal()">Theme</button>
   </div>
 
-  <!-- Modal -->
   <div class="modal" id="themeModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal()">✕</button>
@@ -270,13 +283,13 @@
       <button class="theme-option peach-btn" onclick="setTheme('peach')">Peach</button>
       <button class="theme-option forest-btn" onclick="setTheme('forest')">Forest</button>
       <button class="theme-option rose-btn" onclick="setTheme('rose')">Rose</button>
-      <button class="theme-option" style="background: #00acc1;" onclick="setTheme('sky')">Sky</button>
-      <button class="theme-option" style="background: #7b1fa2;" onclick="setTheme('lavender')">Lavender</button>
-      <button class="theme-option" style="background: #ff7043;" onclick="setTheme('sunset')">Sunset</button>
-      <button class="theme-option" style="background: #29b6f6;" onclick="setTheme('ice')">Ice</button>
-      <button class="theme-option" style="background: #ff8a65;" onclick="setTheme('desert')">Desert</button>
-      <button class="theme-option" style="background: #26a69a;" onclick="setTheme('mint')">Mint</button>
-      <button class="theme-option" style="background: #607d8b;" onclick="setTheme('slate')">Slate</button>
+      <button class="theme-option charcoal-btn" onclick="setTheme('charcoal')">Charcoal</button>
+      <button class="theme-option bloodred-btn" onclick="setTheme('bloodred')">Blood Red</button>
+      <button class="theme-option sunshine-btn" onclick="setTheme('sunshine')">Sunshine</button>
+      <button class="theme-option plum-btn" onclick="setTheme('plum')">Plum</button>
+      <button class="theme-option violetnight-btn" onclick="setTheme('violetnight')">Violet Night</button>
+      <button class="theme-option deepsea-btn" onclick="setTheme('deepsea')">Deep Sea</button>
+      <button class="theme-option greyscale-btn" onclick="setTheme('greyscale')">Greyscale</button>
     </div>
   </div>
 

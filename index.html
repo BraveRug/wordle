@@ -78,20 +78,20 @@
       --card-bg: #252525;
     }
 
-    body.bloodred {
-      --bg: #3b0000;
-      --text: #ffcccc;
-      --accent: #ff0000;
-      --input-bg: #5a0000;
-      --card-bg: #4a0000;
+    body.cherry {
+      --bg: #ffe6e6;
+      --text: #5a0000;
+      --accent: #cc0000;
+      --input-bg: #ffd6d6;
+      --card-bg: #ffcccc;
     }
 
     body.sunshine {
-      --bg: #fff9c4;
-      --text: #795548;
-      --accent: #ffeb3b;
+      --bg: #fffde7;
+      --text: #6b4a2b;
+      --accent: #fbc02d;
       --input-bg: #fff59d;
-      --card-bg: #fffde7;
+      --card-bg: #fffbc0;
     }
 
     body.plum {
@@ -124,6 +124,30 @@
       --accent: #999;
       --input-bg: #ddd;
       --card-bg: #eee;
+    }
+
+    body.azure {
+      --bg: #f0f8ff;
+      --text: #003366;
+      --accent: #3399ff;
+      --input-bg: #e0f0ff;
+      --card-bg: #d6ecff;
+    }
+
+    body.earth {
+      --bg: #f5f5dc;
+      --text: #5c4033;
+      --accent: #8b4513;
+      --input-bg: #f0e68c;
+      --card-bg: #ede4c4;
+    }
+
+    body.ocean {
+      --bg: #e0f7fa;
+      --text: #004d40;
+      --accent: #00acc1;
+      --input-bg: #b2ebf2;
+      --card-bg: #e0f2f1;
     }
 
     * {
@@ -250,12 +274,15 @@
     .forest-btn { background: #2e8b57; }
     .rose-btn { background: #d81b60; }
     .charcoal-btn { background: #444; }
-    .bloodred-btn { background: #800000; }
-    .sunshine-btn { background: #fdd835; color: #000; }
+    .cherry-btn { background: #cc0000; }
+    .sunshine-btn { background: #fbc02d; color: #000; }
     .plum-btn { background: #9c27b0; }
     .violetnight-btn { background: #5c4d8b; }
     .deepsea-btn { background: #0074d9; }
     .greyscale-btn { background: #888; }
+    .azure-btn { background: #3399ff; }
+    .earth-btn { background: #8b4513; }
+    .ocean-btn { background: #00acc1; }
 
     @media (max-width: 600px) {
       .theme-option {
@@ -284,12 +311,15 @@
       <button class="theme-option forest-btn" onclick="setTheme('forest')">Forest</button>
       <button class="theme-option rose-btn" onclick="setTheme('rose')">Rose</button>
       <button class="theme-option charcoal-btn" onclick="setTheme('charcoal')">Charcoal</button>
-      <button class="theme-option bloodred-btn" onclick="setTheme('bloodred')">Blood Red</button>
+      <button class="theme-option cherry-btn" onclick="setTheme('cherry')">Cherry</button>
       <button class="theme-option sunshine-btn" onclick="setTheme('sunshine')">Sunshine</button>
       <button class="theme-option plum-btn" onclick="setTheme('plum')">Plum</button>
       <button class="theme-option violetnight-btn" onclick="setTheme('violetnight')">Violet Night</button>
       <button class="theme-option deepsea-btn" onclick="setTheme('deepsea')">Deep Sea</button>
       <button class="theme-option greyscale-btn" onclick="setTheme('greyscale')">Greyscale</button>
+      <button class="theme-option azure-btn" onclick="setTheme('azure')">Azure</button>
+      <button class="theme-option earth-btn" onclick="setTheme('earth')">Earth</button>
+      <button class="theme-option ocean-btn" onclick="setTheme('ocean')">Ocean</button>
     </div>
   </div>
 

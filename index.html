@@ -3,61 +3,97 @@
 <head>
   <meta charset="UTF-8">
   <title>Letter Frequency by Word</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    :root {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text: #e0e0e0;
+      --accent: #4a90e2;
+      --accent-hover: #357ab8;
+      --input-bg: #2c2c2c;
+    }
+
     * {
       box-sizing: border-box;
     }
+
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f2f4f8;
+      font-family: 'Century Gothic', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 50px 20px;
+      padding: 40px 20px;
+      margin: 0;
     }
+
     h2 {
       margin-bottom: 20px;
-      color: #333;
+      text-align: center;
     }
+
     .container {
-      background: white;
-      padding: 30px;
+      background: var(--card-bg);
+      padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
       width: 100%;
       max-width: 500px;
     }
+
     input {
       width: 100%;
-      padding: 12px 15px;
+      padding: 12px;
       font-size: 1em;
-      border: 1px solid #ccc;
+      border: none;
       border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text);
       margin-bottom: 10px;
     }
+
+    input::placeholder {
+      color: #aaa;
+    }
+
     button {
       width: 100%;
       padding: 12px;
       font-size: 1em;
       border: none;
       border-radius: 8px;
-      background-color: #4a90e2;
+      background-color: var(--accent);
       color: white;
       cursor: pointer;
       transition: background-color 0.2s;
     }
+
     button:hover {
-      background-color: #357ab8;
+      background-color: var(--accent-hover);
     }
+
     #result {
       margin-top: 20px;
-      background: #f7f9fc;
+      background: #292929;
       padding: 15px;
       border-radius: 8px;
       font-family: 'Courier New', monospace;
       white-space: pre-wrap;
       font-size: 1em;
-      color: #222;
+      color: var(--text);
+      overflow-wrap: break-word;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 20px;
+      }
+
+      .container {
+        padding: 20px;
+      }
     }
   </style>
 </head>
@@ -78,11 +114,7 @@
       words.forEach(word => {
         const uniqueLetters = new Set(word.replace(/[^a-z]/g, ''));
         uniqueLetters.forEach(letter => {
-          if (!letterMap[letter]) {
-            letterMap[letter] = 1;
-          } else {
-            letterMap[letter]++;
-          }
+          letterMap[letter] = (letterMap[letter] || 0) + 1;
         });
       });
 

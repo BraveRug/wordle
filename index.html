@@ -54,14 +54,6 @@
       --card-bg: #d0f0d8;
     }
 
-    body.neon {
-      --bg: #141414;
-      --text: #39ff14;
-      --accent: #00ffff;
-      --input-bg: #1f1f1f;
-      --card-bg: #262626;
-    }
-
     body.rose {
       --bg: #fff0f5;
       --text: #880e4f;
@@ -102,7 +94,7 @@
       position: relative;
     }
 
-    input {
+    input[type="text"] {
       width: 100%;
       padding: 12px;
       font-size: 1em;
@@ -191,7 +183,6 @@
     .midnight-btn { background: #415a77; }
     .peach-btn { background: #ff7f50; }
     .forest-btn { background: #2e8b57; }
-    .neon-btn { background: #00ffff; color: #000; }
     .rose-btn { background: #d81b60; }
 
     @media (max-width: 600px) {
@@ -209,7 +200,7 @@
     <button class="theme-btn" onclick="openModal()">Theme</button>
   </div>
 
-  <!-- Modal -->
+  <!-- Theme Modal -->
   <div class="modal" id="themeModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal()">✕</button>
@@ -220,8 +211,22 @@
       <button class="theme-option midnight-btn" onclick="setTheme('midnight')">Midnight</button>
       <button class="theme-option peach-btn" onclick="setTheme('peach')">Peach</button>
       <button class="theme-option forest-btn" onclick="setTheme('forest')">Forest</button>
-      <button class="theme-option neon-btn" onclick="setTheme('neon')">Neon</button>
       <button class="theme-option rose-btn" onclick="setTheme('rose')">Rose</button>
+      <button class="theme-option" style="background: #999;" onclick="openCustomModal()">Custom</button>
+    </div>
+  </div>
+
+  <!-- Custom Theme Modal -->
+  <div class="modal" id="customThemeModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeCustomModal()">✕</button>
+      <h3>Customize Theme</h3>
+      <label>Background: <input type="color" id="bgColor"></label><br><br>
+      <label>Text: <input type="color" id="textColor"></label><br><br>
+      <label>Accent: <input type="color" id="accentColor"></label><br><br>
+      <label>Input BG: <input type="color" id="inputBgColor"></label><br><br>
+      <label>Card BG: <input type="color" id="cardBgColor"></label><br><br>
+      <button class="theme-btn" onclick="applyCustomTheme()">Apply</button>
     </div>
   </div>
 
@@ -254,6 +259,26 @@
 
     function closeModal() {
       document.getElementById('themeModal').style.display = 'none';
+    }
+
+    function openCustomModal() {
+      document.getElementById('customThemeModal').style.display = 'flex';
+    }
+
+    function closeCustomModal() {
+      document.getElementById('customThemeModal').style.display = 'none';
+    }
+
+    function applyCustomTheme() {
+      const root = document.documentElement.style;
+      root.setProperty('--bg', document.getElementById('bgColor').value);
+      root.setProperty('--text', document.getElementById('textColor').value);
+      root.setProperty('--accent', document.getElementById('accentColor').value);
+      root.setProperty('--input-bg', document.getElementById('inputBgColor').value);
+      root.setProperty('--card-bg', document.getElementById('cardBgColor').value);
+      document.body.className = ''; // Clear theme classes to prioritize custom
+      closeCustomModal();
+      closeModal();
     }
 
     countLetters();

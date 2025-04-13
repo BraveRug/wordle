@@ -4,31 +4,70 @@
   <meta charset="UTF-8">
   <title>Letter Frequency by Word</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2em;
-      max-width: 500px;
-      margin: auto;
+    * {
+      box-sizing: border-box;
     }
-    input, button {
-      padding: 10px;
-      margin-top: 10px;
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px 20px;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       width: 100%;
+      max-width: 500px;
+    }
+    input {
+      width: 100%;
+      padding: 12px 15px;
       font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      background-color: #4a90e2;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #357ab8;
     }
     #result {
       margin-top: 20px;
-      font-weight: bold;
-      font-size: 1.1em;
+      background: #f7f9fc;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
       white-space: pre-wrap;
+      font-size: 1em;
+      color: #222;
     }
   </style>
 </head>
 <body>
-  <h2>Letter Count Across Words</h2>
-  <input type="text" id="wordInput" placeholder="Enter words...">
-  <button onclick="countLetterFrequency()">Count Letters</button>
-  <div id="result"></div>
+  <h2>Letter Frequency Counter</h2>
+  <div class="container">
+    <input type="text" id="wordInput" placeholder="Enter words like 'apple banana'">
+    <button onclick="countLetterFrequency()">Count Letters</button>
+    <div id="result"></div>
+  </div>
 
   <script>
     function countLetterFrequency() {
@@ -47,18 +86,17 @@
         });
       });
 
-      // Sort letters by frequency (descending), then alphabetically
       const sortedEntries = Object.entries(letterMap).sort((a, b) => {
         if (b[1] !== a[1]) return b[1] - a[1];
         return a[0].localeCompare(b[0]);
       });
 
-      let resultText = "Letter counts (number of words each letter appears in):\n";
+      let resultText = "Letter : # of Words\n-------------------\n";
       sortedEntries.forEach(([letter, count]) => {
-        resultText += `${letter}: ${count}\n`;
+        resultText += `   ${letter}   :     ${count}\n`;
       });
 
-      document.getElementById('result').innerText = resultText;
+      document.getElementById('result').innerText = resultText || "No letters found.";
     }
   </script>
 </body>

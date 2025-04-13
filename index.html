@@ -54,20 +54,68 @@
       --card-bg: #d0f0d8;
     }
 
-    body.neon {
-      --bg: #141414;
-      --text: #39ff14;
-      --accent: #00ffff;
-      --input-bg: #1f1f1f;
-      --card-bg: #262626;
-    }
-
     body.rose {
       --bg: #fff0f5;
       --text: #880e4f;
       --accent: #d81b60;
       --input-bg: #ffe4ec;
       --card-bg: #f8bbd0;
+    }
+
+    body.sky {
+      --bg: #e0f7fa;
+      --text: #006064;
+      --accent: #00acc1;
+      --input-bg: #b2ebf2;
+      --card-bg: #e0f2f1;
+    }
+
+    body.lavender {
+      --bg: #f3e5f5;
+      --text: #4a148c;
+      --accent: #7b1fa2;
+      --input-bg: #e1bee7;
+      --card-bg: #f8bbd0;
+    }
+
+    body.sunset {
+      --bg: #fff3e0;
+      --text: #bf360c;
+      --accent: #ff7043;
+      --input-bg: #ffe0b2;
+      --card-bg: #ffccbc;
+    }
+
+    body.ice {
+      --bg: #e3f2fd;
+      --text: #0d47a1;
+      --accent: #29b6f6;
+      --input-bg: #bbdefb;
+      --card-bg: #e1f5fe;
+    }
+
+    body.desert {
+      --bg: #fbe9e7;
+      --text: #4e342e;
+      --accent: #ff8a65;
+      --input-bg: #ffe0b2;
+      --card-bg: #fbe9e7;
+    }
+
+    body.mint {
+      --bg: #e0f2f1;
+      --text: #004d40;
+      --accent: #26a69a;
+      --input-bg: #b2dfdb;
+      --card-bg: #d0f0e0;
+    }
+
+    body.slate {
+      --bg: #eceff1;
+      --text: #263238;
+      --accent: #607d8b;
+      --input-bg: #cfd8dc;
+      --card-bg: #e0e0e0;
     }
 
     * {
@@ -160,6 +208,8 @@
       max-width: 400px;
       text-align: center;
       position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
     }
 
     .close-btn {
@@ -191,7 +241,6 @@
     .midnight-btn { background: #415a77; }
     .peach-btn { background: #ff7f50; }
     .forest-btn { background: #2e8b57; }
-    .neon-btn { background: #00ffff; color: #000; }
     .rose-btn { background: #d81b60; }
 
     @media (max-width: 600px) {
@@ -220,8 +269,14 @@
       <button class="theme-option midnight-btn" onclick="setTheme('midnight')">Midnight</button>
       <button class="theme-option peach-btn" onclick="setTheme('peach')">Peach</button>
       <button class="theme-option forest-btn" onclick="setTheme('forest')">Forest</button>
-      <button class="theme-option neon-btn" onclick="setTheme('neon')">Neon</button>
       <button class="theme-option rose-btn" onclick="setTheme('rose')">Rose</button>
+      <button class="theme-option" style="background: #00acc1;" onclick="setTheme('sky')">Sky</button>
+      <button class="theme-option" style="background: #7b1fa2;" onclick="setTheme('lavender')">Lavender</button>
+      <button class="theme-option" style="background: #ff7043;" onclick="setTheme('sunset')">Sunset</button>
+      <button class="theme-option" style="background: #29b6f6;" onclick="setTheme('ice')">Ice</button>
+      <button class="theme-option" style="background: #ff8a65;" onclick="setTheme('desert')">Desert</button>
+      <button class="theme-option" style="background: #26a69a;" onclick="setTheme('mint')">Mint</button>
+      <button class="theme-option" style="background: #607d8b;" onclick="setTheme('slate')">Slate</button>
     </div>
   </div>
 
@@ -239,7 +294,7 @@
       });
 
       const sorted = Object.entries(letterMap).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-      const output = sorted.map(([letter, count]) => ${letter}: ${count}).join('\n');
+      const output = sorted.map(([letter, count]) => `${letter}: ${count}`).join('\n');
       document.getElementById('result').textContent = output || 'No letters found.';
     }
 

@@ -1,68 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Letter Frequency by Word</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Google Font: Didact Gothic -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Letter Frequency</title>
   <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
-
   <style>
     :root {
-      --bg: #f2f2f2;
-      --card-bg: #ffffff;
+      --bg: #ffffff;
       --text: #111;
       --accent: #0077cc;
-      --input-bg: #eeeeee;
+      --input-bg: #f0f0f0;
+      --card-bg: #ffffff;
     }
 
     body.dark {
       --bg: #121212;
-      --card-bg: #1e1e1e;
       --text: #e0e0e0;
       --accent: #4a90e2;
-      --input-bg: #2c2c2c;
+      --input-bg: #1f1f1f;
+      --card-bg: #1e1e1e;
     }
 
     body.solarized {
       --bg: #fdf6e3;
-      --card-bg: #eee8d5;
       --text: #657b83;
       --accent: #268bd2;
       --input-bg: #f5f2dd;
+      --card-bg: #eee8d5;
     }
 
     body.midnight {
       --bg: #0d1b2a;
-      --card-bg: #1b263b;
       --text: #e0e1dd;
       --accent: #415a77;
-      --input-bg: #2c3e50;
+      --input-bg: #1b263b;
+      --card-bg: #1b263b;
     }
 
     body.peach {
       --bg: #fff1e6;
-      --card-bg: #ffe5d9;
       --text: #6b4226;
       --accent: #ff7f50;
       --input-bg: #ffedd5;
+      --card-bg: #ffe5d9;
     }
 
     * {
       box-sizing: border-box;
+      font-family: 'Didact Gothic', sans-serif;
       transition: background-color 0.3s, color 0.3s;
     }
 
     body {
-      font-family: 'Didact Gothic', sans-serif;
+      margin: 0;
       background: var(--bg);
       color: var(--text);
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 40px 20px;
-      margin: 0;
+      min-height: 100vh;
     }
 
     h2 {
@@ -74,53 +72,10 @@
       background: var(--card-bg);
       padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
       width: 100%;
       max-width: 500px;
       position: relative;
-    }
-
-    .theme-selector {
-      margin-bottom: 15px;
-      position: relative;
-    }
-
-    .theme-selector button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 0.95em;
-      cursor: pointer;
-    }
-
-    .theme-options {
-      position: absolute;
-      top: 45px;
-      left: 0;
-      right: 0;
-      background: var(--input-bg);
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-      display: none;
-      z-index: 10;
-      padding: 5px 0;
-    }
-
-    .theme-options button {
-      background: none;
-      border: none;
-      padding: 10px 16px;
-      text-align: left;
-      width: 100%;
-      font-size: 0.95em;
-      color: var(--text);
-      cursor: pointer;
-    }
-
-    .theme-options button:hover {
-      background: rgba(0,0,0,0.05);
     }
 
     input {
@@ -131,7 +86,7 @@
       border-radius: 8px;
       background: var(--input-bg);
       color: var(--text);
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
 
     input::placeholder {
@@ -139,44 +94,106 @@
     }
 
     #result {
-      margin-top: 20px;
-      background: var(--input-bg);
-      padding: 15px;
-      border-radius: 8px;
       font-family: 'Courier New', monospace;
       white-space: pre-wrap;
       font-size: 1em;
       color: var(--text);
-      overflow-wrap: break-word;
     }
 
+    .theme-btn {
+      margin-top: 10px;
+      background: var(--accent);
+      color: white;
+      padding: 10px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95em;
+      cursor: pointer;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .theme-option {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      color: white;
+    }
+
+    .light-btn { background: #0077cc; }
+    .dark-btn { background: #222; }
+    .solarized-btn { background: #268bd2; }
+    .midnight-btn { background: #415a77; }
+    .peach-btn { background: #ff7f50; }
+
     @media (max-width: 600px) {
-      .theme-options button {
+      .theme-option {
         font-size: 1em;
       }
     }
   </style>
 </head>
 <body class="light">
-  <h2>Letter Frequency Counter</h2>
+  <h2>Letter Frequency</h2>
   <div class="container">
-    <div class="theme-selector">
-      <button onclick="toggleThemeMenu()">Theme</button>
-      <div class="theme-options" id="themeMenu">
-        <button onclick="setTheme('light')">Light</button>
-        <button onclick="setTheme('dark')">Dark</button>
-        <button onclick="setTheme('solarized')">Solarized</button>
-        <button onclick="setTheme('midnight')">Midnight</button>
-        <button onclick="setTheme('peach')">Peach</button>
-      </div>
-    </div>
-
-    <input type="text" id="wordInput" placeholder="Enter words like 'apple banana'" oninput="countLetterFrequency()">
+    <input type="text" id="wordInput" placeholder="Type words here..." oninput="countLetters()" />
     <div id="result"></div>
+    <button class="theme-btn" onclick="openModal()">Theme</button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="themeModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">✕</button>
+      <h3>Select a Theme</h3>
+      <button class="theme-option light-btn" onclick="setTheme('light')">Light</button>
+      <button class="theme-option dark-btn" onclick="setTheme('dark')">Dark</button>
+      <button class="theme-option solarized-btn" onclick="setTheme('solarized')">Solarized</button>
+      <button class="theme-option midnight-btn" onclick="setTheme('midnight')">Midnight</button>
+      <button class="theme-option peach-btn" onclick="setTheme('peach')">Peach</button>
+    </div>
   </div>
 
   <script>
-    function countLetterFrequency() {
+    function countLetters() {
       const input = document.getElementById('wordInput').value.toLowerCase();
       const words = input.match(/\b\w+\b/g) || [];
       const letterMap = {};
@@ -188,42 +205,25 @@
         });
       });
 
-      const sortedEntries = Object.entries(letterMap).sort((a, b) => {
-        if (b[1] !== a[1]) return b[1] - a[1];
-        return a[0].localeCompare(b[0]);
-      });
-
-      let resultText = "Letter : # of Words\n-------------------\n";
-      sortedEntries.forEach(([letter, count]) => {
-        resultText += `   ${letter}   :     ${count}\n`;
-      });
-
-      document.getElementById('result').innerText = resultText || "No letters found.";
+      const sorted = Object.entries(letterMap).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+      const output = sorted.map(([letter, count]) => `${letter}: ${count}`).join('\n');
+      document.getElementById('result').textContent = output || 'No letters found.';
     }
 
     function setTheme(theme) {
       document.body.className = theme;
-      closeThemeMenu();
+      closeModal();
     }
 
-    function toggleThemeMenu() {
-      const menu = document.getElementById('themeMenu');
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    function openModal() {
+      document.getElementById('themeModal').style.display = 'flex';
     }
 
-    function closeThemeMenu() {
-      document.getElementById('themeMenu').style.display = "none";
+    function closeModal() {
+      document.getElementById('themeModal').style.display = 'none';
     }
 
-    document.addEventListener("click", function (e) {
-      const menu = document.getElementById('themeMenu');
-      if (!e.target.closest(".theme-selector")) {
-        menu.style.display = "none";
-      }
-    });
-
-    // Default actions
-    countLetterFrequency();
+    countLetters();
   </script>
 </body>
 </html>

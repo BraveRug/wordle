@@ -14,8 +14,16 @@
       --input-bg: #2c2c2c;
     }
 
+    body.light {
+      --bg: #f2f2f2;
+      --card-bg: #ffffff;
+      --text: #111;
+      --input-bg: #eeeeee;
+    }
+
     * {
       box-sizing: border-box;
+      transition: background-color 0.3s, color 0.3s;
     }
 
     body {
@@ -38,7 +46,7 @@
       background: var(--card-bg);
       padding: 25px;
       border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
       width: 100%;
       max-width: 500px;
     }
@@ -58,25 +66,24 @@
       color: #aaa;
     }
 
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 1em;
+    .toggle {
+      background: var(--accent);
       border: none;
       border-radius: 8px;
-      background-color: var(--accent);
       color: white;
+      padding: 10px 15px;
+      font-size: 0.9em;
       cursor: pointer;
-      transition: background-color 0.2s;
+      margin-bottom: 15px;
     }
 
-    button:hover {
-      background-color: var(--accent-hover);
+    .toggle:hover {
+      background: var(--accent-hover);
     }
 
     #result {
       margin-top: 20px;
-      background: #292929;
+      background: var(--input-bg);
       padding: 15px;
       border-radius: 8px;
       font-family: 'Courier New', monospace;
@@ -100,8 +107,8 @@
 <body>
   <h2>Letter Frequency Counter</h2>
   <div class="container">
-    <input type="text" id="wordInput" placeholder="Enter words like 'apple banana'">
-    <button onclick="countLetterFrequency()">Count Letters</button>
+    <button class="toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <input type="text" id="wordInput" placeholder="Enter words like 'apple banana'" oninput="countLetterFrequency()">
     <div id="result"></div>
   </div>
 
@@ -130,6 +137,13 @@
 
       document.getElementById('result').innerText = resultText || "No letters found.";
     }
+
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+    }
+
+    // Run once in case there's already text on load
+    countLetterFrequency();
   </script>
 </body>
 </html>

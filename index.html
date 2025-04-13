@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <title>Letter Frequency by Word</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Load Didact Gothic -->
+  <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
+
   <style>
     :root {
       --bg: #121212;
@@ -27,7 +31,7 @@
     }
 
     body {
-      font-family: 'Century Gothic', 'Segoe UI', sans-serif;
+      font-family: 'Didact Gothic', sans-serif;
       background: var(--bg);
       color: var(--text);
       display: flex;
@@ -142,7 +146,7 @@
       document.body.classList.toggle("light");
     }
 
-    // Run once in case there's already text on load
+    // Live update on load (optional)
     countLetterFrequency();
   </script>
 </body>

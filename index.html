@@ -5,7 +5,7 @@
   <title>Letter Frequency by Word</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Load Didact Gothic -->
+  <!-- Google Font: Didact Gothic -->
   <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
 
   <style>
@@ -14,7 +14,6 @@
       --card-bg: #1e1e1e;
       --text: #e0e0e0;
       --accent: #4a90e2;
-      --accent-hover: #357ab8;
       --input-bg: #2c2c2c;
     }
 
@@ -22,7 +21,32 @@
       --bg: #f2f2f2;
       --card-bg: #ffffff;
       --text: #111;
+      --accent: #0077cc;
       --input-bg: #eeeeee;
+    }
+
+    body.solarized {
+      --bg: #fdf6e3;
+      --card-bg: #eee8d5;
+      --text: #657b83;
+      --accent: #268bd2;
+      --input-bg: #f5f2dd;
+    }
+
+    body.midnight {
+      --bg: #0d1b2a;
+      --card-bg: #1b263b;
+      --text: #e0e1dd;
+      --accent: #415a77;
+      --input-bg: #2c3e50;
+    }
+
+    body.peach {
+      --bg: #fff1e6;
+      --card-bg: #ffe5d9;
+      --text: #6b4226;
+      --accent: #ff7f50;
+      --input-bg: #ffedd5;
     }
 
     * {
@@ -55,6 +79,29 @@
       max-width: 500px;
     }
 
+    .theme-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    .theme-buttons button {
+      flex: 1 1 30%;
+      min-width: 80px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      padding: 10px;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+
+    .theme-buttons button:hover {
+      opacity: 0.9;
+    }
+
     input {
       width: 100%;
       padding: 12px;
@@ -70,21 +117,6 @@
       color: #aaa;
     }
 
-    .toggle {
-      background: var(--accent);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      padding: 10px 15px;
-      font-size: 0.9em;
-      cursor: pointer;
-      margin-bottom: 15px;
-    }
-
-    .toggle:hover {
-      background: var(--accent-hover);
-    }
-
     #result {
       margin-top: 20px;
       background: var(--input-bg);
@@ -98,12 +130,8 @@
     }
 
     @media (max-width: 600px) {
-      body {
-        padding: 20px;
-      }
-
-      .container {
-        padding: 20px;
+      .theme-buttons button {
+        flex: 1 1 45%;
       }
     }
   </style>
@@ -111,7 +139,13 @@
 <body>
   <h2>Letter Frequency Counter</h2>
   <div class="container">
-    <button class="toggle" onclick="toggleTheme()">Toggle Theme</button>
+    <div class="theme-buttons">
+      <button onclick="setTheme('dark')">Dark</button>
+      <button onclick="setTheme('light')">Light</button>
+      <button onclick="setTheme('solarized')">Solarized</button>
+      <button onclick="setTheme('midnight')">Midnight</button>
+      <button onclick="setTheme('peach')">Peach</button>
+    </div>
     <input type="text" id="wordInput" placeholder="Enter words like 'apple banana'" oninput="countLetterFrequency()">
     <div id="result"></div>
   </div>
@@ -142,11 +176,12 @@
       document.getElementById('result').innerText = resultText || "No letters found.";
     }
 
-    function toggleTheme() {
-      document.body.classList.toggle("light");
+    function setTheme(theme) {
+      document.body.className = theme;
     }
 
-    // Live update on load (optional)
+    // Set default theme
+    setTheme('dark');
     countLetterFrequency();
   </script>
 </body>

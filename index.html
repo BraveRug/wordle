@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Letter Frequency Counter</title>
+  <title>Letter Frequency</title>
   <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -20,10 +20,10 @@
 
     body {
       font-family: 'Didact Gothic', sans-serif;
-      background-color: var(--bg);
+      background: var(--bg);
       color: var(--text);
       margin: 0;
-      padding: 1rem;
+      padding: 2rem 1rem;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -31,111 +31,111 @@
     }
 
     h1 {
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
     }
 
     textarea {
-      width: 90%;
-      max-width: 600px;
+      width: 100%;
+      max-width: 500px;
       height: 100px;
       padding: 10px;
       font-size: 1rem;
-      background-color: var(--input-bg);
+      background: var(--input-bg);
       color: var(--text);
       border: 2px solid var(--accent);
-      border-radius: 8px;
-      margin-bottom: 1rem;
+      border-radius: 10px;
       resize: vertical;
+      margin-bottom: 1rem;
     }
 
     .output {
-      background-color: var(--card-bg);
-      padding: 1rem;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 600px;
       font-family: 'Courier New', monospace;
       white-space: pre-line;
+      background: var(--card-bg);
+      padding: 1rem;
+      width: 100%;
+      max-width: 500px;
+      border-radius: 10px;
     }
 
     .theme-button {
       margin-top: 1rem;
       background: var(--accent);
       color: var(--bg);
-      padding: 10px 20px;
       border: none;
-      border-radius: 8px;
+      border-radius: 6px;
+      padding: 10px 20px;
       cursor: pointer;
       font-weight: bold;
     }
 
-    .modal {
+    .overlay, .modal {
+      display: none;
       position: fixed;
+      z-index: 1000;
+    }
+
+    .overlay {
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+    }
+
+    .modal {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background-color: var(--bg);
+      background: var(--bg);
       color: var(--text);
-      padding: 2rem;
       border-radius: 12px;
+      padding: 1.5rem;
+      width: 90%;
+      max-width: 400px;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
-      z-index: 1000;
-      display: none;
       flex-direction: column;
       align-items: center;
-      max-width: 90%;
+    }
+
+    .modal h3 {
+      margin-top: 0;
     }
 
     .theme-option {
       margin: 5px;
-      padding: 10px 15px;
+      padding: 6px 12px;
       border: none;
-      border-radius: 6px;
+      border-radius: 5px;
       cursor: pointer;
       font-weight: bold;
     }
 
-    .overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 999;
-      display: none;
+    .theme-editor {
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    .theme-editor label {
+      display: flex;
+      justify-content: space-between;
+      margin: 4px 0;
+      font-size: 0.95rem;
+    }
+
+    .theme-editor input {
+      margin-left: 10px;
     }
 
     .close-btn {
       position: absolute;
       top: 10px;
       right: 15px;
-      cursor: pointer;
       font-size: 1.2rem;
-      font-weight: bold;
-    }
-
-    .theme-editor label {
-      display: flex;
-      justify-content: space-between;
-      width: 100%;
-      margin: 5px 0;
-    }
-
-    .theme-editor input[type="color"] {
-      margin-left: 10px;
-    }
-
-    @media (max-width: 600px) {
-      textarea {
-        height: 80px;
-      }
-      .modal {
-        padding: 1rem;
-      }
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>Letter Frequency Counter</h1>
+  <h1>Letter Frequency</h1>
   <textarea id="inputText" placeholder="Type words here..."></textarea>
   <div class="output" id="outputBox"></div>
   <button class="theme-button" onclick="openThemeModal()">Themes</button>
@@ -156,13 +156,13 @@
       <button class="theme-option" style="background:var(--accent); color:var(--text);" onclick="setTheme('custom')">Custom</button>
     </div>
 
-    <div id="customThemeEditor" class="theme-editor" style="margin-top: 1rem; display: none;">
-      <h4>Custom Theme Colors</h4>
-      <label>Background: <input type="color" onchange="updateCustom('--bg', this.value)"></label>
-      <label>Text: <input type="color" onchange="updateCustom('--text', this.value)"></label>
-      <label>Accent: <input type="color" onchange="updateCustom('--accent', this.value)"></label>
-      <label>Input Background: <input type="color" onchange="updateCustom('--input-bg', this.value)"></label>
-      <label>Card Background: <input type="color" onchange="updateCustom('--card-bg', this.value)"></label>
+    <div id="customThemeEditor" class="theme-editor" style="display: none;">
+      <h4>Custom Theme</h4>
+      <label>Background <input type="color" onchange="updateCustom('--bg', this.value)"></label>
+      <label>Text <input type="color" onchange="updateCustom('--text', this.value)"></label>
+      <label>Accent <input type="color" onchange="updateCustom('--accent', this.value)"></label>
+      <label>Input BG <input type="color" onchange="updateCustom('--input-bg', this.value)"></label>
+      <label>Card BG <input type="color" onchange="updateCustom('--card-bg', this.value)"></label>
     </div>
   </div>
 
@@ -170,38 +170,36 @@
     const input = document.getElementById('inputText');
     const output = document.getElementById('outputBox');
 
-    input.addEventListener('input', updateOutput);
-
-    function updateOutput() {
+    input.addEventListener('input', () => {
       const text = input.value.toLowerCase().replace(/[^a-z\s]/g, '');
       const words = text.split(/\s+/);
-      const seen = {};
       const counts = {};
 
       for (const word of words) {
-        const letters = new Set(word);
-        letters.forEach(letter => {
+        const unique = new Set(word);
+        unique.forEach(letter => {
           if (letter) counts[letter] = (counts[letter] || 0) + 1;
         });
       }
 
       const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-      output.textContent = sorted.map(([letter, count]) => `${letter}: ${count}`).join('\n');
-    }
+      output.textContent = sorted.map(([l, c]) => `${l}: ${c}`).join('\n');
+    });
 
     function openThemeModal() {
-      document.getElementById('themeModal').style.display = 'flex';
       document.getElementById('overlay').style.display = 'block';
+      document.getElementById('themeModal').style.display = 'flex';
     }
 
     function closeThemeModal() {
-      document.getElementById('themeModal').style.display = 'none';
       document.getElementById('overlay').style.display = 'none';
+      document.getElementById('themeModal').style.display = 'none';
     }
 
     function setTheme(name) {
       const root = document.documentElement;
-      document.getElementById('customThemeEditor').style.display = name === 'custom' ? 'block' : 'none';
+      const editor = document.getElementById('customThemeEditor');
+      editor.style.display = name === 'custom' ? 'block' : 'none';
 
       const themes = {
         light:    { '--bg': '#ffffff', '--text': '#000000', '--accent': '#007acc', '--input-bg': '#f0f0f0', '--card-bg': '#e6e6e6' },
@@ -211,12 +209,12 @@
         peach:    { '--bg': '#ffefd5', '--text': '#a0522d', '--accent': '#ffa07a', '--input-bg': '#ffe4c4', '--card-bg': '#fcd5b5' },
         forest:   { '--bg': '#0b3d0b', '--text': '#cfe8cf', '--accent': '#3cb371', '--input-bg': '#1f5c1f', '--card-bg': '#2e8b57' },
         galaxy:   { '--bg': '#1a0033', '--text': '#dcdcff', '--accent': '#8a2be2', '--input-bg': '#2a0050', '--card-bg': '#130022' },
-        custom:   {} // custom is dynamic
+        custom:   {}
       };
 
       if (themes[name]) {
-        for (const [key, val] of Object.entries(themes[name])) {
-          root.style.setProperty(key, val);
+        for (const [varName, value] of Object.entries(themes[name])) {
+          root.style.setProperty(varName, value);
         }
       }
     }
@@ -225,7 +223,7 @@
       document.documentElement.style.setProperty(variable, value);
     }
 
-    // Default to light theme on load
+    // Set default
     setTheme('light');
   </script>
 </body>

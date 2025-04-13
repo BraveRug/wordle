@@ -10,19 +10,19 @@
 
   <style>
     :root {
-      --bg: #121212;
-      --card-bg: #1e1e1e;
-      --text: #e0e0e0;
-      --accent: #4a90e2;
-      --input-bg: #2c2c2c;
-    }
-
-    body.light {
       --bg: #f2f2f2;
       --card-bg: #ffffff;
       --text: #111;
       --accent: #0077cc;
       --input-bg: #eeeeee;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --card-bg: #1e1e1e;
+      --text: #e0e0e0;
+      --accent: #4a90e2;
+      --input-bg: #2c2c2c;
     }
 
     body.solarized {
@@ -77,29 +77,50 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
       width: 100%;
       max-width: 500px;
+      position: relative;
     }
 
-    .theme-buttons {
-      display: flex;
-      gap: 10px;
+    .theme-selector {
       margin-bottom: 15px;
-      flex-wrap: wrap;
+      position: relative;
     }
 
-    .theme-buttons button {
-      flex: 1 1 30%;
-      min-width: 80px;
+    .theme-selector button {
       background: var(--accent);
-      border: none;
-      border-radius: 8px;
       color: white;
-      padding: 10px;
-      font-size: 0.9em;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.95em;
       cursor: pointer;
     }
 
-    .theme-buttons button:hover {
-      opacity: 0.9;
+    .theme-options {
+      position: absolute;
+      top: 45px;
+      left: 0;
+      right: 0;
+      background: var(--input-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      display: none;
+      z-index: 10;
+      padding: 5px 0;
+    }
+
+    .theme-options button {
+      background: none;
+      border: none;
+      padding: 10px 16px;
+      text-align: left;
+      width: 100%;
+      font-size: 0.95em;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .theme-options button:hover {
+      background: rgba(0,0,0,0.05);
     }
 
     input {
@@ -114,7 +135,7 @@
     }
 
     input::placeholder {
-      color: #aaa;
+      color: #888;
     }
 
     #result {
@@ -130,22 +151,26 @@
     }
 
     @media (max-width: 600px) {
-      .theme-buttons button {
-        flex: 1 1 45%;
+      .theme-options button {
+        font-size: 1em;
       }
     }
   </style>
 </head>
-<body>
+<body class="light">
   <h2>Letter Frequency Counter</h2>
   <div class="container">
-    <div class="theme-buttons">
-      <button onclick="setTheme('dark')">Dark</button>
-      <button onclick="setTheme('light')">Light</button>
-      <button onclick="setTheme('solarized')">Solarized</button>
-      <button onclick="setTheme('midnight')">Midnight</button>
-      <button onclick="setTheme('peach')">Peach</button>
+    <div class="theme-selector">
+      <button onclick="toggleThemeMenu()">Theme</button>
+      <div class="theme-options" id="themeMenu">
+        <button onclick="setTheme('light')">Light</button>
+        <button onclick="setTheme('dark')">Dark</button>
+        <button onclick="setTheme('solarized')">Solarized</button>
+        <button onclick="setTheme('midnight')">Midnight</button>
+        <button onclick="setTheme('peach')">Peach</button>
+      </div>
     </div>
+
     <input type="text" id="wordInput" placeholder="Enter words like 'apple banana'" oninput="countLetterFrequency()">
     <div id="result"></div>
   </div>
@@ -178,10 +203,26 @@
 
     function setTheme(theme) {
       document.body.className = theme;
+      closeThemeMenu();
     }
 
-    // Set default theme
-    setTheme('dark');
+    function toggleThemeMenu() {
+      const menu = document.getElementById('themeMenu');
+      menu.style.display = menu.style.display === "block" ? "none" : "block";
+    }
+
+    function closeThemeMenu() {
+      document.getElementById('themeMenu').style.display = "none";
+    }
+
+    document.addEventListener("click", function (e) {
+      const menu = document.getElementById('themeMenu');
+      if (!e.target.closest(".theme-selector")) {
+        menu.style.display = "none";
+      }
+    });
+
+    // Default actions
     countLetterFrequency();
   </script>
 </body>

@@ -47,10 +47,15 @@
         });
       });
 
-      const sortedLetters = Object.keys(letterMap).sort();
+      // Sort letters by frequency (descending), then alphabetically
+      const sortedEntries = Object.entries(letterMap).sort((a, b) => {
+        if (b[1] !== a[1]) return b[1] - a[1];
+        return a[0].localeCompare(b[0]);
+      });
+
       let resultText = "Letter counts (number of words each letter appears in):\n";
-      sortedLetters.forEach(letter => {
-        resultText += `${letter}: ${letterMap[letter]}\n`;
+      sortedEntries.forEach(([letter, count]) => {
+        resultText += `${letter}: ${count}\n`;
       });
 
       document.getElementById('result').innerText = resultText;

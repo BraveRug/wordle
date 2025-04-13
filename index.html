@@ -130,7 +130,6 @@
       cursor: pointer;
     }
 
-    /* Modal */
     .modal {
       position: fixed;
       top: 0;
@@ -184,6 +183,7 @@
     .peach-btn { background: #ff7f50; }
     .forest-btn { background: #2e8b57; }
     .rose-btn { background: #d81b60; }
+    .custom-btn { background: #888; }
 
     @media (max-width: 600px) {
       .theme-option {
@@ -200,7 +200,7 @@
     <button class="theme-btn" onclick="openModal()">Theme</button>
   </div>
 
-  <!-- Theme Modal -->
+  <!-- Theme Selector Modal -->
   <div class="modal" id="themeModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal()">✕</button>
@@ -212,7 +212,7 @@
       <button class="theme-option peach-btn" onclick="setTheme('peach')">Peach</button>
       <button class="theme-option forest-btn" onclick="setTheme('forest')">Forest</button>
       <button class="theme-option rose-btn" onclick="setTheme('rose')">Rose</button>
-      <button class="theme-option" style="background: #999;" onclick="openCustomModal()">Custom</button>
+      <button class="theme-option custom-btn" onclick="openCustomModal()">Custom</button>
     </div>
   </div>
 
@@ -221,11 +221,11 @@
     <div class="modal-content">
       <button class="close-btn" onclick="closeCustomModal()">✕</button>
       <h3>Customize Theme</h3>
-      <label>Background: <input type="color" id="bgColor"></label><br><br>
-      <label>Text: <input type="color" id="textColor"></label><br><br>
-      <label>Accent: <input type="color" id="accentColor"></label><br><br>
-      <label>Input BG: <input type="color" id="inputBgColor"></label><br><br>
-      <label>Card BG: <input type="color" id="cardBgColor"></label><br><br>
+      <label>Background: <input type="color" id="bgColor" oninput="updateCustomThemePreview()"></label><br><br>
+      <label>Text: <input type="color" id="textColor" oninput="updateCustomThemePreview()"></label><br><br>
+      <label>Accent: <input type="color" id="accentColor" oninput="updateCustomThemePreview()"></label><br><br>
+      <label>Input BG: <input type="color" id="inputBgColor" oninput="updateCustomThemePreview()"></label><br><br>
+      <label>Card BG: <input type="color" id="cardBgColor" oninput="updateCustomThemePreview()"></label><br><br>
       <button class="theme-btn" onclick="applyCustomTheme()">Apply</button>
     </div>
   </div>
@@ -269,14 +269,18 @@
       document.getElementById('customThemeModal').style.display = 'none';
     }
 
-    function applyCustomTheme() {
+    function updateCustomThemePreview() {
       const root = document.documentElement.style;
       root.setProperty('--bg', document.getElementById('bgColor').value);
       root.setProperty('--text', document.getElementById('textColor').value);
       root.setProperty('--accent', document.getElementById('accentColor').value);
       root.setProperty('--input-bg', document.getElementById('inputBgColor').value);
       root.setProperty('--card-bg', document.getElementById('cardBgColor').value);
-      document.body.className = ''; // Clear theme classes to prioritize custom
+      document.body.className = '';
+    }
+
+    function applyCustomTheme() {
+      updateCustomThemePreview();
       closeCustomModal();
       closeModal();
     }

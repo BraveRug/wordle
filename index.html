@@ -70,60 +70,68 @@
       --card-bg: #f8bbd0;
     }
 
-    body.charcoal {
-      --bg: #1c1c1c;
-      --text: #f5f5f5;
-      --accent: #888;
-      --input-bg: #2b2b2b;
-      --card-bg: #252525;
+    body.sunshine {
+      --bg: #fffbea;
+      --text: #5b4000;
+      --accent: #ffdd57;
+      --input-bg: #fff4c2;
+      --card-bg: #fff8d6;
     }
 
     body.bloodred {
-      --bg: #3b0000;
+      --bg: #2b0000;
       --text: #ffcccc;
-      --accent: #ff0000;
-      --input-bg: #5a0000;
-      --card-bg: #4a0000;
+      --accent: #aa2a2a;
+      --input-bg: #440000;
+      --card-bg: #3b0a0a;
     }
 
-    body.sunshine {
-      --bg: #fff9c4;
-      --text: #795548;
-      --accent: #ffeb3b;
-      --input-bg: #fff59d;
-      --card-bg: #fffde7;
+    body.cyberpunk {
+      --bg: #0f0f1f;
+      --text: #ff00cc;
+      --accent: #00ffff;
+      --input-bg: #1a1a2f;
+      --card-bg: #1f1f3f;
     }
 
-    body.plum {
-      --bg: #f3e5f5;
-      --text: #4a148c;
-      --accent: #ba68c8;
-      --input-bg: #e1bee7;
-      --card-bg: #f8bbd0;
+    body.oceanmist {
+      --bg: #e0f7fa;
+      --text: #004d40;
+      --accent: #00bcd4;
+      --input-bg: #b2ebf2;
+      --card-bg: #e0f2f1;
     }
 
-    body.violetnight {
-      --bg: #1e1b3a;
-      --text: #e0d7ff;
-      --accent: #a18aff;
-      --input-bg: #2e264d;
-      --card-bg: #2f2b4a;
+    body.warmmocha {
+      --bg: #ede0d4;
+      --text: #4e342e;
+      --accent: #bcaaa4;
+      --input-bg: #d7ccc8;
+      --card-bg: #efebe9;
     }
 
-    body.deepsea {
-      --bg: #001f3f;
-      --text: #7fdbff;
-      --accent: #39cccc;
-      --input-bg: #003366;
-      --card-bg: #002b4d;
+    body.skyblue {
+      --bg: #e1f5fe;
+      --text: #01579b;
+      --accent: #0288d1;
+      --input-bg: #b3e5fc;
+      --card-bg: #e0f7fa;
     }
 
-    body.greyscale {
-      --bg: #f5f5f5;
-      --text: #333;
-      --accent: #999;
-      --input-bg: #ddd;
-      --card-bg: #eee;
+    body.neongreen {
+      --bg: #101f10;
+      --text: #00ff00;
+      --accent: #00cc44;
+      --input-bg: #203d20;
+      --card-bg: #182f18;
+    }
+
+    body.slategrey {
+      --bg: #2f4f4f;
+      --text: #f5f5f5;
+      --accent: #708090;
+      --input-bg: #4f6f6f;
+      --card-bg: #3f5f5f;
     }
 
     * {
@@ -249,19 +257,15 @@
     .peach-btn { background: #ff7f50; }
     .forest-btn { background: #2e8b57; }
     .rose-btn { background: #d81b60; }
-    .charcoal-btn { background: #444; }
-    .bloodred-btn { background: #800000; }
-    .sunshine-btn { background: #fdd835; color: #000; }
-    .plum-btn { background: #9c27b0; }
-    .violetnight-btn { background: #5c4d8b; }
-    .deepsea-btn { background: #0074d9; }
-    .greyscale-btn { background: #888; }
+    .sunshine-btn { background: #f5d442; color: #333; }
+    .bloodred-btn { background: #aa2a2a; }
+    .cyberpunk-btn { background: #ff00cc; }
+    .oceanmist-btn { background: #00bcd4; }
+    .warmmocha-btn { background: #bcaaa4; }
+    .skyblue-btn { background: #0288d1; }
+    .neongreen-btn { background: #00cc44; }
+    .slategrey-btn { background: #708090; }
 
-    @media (max-width: 600px) {
-      .theme-option {
-        font-size: 1em;
-      }
-    }
   </style>
 </head>
 <body class="light">
@@ -283,20 +287,21 @@
       <button class="theme-option peach-btn" onclick="setTheme('peach')">Peach</button>
       <button class="theme-option forest-btn" onclick="setTheme('forest')">Forest</button>
       <button class="theme-option rose-btn" onclick="setTheme('rose')">Rose</button>
-      <button class="theme-option charcoal-btn" onclick="setTheme('charcoal')">Charcoal</button>
-      <button class="theme-option bloodred-btn" onclick="setTheme('bloodred')">Blood Red</button>
       <button class="theme-option sunshine-btn" onclick="setTheme('sunshine')">Sunshine</button>
-      <button class="theme-option plum-btn" onclick="setTheme('plum')">Plum</button>
-      <button class="theme-option violetnight-btn" onclick="setTheme('violetnight')">Violet Night</button>
-      <button class="theme-option deepsea-btn" onclick="setTheme('deepsea')">Deep Sea</button>
-      <button class="theme-option greyscale-btn" onclick="setTheme('greyscale')">Greyscale</button>
+      <button class="theme-option bloodred-btn" onclick="setTheme('bloodred')">Blood Red</button>
+      <button class="theme-option cyberpunk-btn" onclick="setTheme('cyberpunk')">Cyberpunk</button>
+      <button class="theme-option oceanmist-btn" onclick="setTheme('oceanmist')">Ocean Mist</button>
+      <button class="theme-option warmmocha-btn" onclick="setTheme('warmmocha')">Warm Mocha</button>
+      <button class="theme-option skyblue-btn" onclick="setTheme('skyblue')">Sky Blue</button>
+      <button class="theme-option neongreen-btn" onclick="setTheme('neongreen')">Neon Green</button>
+      <button class="theme-option slategrey-btn" onclick="setTheme('slategrey')">Slate Grey</button>
     </div>
   </div>
 
   <script>
     function countLetters() {
       const input = document.getElementById('wordInput').value.toLowerCase();
-      const words = input.match(/\b\w+\b/g) || [];
+      const words = input.match(/\\b\\w+\\b/g) || [];
       const letterMap = {};
 
       words.forEach(word => {
@@ -307,7 +312,7 @@
       });
 
       const sorted = Object.entries(letterMap).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-      const output = sorted.map(([letter, count]) => `${letter}: ${count}`).join('\n');
+      const output = sorted.map(([letter, count]) => \`\${letter}: \${count}\`).join('\\n');
       document.getElementById('result').textContent = output || 'No letters found.';
     }
 

@@ -306,13 +306,19 @@
     #settingsIconBtn { /* Already has inline styles, but can be enhanced here if needed */
       padding: 5px; /* Ensure it's not too large */
     }
-    .settings-section h3 {
+    .settings-section h3, .modal-content > h3 { /* Target direct h3 under modal-content and specific section h3s */
       margin-top: 20px;
       margin-bottom: 10px;
-      font-size: 1.1em;
+      font-size: 1.15em; /* Unified font size */
       color: var(--text);
       border-bottom: 1px solid var(--input-bg);
       padding-bottom: 8px;
+    }
+    .theme-section h3 { /* Sub-headings for Light/Dark themes */
+        font-size: 1.05em; /* Slightly smaller than main section titles */
+        margin-top: 15px;
+        margin-bottom: 8px;
+        border-bottom-style: dashed; /* Differentiate sub-section borders */
     }
     .layout-option {
       cursor: pointer;
@@ -331,26 +337,31 @@
     .layout-option.active-layout {
       background-color: var(--accent); /* Similar to hover, or a distinct color */
       color: white;
-      border: 2px solid var(--bg); /* Example: adds a border to distinguish */
+      border: 2px solid var(--bg); 
       box-shadow: 0 0 5px rgba(0,0,0,0.2);
     }
-    .layout-icon {
-      margin-bottom: 8px;
-      height: 40px; /* Increased height */
-      width: 60px;  /* Increased width */
-      display: flex; /* Added for centering */
-      align-items: center; /* Added for centering */
-      justify-content: center; /* Added for centering */
+    .layout-option { /* Ensure the whole button is a flex column */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; /* Center content vertically if there's extra space */
+      /* width, padding, etc. already defined and seem okay */
+    }
+    .layout-icon { /* Container for the SVG */
+      margin-bottom: 5px; /* Space between icon and text */
+      height: 35px;  /* Slightly increased icon visual height */
+      width: auto;   /* Maintain aspect ratio based on height */
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
     }
     .layout-icon svg {
-      fill: currentColor; /* SVG inherits color from parent */
-      max-width: 100%; /* Ensure SVG scales down if container is smaller */
-      max-height: 100%; /* Ensure SVG scales down if container is smaller */
-      width: 100%;
-      height: 100%;
+      fill: currentColor; 
+      height: 100%; /* SVG takes full height of .layout-icon */
+      width: auto;  /* Maintain aspect ratio */
     }
     .theme-option.active-theme {
-      border: 2px solid var(--text); /* Example: distinct border for active theme */
+      border: 2px solid var(--text); 
       box-shadow: 0 0 8px rgba(0,0,0,0.3);
       font-weight: bold;
     }
@@ -568,13 +579,18 @@
 
     function updateTextareaHeight(textareaElement) {
       textareaElement.style.height = 'auto'; // Temporarily shrink to get correct scrollHeight
-      // Set a sensible max-height, e.g. 300px or based on viewport
-      const maxHeight = Math.min(300, window.innerHeight * 0.4); 
-      textareaElement.style.height = Math.min(textareaElement.scrollHeight, maxHeight) + 'px';
-      if (textareaElement.scrollHeight > maxHeight) {
+      // Increased max-height: 500px fixed, or 60% of viewport height
+      const maxHeight = Math.min(500, window.innerHeight * 0.6); 
+      
+      // Only apply scrollHeight if it's different and less than maxHeight, or if it's beyond maxHeight
+      const newHeight = textareaElement.scrollHeight;
+
+      if (newHeight > maxHeight) {
+        textareaElement.style.height = maxHeight + 'px';
         textareaElement.style.overflowY = 'auto'; // Show scrollbar if content exceeds max-height
       } else {
-        textareaElement.style.overflowY = 'hidden';
+        textareaElement.style.height = newHeight + 'px';
+        textareaElement.style.overflowY = 'hidden'; // Hide scrollbar if content is within bounds
       }
     }
 

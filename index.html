@@ -271,6 +271,88 @@
     .theme-section h3 { margin-bottom:10px; font-size:1em; border-bottom:1px solid var(--input-bg); padding-bottom:5px; }
     .theme-option { display:block; width:100%; padding:12px; margin:6px 0; border:none; border-radius:8px; font-size:1em; cursor:pointer; color:white; }
 
+    /* Settings Modal & Layout Options */
+    #settingsIconBtn { /* Already has inline styles, but can be enhanced here if needed */
+      padding: 5px; /* Ensure it's not too large */
+    }
+    .settings-section h3 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+      color: var(--text);
+      border-bottom: 1px solid var(--input-bg);
+      padding-bottom: 8px;
+    }
+    .layout-option {
+      cursor: pointer;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+      background-color: var(--input-bg);
+      color: var(--text);
+      width: calc(50% - 10px); /* Two options side-by-side */
+      transition: background-color 0.2s;
+    }
+    .layout-option:hover {
+      background-color: var(--accent);
+      color: white;
+    }
+    .layout-icon {
+      font-size: 1.5em; /* Larger icon */
+      margin-bottom: 5px;
+      font-family: 'Courier New', monospace; /* For a blocky look */
+    }
+
+    /* Content Area Layouts */
+    .content-area {
+      display: flex;
+      width: 100%;
+    }
+
+    /* Default: Side-by-Side Layout */
+    .content-area {
+      flex-direction: row;
+      justify-content: space-between;
+      gap: 20px; /* Adds space between input and result */
+    }
+    #wordInput { /* Textarea now */
+      flex-basis: calc(50% - 10px);
+      padding: 12px;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text);
+      margin-bottom: 0; /* Remove bottom margin if side-by-side */
+      resize: vertical; /* Allow vertical resize, not horizontal */
+      min-height: 100px; /* Minimum height for textarea */
+      white-space: pre-wrap; /* Ensure textarea wraps words */
+      word-wrap: break-word; /* Ensure textarea wraps words */
+    }
+    .result-box {
+      flex-basis: calc(50% - 10px);
+      align-self: stretch; /* Make it same height as textarea if possible */
+    }
+
+    /* Original Layout Override */
+    body.layout-original .content-area {
+      flex-direction: column;
+      gap: 20px; /* Gap between input and result when stacked */
+    }
+    body.layout-original #wordInput {
+      flex-basis: auto; /* Full width */
+      width: 100%;
+      margin-bottom: 20px; /* Add margin back for original layout */
+    }
+    body.layout-original .result-box {
+      flex-basis: auto; /* Full width */
+      width: 100%;
+    }
+
+    /* Ensure textarea styling is consistent with original input */
+    textarea#wordInput::placeholder { color:#888; }
+
+
     /* Button Colors */
     .light-btn { background:#0077cc; }
     .solarized-btn { background:#268bd2; }
@@ -309,14 +391,34 @@
 <body class="light">
   <h2>Letter Frequency</h2>
   <div class="container">
-    <input type="text" id="wordInput" placeholder="Type words here..." oninput="countLetters()" />
-    <div id="result" class="result-box"></div>
-    <button class="theme-btn" onclick="openModal()">Theme</button>
+    <div id="settingsButtonContainer" style="position: absolute; top: 10px; right: 10px;">
+      <button id="settingsIconBtn" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: var(--text);" onclick="openModal()">⚙️</button>
+    </div>
+    <div class="content-area">
+      <textarea id="wordInput" placeholder="Type words here..." oninput="countLetters()"></textarea>
+      <div id="result" class="result-box"></div>
+    </div>
+    <!-- Theme button removed from here -->
   </div>
-  <div class="modal" id="themeModal">
+  <div class="modal" id="settingsModal"> <!-- Renamed id -->
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal()">✕</button>
-      <h3>Select a Theme</h3>
+
+      <div class="settings-section"> <!-- New section for layout -->
+        <h3>Layout Options</h3>
+        <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+          <div id="layout-side-by-side" class="layout-option" onclick="setLayout('side-by-side')">
+            <div class="layout-icon">[ | ]</div>
+            <div>Side-by-Side</div>
+          </div>
+          <div id="layout-original" class="layout-option" onclick="setLayout('original')">
+            <div class="layout-icon">[---]</div>
+            <div>Original</div>
+          </div>
+        </div>
+      </div>
+
+      <h3>Select a Theme</h3> <!-- Moved Theme button functionality here -->
       <div class="theme-section">
         <h3>Light Themes</h3>
         <button class="theme-option light-btn" onclick="setTheme('light')">Light</button>
@@ -373,16 +475,48 @@
       document.getElementById('result').textContent = output || 'No letters found.';
     }
     function setTheme(theme) {
-      document.body.className = theme;
-      closeModal();
+      // Preserve layout class when changing theme
+      const currentLayoutClass = document.body.classList.contains('layout-original') ? 'layout-original' : '';
+      document.body.className = theme; // This overwrites all classes
+      if (currentLayoutClass) {
+        document.body.classList.add(currentLayoutClass);
+      }
+      localStorage.setItem('selectedTheme', theme);
+      closeModal(); // Close settings modal after theme selection
     }
+
+    function applyLayout(layoutName) {
+      if (layoutName === 'original') {
+        document.body.classList.add('layout-original');
+      } else { // 'side-by-side' or default
+        document.body.classList.remove('layout-original');
+      }
+    }
+
+    function setLayout(layoutName) {
+      applyLayout(layoutName);
+      localStorage.setItem('selectedLayout', layoutName);
+      // No need to close modal here, user might want to change theme too
+    }
+
     function openModal() {
-      document.getElementById('themeModal').style.display = 'flex';
+      document.getElementById('settingsModal').style.display = 'flex';
     }
     function closeModal() {
-      document.getElementById('themeModal').style.display = 'none';
+      document.getElementById('settingsModal').style.display = 'none';
     }
-    countLetters();
+
+    function initializePage() {
+      const savedTheme = localStorage.getItem('selectedTheme') || 'light';
+      const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
+
+      document.body.className = savedTheme; // Apply theme first
+      applyLayout(savedLayout); // Then apply layout
+
+      countLetters(); // Initial calculation
+    }
+
+    initializePage(); // Call initialization function
   </script>
 </body>
 </html>

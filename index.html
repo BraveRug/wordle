@@ -336,11 +336,16 @@
     }
     .layout-icon {
       margin-bottom: 8px;
-      height: 30px; /* Give SVG a defined height */
-      width: 50px;  /* Give SVG a defined width */
+      height: 40px; /* Increased height */
+      width: 60px;  /* Increased width */
+      display: flex; /* Added for centering */
+      align-items: center; /* Added for centering */
+      justify-content: center; /* Added for centering */
     }
     .layout-icon svg {
       fill: currentColor; /* SVG inherits color from parent */
+      max-width: 100%; /* Ensure SVG scales down if container is smaller */
+      max-height: 100%; /* Ensure SVG scales down if container is smaller */
       width: 100%;
       height: 100%;
     }
@@ -394,20 +399,17 @@
     }
     /* Styles for wordInputText (Original) */
     body.layout-original #wordInputText {
-      /* flex-basis: auto; remove this, width is dynamic */
-      width: auto; /* Start with auto width */
-      min-width: 100%; /* Fallback for empty state, but JS will override */
-      max-width: 100%; /* Prevent overflow if JS fails */
+      width: 100%; /* Take full width of its container */
       padding: 12px;
       font-size: 1em;
-      border: 1px solid var(--input-bg); /* Subtle border */
+      border: 1px solid var(--input-bg); 
       border-radius: 8px;
       background: var(--input-bg);
       color: var(--text);
-      margin-bottom: 20px; 
-      white-space: nowrap; /* Keep text on a single line */
-      overflow: hidden; /* Hide overflow, JS manages width */
-      font-family: 'Didact Gothic', sans-serif; /* Ensure font consistency */
+      margin-bottom: 10px; /* Reduced margin for less gap */
+      /* Default input behavior will allow horizontal scrolling if text overflows */
+      /* No need for white-space: nowrap or overflow: hidden from JS version */
+      font-family: 'Didact Gothic', sans-serif; 
     }
     body.layout-original #wordInputText::placeholder { color:#888; }
 
@@ -415,15 +417,19 @@
       flex-basis: auto; 
       width: 100%;
     }
+    body.layout-original .content-area {
+      flex-direction: column;
+      gap: 10px; /* Reduced gap for original layout content */
+    }
     
-    /* Hidden helper span for text width calculation */
+    /* Hidden helper span for text width calculation - still needed for other potential uses or if we bring back dynamic width for something else */
     #text-width-helper {
       position: absolute;
       visibility: hidden;
       white-space: nowrap;
-      font-family: 'Didact Gothic', sans-serif; /* Must match input's font */
-      font-size: 1em; /* Must match input's font-size */
-      padding: 0 12px; /* Should match input's horizontal padding */
+      font-family: 'Didact Gothic', sans-serif; 
+      font-size: 1em; 
+      padding: 0 12px; 
     }
 
     /* Button Colors */
@@ -554,26 +560,10 @@
     }
 
     function updateInputWidth(inputElement) {
-      if (!textWidthHelper) return; 
-      setupTextWidthHelperFont(); // Ensure helper has correct font before measuring
-      textWidthHelper.textContent = inputElement.value || inputElement.placeholder;
-      
-      let newWidth = textWidthHelper.offsetWidth;
-      // For placeholder, we might want to ensure it's at least 100% of parent if placeholder is short.
-      // For actual value, it should expand.
-      if (inputElement.value) {
-          newWidth += 5; // Add a small buffer for cursor or slight rendering differences when text is present
-      } else { // Placeholder is showing
-          newWidth +=2; // Smaller buffer for placeholder
-      }
-
-      // Ensure it's at least the container's width if text is short or only placeholder
-      const containerWidth = inputElement.parentElement.clientWidth;
-      if (newWidth < containerWidth) {
-        inputElement.style.width = '100%';
-      } else {
-        inputElement.style.width = newWidth + 'px';
-      }
+      // This function is no longer used for dynamic width expansion of wordInputText.
+      // It was for the previous behavior. Keeping it here for now in case
+      // any other input might need it in the future, or it can be removed later.
+      // console.log("updateInputWidth called, but is deprecated for wordInputText");
     }
 
     function updateTextareaHeight(textareaElement) {
@@ -593,7 +583,7 @@
     function handleWordInput() {
         if (activeInputElement) {
             if (activeInputElement.id === 'wordInputText') {
-                updateInputWidth(activeInputElement);
+                // No longer calling updateInputWidth for wordInputText
             } else if (activeInputElement.id === 'wordInputTextarea') {
                 updateTextareaHeight(activeInputElement);
             }
@@ -653,16 +643,17 @@
 
       if (layoutName === 'original') {
         document.body.classList.add('layout-original');
-        wordInputText.style.display = 'block'; // Or 'inline-block' if preferred for layout
+        wordInputText.style.display = 'block'; 
         wordInputTextarea.style.display = 'none';
         activeInputElement = wordInputText;
-        updateInputWidth(activeInputElement); // Set initial width
+        // No longer calling updateInputWidth here for wordInputText
+        wordInputText.style.width = '100%'; // Ensure it's full width on layout switch
       } else { // 'side-by-side' or default
         document.body.classList.remove('layout-original');
         wordInputText.style.display = 'none';
         wordInputTextarea.style.display = 'block';
         activeInputElement = wordInputTextarea;
-        updateTextareaHeight(activeInputElement); // Set initial height
+        updateTextareaHeight(activeInputElement); // Set initial height for textarea
       }
       // Transfer value between inputs if necessary, or clear the hidden one
       const visibleInput = (layoutName === 'original') ? wordInputText : wordInputTextarea;
@@ -736,9 +727,10 @@
       // If there was saved text, setLayout would have handled it.
       // This mainly ensures the initial placeholder resize is correct.
       // Also, setup the font for the helper span based on the initially active input.
-      setupTextWidthHelperFont();
+      setupTextWidthHelperFont(); // Still useful if textWidthHelper is used for anything else
       if (activeInputElement.id === 'wordInputText') {
-          updateInputWidth(activeInputElement);
+          // No initial width update needed for wordInputText as it's 100% CSS driven now
+          activeInputElement.style.width = '100%'; // Ensure it is 100% on init
       } else if (activeInputElement.id === 'wordInputTextarea') {
           updateTextareaHeight(activeInputElement);
       }

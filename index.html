@@ -13,6 +13,7 @@
       --accent: #0077cc;
       --input-bg: #f0f0f0;
       --card-bg: #ffffff;
+      --settings-icon-bg: rgba(128, 128, 128, 0.2);
     }
 
     /* Theme Definitions */
@@ -22,6 +23,7 @@
       --accent: #0077cc;
       --input-bg: #f0f0f0;
       --card-bg: #ffffff;
+      --settings-icon-bg: rgba(128, 128, 128, 0.2);
     }
     body.solarized { /* Polarized */
       --bg: #fdf6e3;
@@ -29,6 +31,7 @@
       --accent: #268bd2;
       --input-bg: #f5f2dd;
       --card-bg: #eee8d5;
+      --settings-icon-bg: rgba(101, 123, 131, 0.2); /* Adjusted for theme */
     }
     body.cherry { /* Red Light */
       --bg: #ffe6e6;
@@ -256,14 +259,42 @@
     }
 
     /* Global Styles */
-    * { box-sizing: border-box; font-family: 'Didact Gothic', sans-serif; transition: background-color 0.3s, color 0.3s; }
-    body { margin:0; background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center; padding:40px 20px; min-height:100vh; }
-    h2 { margin-bottom:20px; text-align:center; }
-    .container { background:var(--card-bg); padding:25px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); width:100%; max-width:500px; position:relative; }
-    input { width:100%; padding:12px; font-size:1em; border:none; border-radius:8px; background:var(--input-bg); color:var(--text); margin-bottom:20px; }
-    input::placeholder { color:#888; }
+    * { box-sizing: border-box; font-family: 'Didact Gothic', sans-serif; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+    body { margin:0; background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center; padding:20px; min-height:100vh; }
+    
+    .app-header { display: flex; justify-content: center; align-items: center; width:100%; max-width:500px; position: relative; margin-bottom: 20px; }
+    .app-header h2 { margin:0; text-align:center; flex-grow: 1; } /* Title takes available space */
+
+    #settingsButtonContainer { /* This is the container for the icon button */
+      position: absolute; /* Position relative to app-header */
+      right: 0; /* Align to the right of the app-header */
+      top: 50%;
+      transform: translateY(-50%); /* Vertically center */
+    }
+    #settingsIconBtn {
+      background: var(--settings-icon-bg);
+      border: none;
+      font-size: 1.5em; /* Adjust as needed */
+      cursor: pointer;
+      color: var(--text);
+      border-radius: 50%; /* Rounded */
+      padding: 8px; /* Padding around the icon */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px; /* Explicit width */
+      height: 40px; /* Explicit height */
+      transition: background-color 0.3s; /* Smooth transition for background */
+    }
+    #settingsIconBtn:hover {
+      background: var(--accent);
+      color: white;
+    }
+
+    .container { background:var(--card-bg); padding:25px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); width:100%; max-width:500px; /* position:relative; no longer needed if settings btn is in header */ }
+    /* input styles will be handled by #wordInputText and #wordInputTextarea directly */
     .result-box { background:var(--input-bg); padding:16px; border-radius:10px; font-family:'Courier New', monospace; white-space:pre-wrap; font-size:1em; color:var(--text); }
-    .theme-btn { margin-top:10px; background:var(--accent); color:white; padding:10px 14px; border:none; border-radius:8px; font-size:0.95em; cursor:pointer; }
+    /* .theme-btn removed */
     .modal { position:fixed; top:0; left:0; right:0; bottom:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); z-index:100; }
     .modal-content { background:var(--card-bg); padding:20px; border-radius:12px; width:90%; max-width:400px; text-align:center; position:relative; max-height:80vh; overflow-y:auto; }
     .close-btn { position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.2em; color:var(--text); cursor:pointer; }
@@ -297,11 +328,28 @@
       background-color: var(--accent);
       color: white;
     }
-    .layout-icon {
-      font-size: 1.5em; /* Larger icon */
-      margin-bottom: 5px;
-      font-family: 'Courier New', monospace; /* For a blocky look */
+    .layout-option.active-layout {
+      background-color: var(--accent); /* Similar to hover, or a distinct color */
+      color: white;
+      border: 2px solid var(--bg); /* Example: adds a border to distinguish */
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
     }
+    .layout-icon {
+      margin-bottom: 8px;
+      height: 30px; /* Give SVG a defined height */
+      width: 50px;  /* Give SVG a defined width */
+    }
+    .layout-icon svg {
+      fill: currentColor; /* SVG inherits color from parent */
+      width: 100%;
+      height: 100%;
+    }
+    .theme-option.active-theme {
+      border: 2px solid var(--text); /* Example: distinct border for active theme */
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      font-weight: bold;
+    }
+
 
     /* Content Area Layouts */
     .content-area {
@@ -313,45 +361,70 @@
     .content-area {
       flex-direction: row;
       justify-content: space-between;
-      gap: 20px; /* Adds space between input and result */
+      gap: 20px; 
     }
-    #wordInput { /* Textarea now */
+    /* Styles for wordInputTextarea (Side-by-Side) */
+    #wordInputTextarea {
       flex-basis: calc(50% - 10px);
       padding: 12px;
       font-size: 1em;
-      border: none;
+      border: 1px solid var(--input-bg); /* Subtle border */
       border-radius: 8px;
       background: var(--input-bg);
       color: var(--text);
-      margin-bottom: 0; /* Remove bottom margin if side-by-side */
-      resize: vertical; /* Allow vertical resize, not horizontal */
-      min-height: 100px; /* Minimum height for textarea */
-      white-space: pre-wrap; /* Ensure textarea wraps words */
-      word-wrap: break-word; /* Ensure textarea wraps words */
+      margin-bottom: 0;
+      resize: none; /* Disabled manual resize, will be dynamic */
+      overflow-y: hidden; /* Hide scrollbar, height adjusts */
+      min-height: 50px; /* Start with a decent min-height */
+      white-space: pre-wrap; 
+      word-wrap: break-word; 
+      font-family: 'Didact Gothic', sans-serif; /* Ensure font consistency */
     }
+     #wordInputTextarea::placeholder { color:#888; }
+
     .result-box {
       flex-basis: calc(50% - 10px);
-      align-self: stretch; /* Make it same height as textarea if possible */
+      align-self: stretch; 
     }
 
-    /* Original Layout Override */
+    /* Original Layout Override Styles */
     body.layout-original .content-area {
       flex-direction: column;
-      gap: 20px; /* Gap between input and result when stacked */
+      gap: 20px; 
     }
-    body.layout-original #wordInput {
-      flex-basis: auto; /* Full width */
-      width: 100%;
-      margin-bottom: 20px; /* Add margin back for original layout */
+    /* Styles for wordInputText (Original) */
+    body.layout-original #wordInputText {
+      /* flex-basis: auto; remove this, width is dynamic */
+      width: auto; /* Start with auto width */
+      min-width: 100%; /* Fallback for empty state, but JS will override */
+      max-width: 100%; /* Prevent overflow if JS fails */
+      padding: 12px;
+      font-size: 1em;
+      border: 1px solid var(--input-bg); /* Subtle border */
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text);
+      margin-bottom: 20px; 
+      white-space: nowrap; /* Keep text on a single line */
+      overflow: hidden; /* Hide overflow, JS manages width */
+      font-family: 'Didact Gothic', sans-serif; /* Ensure font consistency */
     }
+    body.layout-original #wordInputText::placeholder { color:#888; }
+
     body.layout-original .result-box {
-      flex-basis: auto; /* Full width */
+      flex-basis: auto; 
       width: 100%;
     }
-
-    /* Ensure textarea styling is consistent with original input */
-    textarea#wordInput::placeholder { color:#888; }
-
+    
+    /* Hidden helper span for text width calculation */
+    #text-width-helper {
+      position: absolute;
+      visibility: hidden;
+      white-space: nowrap;
+      font-family: 'Didact Gothic', sans-serif; /* Must match input's font */
+      font-size: 1em; /* Must match input's font-size */
+      padding: 0 12px; /* Should match input's horizontal padding */
+    }
 
     /* Button Colors */
     .light-btn { background:#0077cc; }
@@ -389,36 +462,43 @@
   </style>
 </head>
 <body class="light">
-  <h2>Letter Frequency</h2>
-  <div class="container">
-    <div id="settingsButtonContainer" style="position: absolute; top: 10px; right: 10px;">
-      <button id="settingsIconBtn" style="background: none; border: none; font-size: 1.5em; cursor: pointer; color: var(--text);" onclick="openModal()">⚙️</button>
+  <div class="app-header">
+    <h2>Letter Frequency</h2>
+    <div id="settingsButtonContainer">
+      <button id="settingsIconBtn" onclick="openModal()">⚙️</button>
     </div>
+  </div>
+  <div class="container">
     <div class="content-area">
-      <textarea id="wordInput" placeholder="Type words here..." oninput="countLetters()"></textarea>
+      <!-- Inputs will be shown/hidden based on layout -->
+      <input type="text" id="wordInputText" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()" />
+      <textarea id="wordInputTextarea" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()"></textarea>
       <div id="result" class="result-box"></div>
     </div>
-    <!-- Theme button removed from here -->
   </div>
-  <div class="modal" id="settingsModal"> <!-- Renamed id -->
+  <div class="modal" id="settingsModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal()">✕</button>
-
-      <div class="settings-section"> <!-- New section for layout -->
+      
+      <div class="settings-section">
         <h3>Layout Options</h3>
         <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
           <div id="layout-side-by-side" class="layout-option" onclick="setLayout('side-by-side')">
-            <div class="layout-icon">[ | ]</div>
+            <div class="layout-icon">
+              <svg viewBox="0 0 100 60"><rect x="10" y="5" width="35" height="50" rx="3"/><rect x="55" y="5" width="35" height="50" rx="3"/></svg>
+            </div>
             <div>Side-by-Side</div>
           </div>
           <div id="layout-original" class="layout-option" onclick="setLayout('original')">
-            <div class="layout-icon">[---]</div>
+            <div class="layout-icon">
+              <svg viewBox="0 0 100 60"><rect x="10" y="15" width="80" height="30" rx="3"/></svg>
+            </div>
             <div>Original</div>
           </div>
         </div>
       </div>
 
-      <h3>Select a Theme</h3> <!-- Moved Theme button functionality here -->
+      <h3>Select a Theme</h3>
       <div class="theme-section">
         <h3>Light Themes</h3>
         <button class="theme-option light-btn" onclick="setTheme('light')">Light</button>
@@ -460,9 +540,71 @@
     </div>
   </div>
   <script>
+    // Helper span for dynamic input width calculation
+    let textWidthHelper; 
+
+    function setupTextWidthHelperFont() {
+        if (textWidthHelper && activeInputElement) {
+            const style = window.getComputedStyle(activeInputElement);
+            textWidthHelper.style.fontFamily = style.fontFamily;
+            textWidthHelper.style.fontSize = style.fontSize;
+            textWidthHelper.style.paddingLeft = style.paddingLeft; // Use the actual padding of the input
+            textWidthHelper.style.paddingRight = style.paddingRight;
+        }
+    }
+
+    function updateInputWidth(inputElement) {
+      if (!textWidthHelper) return; 
+      setupTextWidthHelperFont(); // Ensure helper has correct font before measuring
+      textWidthHelper.textContent = inputElement.value || inputElement.placeholder;
+      
+      let newWidth = textWidthHelper.offsetWidth;
+      // For placeholder, we might want to ensure it's at least 100% of parent if placeholder is short.
+      // For actual value, it should expand.
+      if (inputElement.value) {
+          newWidth += 5; // Add a small buffer for cursor or slight rendering differences when text is present
+      } else { // Placeholder is showing
+          newWidth +=2; // Smaller buffer for placeholder
+      }
+
+      // Ensure it's at least the container's width if text is short or only placeholder
+      const containerWidth = inputElement.parentElement.clientWidth;
+      if (newWidth < containerWidth) {
+        inputElement.style.width = '100%';
+      } else {
+        inputElement.style.width = newWidth + 'px';
+      }
+    }
+
+    function updateTextareaHeight(textareaElement) {
+      textareaElement.style.height = 'auto'; // Temporarily shrink to get correct scrollHeight
+      // Set a sensible max-height, e.g. 300px or based on viewport
+      const maxHeight = Math.min(300, window.innerHeight * 0.4); 
+      textareaElement.style.height = Math.min(textareaElement.scrollHeight, maxHeight) + 'px';
+      if (textareaElement.scrollHeight > maxHeight) {
+        textareaElement.style.overflowY = 'auto'; // Show scrollbar if content exceeds max-height
+      } else {
+        textareaElement.style.overflowY = 'hidden';
+      }
+    }
+
+    let activeInputElement; // To store the currently active input
+
+    function handleWordInput() {
+        if (activeInputElement) {
+            if (activeInputElement.id === 'wordInputText') {
+                updateInputWidth(activeInputElement);
+            } else if (activeInputElement.id === 'wordInputTextarea') {
+                updateTextareaHeight(activeInputElement);
+            }
+        }
+        countLetters();
+    }
+
     function countLetters() {
-      const input = document.getElementById('wordInput').value.toLowerCase();
-      const words = input.match(/\b\w+\b/g) || [];
+      if (!activeInputElement) return; // Do nothing if no input is active
+      const inputValue = activeInputElement.value.toLowerCase();
+      const words = inputValue.match(/\b\w+\b/g) || [];
       const letterMap = {};
       words.forEach(word => {
         const uniqueLetters = new Set(word.replace(/[^a-z]/g, ''));
@@ -482,41 +624,142 @@
         document.body.classList.add(currentLayoutClass);
       }
       localStorage.setItem('selectedTheme', theme);
+      updateActiveThemeButton(theme);
       closeModal(); // Close settings modal after theme selection
     }
 
+    function updateActiveThemeButton(activeTheme) {
+      document.querySelectorAll('.theme-option').forEach(btn => {
+        if (btn.textContent.toLowerCase() === activeTheme.replace(/-/g, ' ').toLowerCase() || 
+            btn.onclick.toString().includes(`setTheme('${activeTheme}')`)) {
+          btn.classList.add('active-theme');
+        } else {
+          btn.classList.remove('active-theme');
+        }
+      });
+    }
+    
+    function updateActiveLayoutButton(activeLayout) {
+        document.querySelectorAll('.layout-option').forEach(btn => btn.classList.remove('active-layout'));
+        const activeBtn = document.getElementById(`layout-${activeLayout}`);
+        if (activeBtn) {
+            activeBtn.classList.add('active-layout');
+        }
+    }
+
     function applyLayout(layoutName) {
+      const wordInputText = document.getElementById('wordInputText');
+      const wordInputTextarea = document.getElementById('wordInputTextarea');
+
       if (layoutName === 'original') {
         document.body.classList.add('layout-original');
+        wordInputText.style.display = 'block'; // Or 'inline-block' if preferred for layout
+        wordInputTextarea.style.display = 'none';
+        activeInputElement = wordInputText;
+        updateInputWidth(activeInputElement); // Set initial width
       } else { // 'side-by-side' or default
         document.body.classList.remove('layout-original');
+        wordInputText.style.display = 'none';
+        wordInputTextarea.style.display = 'block';
+        activeInputElement = wordInputTextarea;
+        updateTextareaHeight(activeInputElement); // Set initial height
       }
+      // Transfer value between inputs if necessary, or clear the hidden one
+      const visibleInput = (layoutName === 'original') ? wordInputText : wordInputTextarea;
+      const hiddenInput = (layoutName === 'original') ? wordInputTextarea : wordInputText;
+      // visibleInput.value = hiddenInput.value; // Option 1: transfer value
+      // hiddenInput.value = ''; // Option 2: clear hidden (let's go with this to avoid confusion)
+      // Let's try to keep the value if the user switches back and forth for a better UX
+      if (document.activeElement !== visibleInput) { // Avoid clearing if user is typing and layout switches programmatically
+          // No, this is complex. Let's just ensure the current activeInput has the value.
+          // When switching, the value of the *newly visible* input should be what matters.
+          // If they were sharing a value, it's simpler. Let's assume they should share value.
+      }
+      // If values are not shared, ensure countLetters runs on the new activeInputElement's value
+      countLetters(); 
+
+
+      updateActiveLayoutButton(layoutName);
     }
 
     function setLayout(layoutName) {
-      applyLayout(layoutName);
+      const oldActiveValue = activeInputElement ? activeInputElement.value : "";
+      applyLayout(layoutName); // This now sets the new activeInputElement
+      if (activeInputElement) { // The new active input
+        activeInputElement.value = oldActiveValue; // Preserve text across layout changes
+        // Trigger the appropriate resize function for the now visible and value-filled input
+        if (activeInputElement.id === 'wordInputText') {
+          updateInputWidth(activeInputElement);
+        } else if (activeInputElement.id === 'wordInputTextarea') {
+          updateTextareaHeight(activeInputElement);
+        }
+      }
       localStorage.setItem('selectedLayout', layoutName);
-      // No need to close modal here, user might want to change theme too
     }
 
     function openModal() {
       document.getElementById('settingsModal').style.display = 'flex';
+      // Refresh active buttons when modal opens
+      const savedTheme = localStorage.getItem('selectedTheme') || 'light';
+      const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
+      updateActiveThemeButton(savedTheme);
+      updateActiveLayoutButton(savedLayout);
     }
     function closeModal() {
       document.getElementById('settingsModal').style.display = 'none';
     }
 
     function initializePage() {
+      const wordInputText = document.getElementById('wordInputText');
+      const wordInputTextarea = document.getElementById('wordInputTextarea');
+
       const savedTheme = localStorage.getItem('selectedTheme') || 'light';
       const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
+      
+      document.body.className = savedTheme; 
+      // Determine which input to show initially based on savedLayout
+      if (savedLayout === 'original') {
+        wordInputText.style.display = 'block';
+        wordInputTextarea.style.display = 'none';
+        activeInputElement = wordInputText;
+      } else {
+        wordInputText.style.display = 'none';
+        wordInputTextarea.style.display = 'block';
+        activeInputElement = wordInputTextarea;
+      }
+      
+      applyLayout(savedLayout); // This will also call updateActiveLayoutButton and initial resize
+      
+      updateActiveThemeButton(savedTheme);
 
-      document.body.className = savedTheme; // Apply theme first
-      applyLayout(savedLayout); // Then apply layout
+      // Ensure initial state of inputs is good if there's no saved text.
+      // If there was saved text, setLayout would have handled it.
+      // This mainly ensures the initial placeholder resize is correct.
+      // Also, setup the font for the helper span based on the initially active input.
+      setupTextWidthHelperFont();
+      if (activeInputElement.id === 'wordInputText') {
+          updateInputWidth(activeInputElement);
+      } else if (activeInputElement.id === 'wordInputTextarea') {
+          updateTextareaHeight(activeInputElement);
+      }
 
       countLetters(); // Initial calculation
     }
 
-    initializePage(); // Call initialization function
+    // DOMContentLoaded ensures that elements are available before JS tries to manipulate them
+    document.addEventListener('DOMContentLoaded', () => {
+        // Create the helper span once DOM is loaded
+        textWidthHelper = document.createElement('span');
+        textWidthHelper.id = 'text-width-helper'; // ID for potential CSS styling if needed
+        textWidthHelper.style.position = 'absolute';
+        textWidthHelper.style.visibility = 'hidden';
+        textWidthHelper.style.whiteSpace = 'nowrap';
+        // Font family, size, and padding will be set by setupTextWidthHelperFont() 
+        // based on the active input, so no need to set them here initially.
+        document.body.appendChild(textWidthHelper);
+        
+        initializePage(); // Initialize after helper span is created
+    });
   </script>
 </body>
 </html>

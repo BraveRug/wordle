@@ -134,13 +134,13 @@
 
     /* Ash Themes */
     /* Ashwood and Slateash removed */
-    body.crimsonash { /* Dark Slate Blue/Grey with Red Accent */
+    body.ash { /* Dark Slate Blue/Grey with Grey Accent */
       --bg: #333a45; 
       --text: #F1FAEE; 
-      --accent: #e63946; 
+      --accent: #8892A0;  /* Changed to neutral grey */
       --input-bg: #2a3038;
       --card-bg: #3b424d;
-      --settings-icon-bg: rgba(230, 57, 70, 0.25);
+      --settings-icon-bg: rgba(136, 146, 160, 0.25); /* Using new grey accent */
     }
 
     /* Dark Themes */
@@ -268,6 +268,15 @@
       --input-bg: #2b2b2b;
       --card-bg: #252525;
     }
+    body.infernoslate { /* Dark Slate BG, Red Container, Teal Accent */
+      --bg: #333a45;
+      --text: #F1FAEE;
+      --accent: #A8DADC; /* Light Teal/Cyan */
+      --card-bg: #e63946; /* Red for the main div.container */
+      --input-bg: #333a45; /* Matching page BG for input/result boxes */
+      --settings-icon-bg: rgba(168, 218, 220, 0.25); /* Teal accent with transparency */
+    }
+
 
     /* Onyx Themes */
     body.obsidian { /* Very dark grey, near black with vibrant blue accent */
@@ -508,11 +517,12 @@
 
     /* New Ash Theme Button Colors */
     /* .ashwood-btn and .slateash-btn removed */
-    .crimsonash-btn { background: #e63946; color: white; } /* Accent of Crimson Ash */
+    .ash-btn { background: #8892A0; color: white; } /* Accent of Ash (grey) */
+    .infernoslate-btn { background: #A8DADC; color: #333a45; } /* Accent of Inferno Slate (teal), dark text */
 
     /* New Onyx Theme Button Colors */
-    .obsidian-btn { background: #111111; color: #00aaff;} /* Dark BG, Accent text */
-    .blackopal-btn { background: #111111; color: #7e38b0;} /* Dark BG, Accent text */
+    .obsidian-btn { background: #111111; color: white;} /* Dark BG, White text */
+    .blackopal-btn { background: #111111; color: white;} /* Dark BG, White text */
   </style>
 </head>
 <body class="light">
@@ -574,7 +584,7 @@
       </div>
       <div class="theme-section">
         <h3>Ash Themes</h3>
-        <button class="theme-option crimsonash-btn" onclick="setTheme('crimsonash')">Crimson Ash</button>
+        <button class="theme-option ash-btn" onclick="setTheme('ash')">Ash</button>
       </div>
       <div class="theme-section">
         <h3>Dark Themes</h3>
@@ -594,6 +604,7 @@
         <button class="theme-option hotpinkdark-btn" onclick="setTheme('hotpinkdark')">Hot Pink Dark</button>
         <button class="theme-option browndark-btn" onclick="setTheme('browndark')">Brown Dark</button>
         <button class="theme-option charcoal-btn" onclick="setTheme('charcoal')">Grey Dark</button>
+        <button class="theme-option infernoslate-btn" onclick="setTheme('infernoslate')">Inferno Slate</button>
       </div>
       <div class="theme-section">
         <h3>Onyx Themes</h3>

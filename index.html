@@ -133,21 +133,14 @@
     }
 
     /* Ash Themes */
-    body.ashwood { /* Light, warm grey */
-      --bg: #e9e4e0; 
-      --text: #4a443f; 
-      --accent: #8d7b6f; 
-      --input-bg: #d9d3cf;
-      --card-bg: #f0ebe7;
-      --settings-icon-bg: rgba(128, 123, 117, 0.2);
-    }
-    body.slateash { /* Cooler, medium-light grey */
-      --bg: #d8dde2; 
-      --text: #3b4045; 
-      --accent: #607d8b; 
-      --input-bg: #c8ced2;
-      --card-bg: #e4e8eb;
-      --settings-icon-bg: rgba(110, 120, 130, 0.2);
+    /* Ashwood and Slateash removed */
+    body.crimsonash { /* Dark Slate Blue/Grey with Red Accent */
+      --bg: #333a45; 
+      --text: #F1FAEE; 
+      --accent: #e63946; 
+      --input-bg: #2a3038;
+      --card-bg: #3b424d;
+      --settings-icon-bg: rgba(230, 57, 70, 0.25);
     }
 
     /* Dark Themes */
@@ -514,12 +507,12 @@
     .charcoal-btn { background:#444; }
 
     /* New Ash Theme Button Colors */
-    .ashwood-btn { background: #8d7b6f; color: white;} /* Accent of ashwood */
-    .slateash-btn { background: #607d8b; color: white;} /* Accent of slateash */
+    /* .ashwood-btn and .slateash-btn removed */
+    .crimsonash-btn { background: #e63946; color: white; } /* Accent of Crimson Ash */
 
     /* New Onyx Theme Button Colors */
-    .obsidian-btn { background: #00aaff; color: white;} /* Accent of obsidian */
-    .blackopal-btn { background: #7e38b0; color: white;} /* Accent of blackopal */
+    .obsidian-btn { background: #111111; color: #00aaff;} /* Dark BG, Accent text */
+    .blackopal-btn { background: #111111; color: #7e38b0;} /* Dark BG, Accent text */
   </style>
 </head>
 <body class="light">
@@ -581,8 +574,7 @@
       </div>
       <div class="theme-section">
         <h3>Ash Themes</h3>
-        <button class="theme-option ashwood-btn" onclick="setTheme('ashwood')">Ashwood</button>
-        <button class="theme-option slateash-btn" onclick="setTheme('slateash')">Slate Ash</button>
+        <button class="theme-option crimsonash-btn" onclick="setTheme('crimsonash')">Crimson Ash</button>
       </div>
       <div class="theme-section">
         <h3>Dark Themes</h3>

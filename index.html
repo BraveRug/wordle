@@ -6,6 +6,7 @@
   <title>Letter Frequency</title>
   <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
   <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+  <script src="dictionary.js"></script>
   <style>
     /* Core Variables */
     :root {
@@ -420,7 +421,7 @@
     }
     /* Styles for wordInputTextarea (Side-by-Side) */
     #wordInputTextarea {
-      flex-basis: calc(50% - 10px);
+      /* flex-basis is now on parent .input-container */
       padding: 12px;
       font-size: 1em;
       border: 1px solid var(--input-bg); /* Subtle border */
@@ -449,16 +450,14 @@
     }
     /* Styles for wordInputText (Original) */
     body.layout-original #wordInputText {
-      width: 100%; /* Take full width of its container */
+      /* width: 100%; Now handled by flex-grow: 1 in .input-container */
       padding: 12px;
       font-size: 1em;
       border: 1px solid var(--input-bg); 
       border-radius: 8px;
       background: var(--input-bg);
       color: var(--text);
-      margin-bottom: 10px; /* Reduced margin for less gap */
-      /* Default input behavior will allow horizontal scrolling if text overflows */
-      /* No need for white-space: nowrap or overflow: hidden from JS version */
+      /* margin-bottom is now on .input-container for original layout */
       font-family: 'Didact Gothic', sans-serif; 
     }
     body.layout-original #wordInputText::placeholder { color:#888; }
@@ -469,7 +468,8 @@
     }
     body.layout-original .content-area {
       flex-direction: column;
-      gap: 10px; /* Reduced gap for original layout content */
+      /* gap is between .input-container and .result-box now */
+      /* gap: 10px; This might be too much if input-container also has margin-bottom */
     }
     
     /* Hidden helper span for text width calculation - still needed for other potential uses or if we bring back dynamic width for something else */
@@ -526,15 +526,33 @@
     .blackopal-btn { background: #111111; color: white;} /* Dark BG, White text */
     
     /* Camera Button and Modal Styles */
+    .input-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-basis: calc(50% - 10px); /* For side-by-side layout */
+    }
+    body.layout-original .input-container {
+      flex-basis: auto; /* Full width in original layout */
+      width: 100%;
+      margin-bottom: 10px; /* Spacing between input area and result */
+    }
     .camera-btn {
       background-color: var(--accent);
       color: white;
-      padding: 10px 18px;
+      padding: 8px; /* Adjusted padding for icon-only */
+      width: 40px; /* Fixed width */
+      height: 40px; /* Fixed height */
       border: none;
       border-radius: 8px;
-      font-size: 1em;
+      font-size: 1.5em; /* Larger icon */
       cursor: pointer;
       transition: background-color 0.2s, transform 0.1s;
+      flex-shrink: 0; /* Prevent button from shrinking */
+    }
+    #wordInputText, #wordInputTextarea {
+        flex-grow: 1; /* Allow input fields to take remaining space */
+        width: auto; /* Override fixed widths to allow flex growth */
     }
     .camera-btn:hover {
       background-color: var(--text); /* Simple hover effect */
@@ -568,13 +586,14 @@
   <div class="container">
     <div class="content-area">
       <!-- Inputs will be shown/hidden based on layout -->
-      <input type="text" id="wordInputText" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()" />
-      <textarea id="wordInputTextarea" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()"></textarea>
+      <div class="input-container">
+        <button id="cameraBtn" class="camera-btn">📷</button>
+        <input type="text" id="wordInputText" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()" />
+        <textarea id="wordInputTextarea" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()"></textarea>
+      </div>
       <div id="result" class="result-box"></div>
     </div>
-    <div style="text-align: center; margin-top: 20px;">
-        <button id="cameraBtn" class="camera-btn">📷 Camera Input</button>
-    </div>
+    <!-- Camera button moved into input-container -->
   </div>
 
   <!-- Settings Modal -->
@@ -877,7 +896,8 @@
         // Add event listener for camera button
         document.getElementById('cameraBtn').addEventListener('click', openCamera);
         document.getElementById('captureBtn').addEventListener('click', recognizeTextFromVideo);
-
+        
+        initializeWordSet(); // Initialize the dictionary Set
         initializePage(); // Initialize after helper span is created
     });
 
@@ -929,30 +949,98 @@
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      status.textContent = 'Recognizing text... (this may take a moment)';
+      status.textContent = 'Loading handwriting model & recognizing...';
       document.getElementById('captureBtn').style.display = 'none'; // Hide button during processing
 
       try {
-        const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
+        // Attempting to use a model that might be better for handwriting or varied text.
+        // Note: True specialized handwriting models might require specific Tesseract.js versions or configurations.
+        // For now, 'mrz' is known to be robust. If a specific handwriting model is available for Tesseract.js v5 CDN,
+        // that would be 'script/Handwritten' or similar, but 'mrz' is a good general test for robustness.
+        // Let's try with 'eng' first and then add a note about model switching if this isn't enough.
+        // The user specifically asked for handwriting, so we should try to use a more suitable model.
+        // Default Tesseract.js CDN might not include all specific script models like "script/Handwritten".
+        // We will use 'eng' but with a note that for dedicated handwriting, a custom build or different setup might be needed.
+        // For now, let's stick to 'eng' and focus on the filtering, as adding new models dynamically via CDN is complex.
+        // The prompt was to try and improve it. Tesseract's default 'eng' model has some handwriting capabilities, though limited.
+        // The crucial part will be the word filtering.
+
+        // Re-evaluating: The user request was to *try* to make it work for handwriting.
+        // Tesseract.js can load different language data. For English handwriting,
+        // there isn't a single "best" official model readily available via the standard CDN for all handwriting types.
+        // Some models like 'script/Handwritten' exist but might not be in the default CDN bundle.
+        // We'll stick with 'eng' for now, as it's the most reliably available and has some capability.
+        // The main improvement for "gibberish" will come from word filtering.
+        // I will update the status message to reflect "Loading recognition model..."
+        
+        status.textContent = 'Loading recognition model...';
+
+        const { data: { text } } = await Tesseract.recognize(canvas, 'eng', { // Sticking with 'eng' due to CDN model availability
           logger: m => {
             console.log(m);
             if (m.status === 'recognizing text') {
               status.textContent = `Recognizing... ${Math.round(m.progress * 100)}%`;
+            } else if (m.status === 'loading language model') {
+                status.textContent = `Loading model: ${m.progress * 100}%`;
             }
           }
         });
         
-        if (text && activeInputElement) {
-          activeInputElement.value += (activeInputElement.value ? ' ' : '') + text.replace(/(\r\n|\n|\r)/gm, " "); // Append recognized text
-          handleWordInput(); // Update counts and input size
+        if (activeInputElement) { // Word filtering will be applied here in the next step
+          const filteredText = filterRealWords(text); // Placeholder for now
+          if (filteredText) {
+            activeInputElement.value += (activeInputElement.value ? ' ' : '') + filteredText;
+            handleWordInput(); // Update counts and input size
+            status.textContent = `Appended recognized text!`;
+          } else {
+            status.textContent = 'No valid words recognized. Please try again.';
+          }
+        } else {
+            status.textContent = 'No active input field found.';
         }
-        status.textContent = `Appended recognized text!`;
       } catch (err) {
         console.error(err);
         status.textContent = 'Could not recognize text. Please try again.';
       } finally {
-        setTimeout(closeCamera, 1500); // Close after showing success/fail message
+        setTimeout(closeCamera, 2000); // Increased delay for user to read status
       }
+    }
+
+    // Word filtering function
+    let wordSet; // To be initialized after dictionary.js loads
+    
+    function initializeWordSet() {
+        if (typeof wordList !== 'undefined' && wordList.length > 0) {
+            wordSet = new Set(wordList.map(word => word.toLowerCase()));
+            console.log(`Dictionary loaded with ${wordSet.size} words.`);
+        } else {
+            console.error("Word list not found or empty. OCR filtering will be basic.");
+            wordSet = new Set(); // Fallback to an empty set
+        }
+    }
+
+    function filterRealWords(text) {
+        if (!wordSet || wordSet.size === 0) {
+            console.warn("WordSet not initialized or empty, returning raw cleaned text.");
+            return text.replace(/[^a-zA-Z\s'-]/g, "").replace(/(\r\n|\n|\r)/gm, " ").trim();
+        }
+
+        console.log("Original OCR text for filtering:", text);
+        const words = text.split(/\s+/); // Split by any whitespace
+        const realWords = [];
+
+        for (const word of words) {
+            // Clean the word: remove punctuation (except internal hyphens/apostrophes), convert to lowercase
+            const cleanedWord = word.toLowerCase().replace(/[^a-z'-]|(^['-])|(['-]$)/g, "");
+            if (cleanedWord && wordSet.has(cleanedWord)) {
+                realWords.push(cleanedWord);
+            } else if (cleanedWord) {
+                console.log(`Filtered out: '${cleanedWord}' (Original: '${word}')`);
+            }
+        }
+        const result = realWords.join(" ").trim();
+        console.log("Filtered text:", result);
+        return result;
     }
   </script>
 

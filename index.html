@@ -1022,40 +1022,28 @@
     }
 
     function initializePage() {
-      const wordInputText = document.getElementById('wordInputText');
-      const wordInputTextarea = document.getElementById('wordInputTextarea');
-
       const savedTheme = localStorage.getItem('selectedTheme') || 'light';
       const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
       
       document.body.className = savedTheme; 
-      // Determine which input to show initially based on savedLayout
-      if (savedLayout === 'original') {
-        wordInputText.style.display = 'block';
-        wordInputTextarea.style.display = 'none';
-        activeInputElement = wordInputText;
-      } else {
-        wordInputText.style.display = 'none';
-        wordInputTextarea.style.display = 'block';
-        activeInputElement = wordInputTextarea;
-      }
-      
-      applyLayout(savedLayout); // This will also call updateActiveLayoutButton and initial resize
-      
+      applyLayout(savedLayout); // Apply layout first to set the correct activeInputElement
       updateActiveThemeButton(savedTheme);
 
-      // Ensure initial state of inputs is good if there's no saved text.
-      // If there was saved text, setLayout would have handled it.
-      // This mainly ensures the initial placeholder resize is correct.
-      // Also, setup the font for the helper span based on the initially active input.
-      setupTextWidthHelperFont(); // Still useful if textWidthHelper is used for anything else
-      if (activeInputElement.id === 'wordInputText') {
-          // No initial width update needed for wordInputText as it's 100% CSS driven now
-          activeInputElement.style.width = '100%'; // Ensure it is 100% on init
-      } else if (activeInputElement.id === 'wordInputTextarea') {
-          updateTextareaHeight(activeInputElement);
+      // Ensure the loaded ID is cleared on page load
+      if(document.getElementById('loadedCombinationId')) {
+        document.getElementById('loadedCombinationId').value = '';
       }
 
+      // Initial resize of the active input
+      if (activeInputElement) {
+        if (activeInputElement.id === 'wordInputTextarea') {
+            updateTextareaHeight(activeInputElement);
+        } else {
+            // No action needed for wordInputText as its size is pure CSS
+        }
+      }
+
+      setupTextWidthHelperFont();
       countLetters(); // Initial calculation
     }
 
@@ -1100,25 +1088,28 @@
     function openSaveModal() {
         const loadedId = document.getElementById('loadedCombinationId').value;
         if (loadedId) {
-            // If an ID is loaded, populate the modal with its data
+            // If an ID is loaded, it's an update. Populate the modal with current main page data.
             const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-            const comboToLoad = combinations.find(c => c.id.toString() === loadedId);
-            if (comboToLoad) {
-                // IMPORTANT: We now pre-fill with CURRENT page data, not stale storage data
+            const originalCombo = combinations.find(c => c.id.toString() === loadedId);
+            
+            if (originalCombo) {
+                // Get current letters and test word from main page
                 const currentLetters = (activeInputElement.value || '').toUpperCase().split('');
                 const currentTestWord = document.getElementById('mainTestWordInput').value;
 
-                const mergedComboData = {
-                    id: comboToLoad.id,
-                    rows: comboToLoad.rows.map((row, rowIndex) => {
+                // Create a temporary combo object with current page data but original colors
+                const updatedComboData = {
+                    id: originalCombo.id,
+                    rows: originalCombo.rows.map((row, rowIndex) => {
                         return row.map((box, boxIndex) => ({
+                            // Use current letter from main page for the first row, otherwise original
                             letter: rowIndex === 0 ? (currentLetters[boxIndex] || '') : box.letter,
                             color: box.color
                         }));
                     }),
                     testWord: currentTestWord
                 };
-                loadCombinationIntoSaveModal(mergedComboData);
+                loadCombinationIntoSaveModal(updatedComboData);
             }
         } else {
             // Otherwise, clear the modal for a new entry

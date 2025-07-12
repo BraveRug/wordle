@@ -543,10 +543,24 @@
       transition: background-color 0.2s, transform 0.1s;
       margin-top: 15px; /* Space below the main container */
     }
-    .camera-btn-repositioned:hover {
+    .camera-btn-repositioned {
+        display: none; /* Hiding the camera button as requested */
+    }
+    #saveCombinationBtn {
+      background-color: var(--accent);
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+      margin-top: 15px;
+    }
+    #saveCombinationBtn:hover {
       background-color: var(--text);
     }
-    .camera-btn-repositioned:active {
+    #saveCombinationBtn:active {
       transform: scale(0.98);
     }
     #cameraStatus {
@@ -555,6 +569,75 @@
       min-height: 20px;
     }
     #captureBtn {
+        background-color: var(--accent);
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1em;
+        cursor: pointer;
+    }
+
+    /* Save Combination Modal Styles */
+    .palette {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 15px 0;
+    }
+    .palette-color {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    .palette-color:hover {
+        transform: scale(1.1);
+    }
+    .palette-color.active-color {
+        border-color: var(--accent);
+        transform: scale(1.15);
+    }
+    .palette-color.grey { background-color: #787c7e; }
+    .palette-color.yellow { background-color: #c9b458; }
+    .palette-color.green { background-color: #6aaa64; }
+
+    .wordle-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .wordle-row {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    .wordle-box {
+        width: 50px;
+        height: 50px;
+        border: 2px solid #565758;
+        background-color: #787c7e; /* Default to grey */
+        color: white;
+        font-size: 1.8em;
+        font-weight: bold;
+        text-align: center;
+        text-transform: uppercase;
+        caret-color: transparent; /* Hide cursor */
+    }
+    .test-word-input {
+        width: 100%;
+        padding: 12px;
+        font-size: 1em;
+        border: 1px solid var(--input-bg);
+        border-radius: 8px;
+        background: var(--input-bg);
+        color: var(--text);
+        margin-bottom: 20px;
+    }
+    .save-data-btn {
         background-color: var(--accent);
         color: white;
         padding: 12px 20px;
@@ -581,7 +664,7 @@
         <div id="result" class="result-box"></div>
       </div>
     </div>
-    <button id="cameraBtn" class="camera-btn-repositioned">📷 Use Camera for Handwriting</button>
+    <button id="saveCombinationBtn">Save Combination</button>
   </div>
 
   <!-- Settings Modal -->
@@ -886,8 +969,98 @@
         // document.getElementById('captureBtn').addEventListener('click', recognizeTextFromVideo); - REMOVED
         
         // initializeWordSet(); // Initialize the dictionary Set - REMOVED
+        
+        // Save Combination Modal Listeners
+        document.getElementById('saveCombinationBtn').addEventListener('click', openSaveModal);
+        document.querySelector('.palette').addEventListener('click', selectPaletteColor);
+        document.querySelector('.wordle-grid').addEventListener('click', colorWordleBox);
+        document.querySelector('.wordle-grid').addEventListener('input', handleWordleBoxInput);
+        document.getElementById('saveCombinationDataBtn').addEventListener('click', saveCombinationData);
+        
         initializePage(); // Initialize after helper span is created
     });
+
+    let selectedColor = 'grey'; // Default selected color
+
+    function openSaveModal() {
+        document.getElementById('saveCombinationModal').style.display = 'flex';
+    }
+
+    function closeSaveModal() {
+        document.getElementById('saveCombinationModal').style.display = 'none';
+    }
+
+    function selectPaletteColor(event) {
+        const target = event.target;
+        if (!target.classList.contains('palette-color')) return;
+
+        // Update selected color variable
+        selectedColor = target.dataset.color;
+        
+        // Update active class
+        document.querySelectorAll('.palette-color').forEach(c => c.classList.remove('active-color'));
+        target.classList.add('active-color');
+    }
+
+    function colorWordleBox(event) {
+        const target = event.target;
+        if (!target.classList.contains('wordle-box')) return;
+        
+        const colorMap = {
+            grey: '#787c7e',
+            yellow: '#c9b458',
+            green: '#6aaa64'
+        };
+
+        target.style.backgroundColor = colorMap[selectedColor];
+        target.dataset.color = selectedColor; // Store color on the element
+    }
+
+    function handleWordleBoxInput(event) {
+        const target = event.target;
+        if (target.value && target.nextElementSibling) {
+            target.nextElementSibling.focus();
+        }
+    }
+
+    function saveCombinationData() {
+        const rows = document.querySelectorAll('.wordle-row');
+        const rowsData = [];
+
+        rows.forEach(row => {
+            const rowData = [];
+            const boxes = row.querySelectorAll('.wordle-box');
+            boxes.forEach(box => {
+                rowData.push({
+                    letter: box.value.toUpperCase() || '',
+                    color: box.dataset.color || 'grey'
+                });
+            });
+            rowsData.push(rowData);
+        });
+
+        const testWord = document.getElementById('testWordInput').value;
+
+        const newCombination = {
+            id: Date.now(),
+            rows: rowsData,
+            testWord: testWord
+        };
+
+        // Get existing combinations from local storage, or create a new array
+        const savedCombinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+        
+        // Add the new one
+        savedCombinations.push(newCombination);
+
+        // Save back to local storage
+        localStorage.setItem('savedCombinations', JSON.stringify(savedCombinations));
+
+        console.log('Combination saved:', newCombination);
+        alert('Combination saved successfully!');
+        
+        closeSaveModal();
+    }
 
     // All camera and OCR related functions and variables below are removed.
     // let videoStream = null; 
@@ -1028,6 +1201,41 @@
       <div style="text-align: center; margin-top: 15px;">
         <button id="captureBtn" style="display:none;">Capture Text</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Save Combination Modal -->
+  <div class="modal" id="saveCombinationModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeSaveModal()">✕</button>
+        <h3>Save Wordle Combination</h3>
+        
+        <div class="palette">
+            <div class="palette-color grey active-color" data-color="grey"></div>
+            <div class="palette-color yellow" data-color="yellow"></div>
+            <div class="palette-color green" data-color="green"></div>
+        </div>
+
+        <div class="wordle-grid">
+            <div class="wordle-row">
+                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" />
+            </div>
+            <div class="wordle-row">
+                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" />
+            </div>
+        </div>
+
+        <input type="text" id="testWordInput" placeholder="Your test word..." class="test-word-input">
+        
+        <button id="saveCombinationDataBtn" class="save-data-btn">Save Combination</button>
     </div>
   </div>
 

@@ -421,7 +421,7 @@
     }
     /* Styles for wordInputTextarea (Side-by-Side) */
     #wordInputTextarea {
-      /* flex-basis is now on parent .input-container */
+      flex-basis: calc(50% - 10px); /* Restored flex-basis */
       padding: 12px;
       font-size: 1em;
       border: 1px solid var(--input-bg); /* Subtle border */
@@ -450,14 +450,14 @@
     }
     /* Styles for wordInputText (Original) */
     body.layout-original #wordInputText {
-      /* width: 100%; Now handled by flex-grow: 1 in .input-container */
+      width: 100%; /* Restored width property */
       padding: 12px;
       font-size: 1em;
       border: 1px solid var(--input-bg); 
       border-radius: 8px;
       background: var(--input-bg);
       color: var(--text);
-      /* margin-bottom is now on .input-container for original layout */
+      margin-bottom: 10px; /* Restored margin-bottom */
       font-family: 'Didact Gothic', sans-serif; 
     }
     body.layout-original #wordInputText::placeholder { color:#888; }
@@ -468,8 +468,7 @@
     }
     body.layout-original .content-area {
       flex-direction: column;
-      /* gap is between .input-container and .result-box now */
-      /* gap: 10px; This might be too much if input-container also has margin-bottom */
+      gap: 10px; /* Restored gap property */
     }
     
     /* Hidden helper span for text width calculation - still needed for other potential uses or if we bring back dynamic width for something else */
@@ -526,44 +525,34 @@
     .blackopal-btn { background: #111111; color: white;} /* Dark BG, White text */
     
     /* Camera Button and Modal Styles */
-    .input-container {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-basis: calc(50% - 10px); /* For side-by-side layout */
-    }
-    body.layout-original .input-container {
-      flex-basis: auto; /* Full width in original layout */
+    .main-content-wrapper {
       width: 100%;
-      margin-bottom: 10px; /* Spacing between input area and result */
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start; /* Aligns children to the left */
     }
-    .camera-btn {
+    .camera-btn-repositioned {
       background-color: var(--accent);
       color: white;
-      padding: 8px; /* Adjusted padding for icon-only */
-      width: 40px; /* Fixed width */
-      height: 40px; /* Fixed height */
+      padding: 10px 18px;
       border: none;
       border-radius: 8px;
-      font-size: 1.5em; /* Larger icon */
+      font-size: 1em;
       cursor: pointer;
       transition: background-color 0.2s, transform 0.1s;
-      flex-shrink: 0; /* Prevent button from shrinking */
+      margin-top: 15px; /* Space below the main container */
     }
-    #wordInputText, #wordInputTextarea {
-        flex-grow: 1; /* Allow input fields to take remaining space */
-        width: auto; /* Override fixed widths to allow flex growth */
+    .camera-btn-repositioned:hover {
+      background-color: var(--text);
     }
-    .camera-btn:hover {
-      background-color: var(--text); /* Simple hover effect */
-    }
-    .camera-btn:active {
+    .camera-btn-repositioned:active {
       transform: scale(0.98);
     }
     #cameraStatus {
       font-size: 1em;
       margin-bottom: 15px;
-      min-height: 20px; /* Prevent layout shift when text changes */
+      min-height: 20px;
     }
     #captureBtn {
         background-color: var(--accent);
@@ -583,17 +572,16 @@
       <button id="settingsIconBtn" onclick="openModal()">⚙️</button>
     </div>
   </div>
-  <div class="container">
-    <div class="content-area">
-      <!-- Inputs will be shown/hidden based on layout -->
-      <div class="input-container">
-        <button id="cameraBtn" class="camera-btn">📷</button>
+  <div class="main-content-wrapper">
+    <div class="container">
+      <div class="content-area">
+        <!-- Inputs will be shown/hidden based on layout -->
         <input type="text" id="wordInputText" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()" />
         <textarea id="wordInputTextarea" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()"></textarea>
+        <div id="result" class="result-box"></div>
       </div>
-      <div id="result" class="result-box"></div>
     </div>
-    <!-- Camera button moved into input-container -->
+    <button id="cameraBtn" class="camera-btn-repositioned">📷 Use Camera for Handwriting</button>
   </div>
 
   <!-- Settings Modal -->
@@ -893,15 +881,50 @@
         // based on the active input, so no need to set them here initially.
         document.body.appendChild(textWidthHelper);
         
-        // Add event listener for camera button
-        document.getElementById('cameraBtn').addEventListener('click', openCamera);
-        document.getElementById('captureBtn').addEventListener('click', recognizeTextFromVideo);
+        // Add event listener for camera button - REMOVED
+        // document.getElementById('cameraBtn').addEventListener('click', openCamera); - REMOVED
+        // document.getElementById('captureBtn').addEventListener('click', recognizeTextFromVideo); - REMOVED
         
-        initializeWordSet(); // Initialize the dictionary Set
+        // initializeWordSet(); // Initialize the dictionary Set - REMOVED
         initializePage(); // Initialize after helper span is created
     });
 
-    let videoStream = null; // To hold the camera stream
+    // All camera and OCR related functions and variables below are removed.
+    // let videoStream = null; 
+    // async function openCamera() { ... }
+    // function closeCamera() { ... }
+    // async function recognizeTextFromVideo() { ... }
+    // let wordSet; 
+    // function initializeWordSet() { ... }
+    // function filterRealWords(text) { ... }
+
+    let videoStream = null;
+    let wordSet;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        textWidthHelper = document.createElement('span');
+        textWidthHelper.id = 'text-width-helper';
+        textWidthHelper.style.position = 'absolute';
+        textWidthHelper.style.visibility = 'hidden';
+        textWidthHelper.style.whiteSpace = 'nowrap';
+        document.body.appendChild(textWidthHelper);
+        
+        document.getElementById('cameraBtn').addEventListener('click', openCamera);
+        document.getElementById('captureBtn').addEventListener('click', recognizeTextFromVideo);
+        
+        initializeWordSet();
+        initializePage();
+    });
+
+    function initializeWordSet() {
+        if (typeof wordList !== 'undefined' && wordList.length > 0) {
+            wordSet = new Set(wordList.map(word => word.toLowerCase()));
+            console.log(`Dictionary loaded with ${wordSet.size} words.`);
+        } else {
+            console.error("Word list not found or empty. OCR filtering will be basic.");
+            wordSet = new Set();
+        }
+    }
 
     async function openCamera() {
       const cameraModal = document.getElementById('cameraModal');
@@ -921,12 +944,12 @@
           video.play();
           video.style.display = 'block';
           captureBtn.style.display = 'inline-block';
-          status.textContent = 'Point camera at text and capture.';
+          status.textContent = 'Point camera at handwritten text and capture.';
         };
       } catch (err) {
         console.error("Camera Error:", err);
         status.textContent = 'Could not access camera. Please check permissions.';
-        setTimeout(closeCamera, 3000); // Close after 3 seconds on error
+        setTimeout(closeCamera, 3000);
       }
     }
 
@@ -944,103 +967,54 @@
       const context = canvas.getContext('2d');
       const status = document.getElementById('cameraStatus');
 
-      // Set canvas size to video size
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      status.textContent = 'Loading handwriting model & recognizing...';
-      document.getElementById('captureBtn').style.display = 'none'; // Hide button during processing
+      status.textContent = 'Loading Handwriting Recognition Model...';
+      document.getElementById('captureBtn').style.display = 'none';
 
       try {
-        // Attempting to use a model that might be better for handwriting or varied text.
-        // Note: True specialized handwriting models might require specific Tesseract.js versions or configurations.
-        // For now, 'mrz' is known to be robust. If a specific handwriting model is available for Tesseract.js v5 CDN,
-        // that would be 'script/Handwritten' or similar, but 'mrz' is a good general test for robustness.
-        // Let's try with 'eng' first and then add a note about model switching if this isn't enough.
-        // The user specifically asked for handwriting, so we should try to use a more suitable model.
-        // Default Tesseract.js CDN might not include all specific script models like "script/Handwritten".
-        // We will use 'eng' but with a note that for dedicated handwriting, a custom build or different setup might be needed.
-        // For now, let's stick to 'eng' and focus on the filtering, as adding new models dynamically via CDN is complex.
-        // The prompt was to try and improve it. Tesseract's default 'eng' model has some handwriting capabilities, though limited.
-        // The crucial part will be the word filtering.
-
-        // Re-evaluating: The user request was to *try* to make it work for handwriting.
-        // Tesseract.js can load different language data. For English handwriting,
-        // there isn't a single "best" official model readily available via the standard CDN for all handwriting types.
-        // Some models like 'script/Handwritten' exist but might not be in the default CDN bundle.
-        // We'll stick with 'eng' for now, as it's the most reliably available and has some capability.
-        // The main improvement for "gibberish" will come from word filtering.
-        // I will update the status message to reflect "Loading recognition model..."
-        
-        status.textContent = 'Loading recognition model...';
-
-        const { data: { text } } = await Tesseract.recognize(canvas, 'eng', { // Sticking with 'eng' due to CDN model availability
+        const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
           logger: m => {
             console.log(m);
             if (m.status === 'recognizing text') {
               status.textContent = `Recognizing... ${Math.round(m.progress * 100)}%`;
             } else if (m.status === 'loading language model') {
-                status.textContent = `Loading model: ${m.progress * 100}%`;
+              status.textContent = `Loading Model: ${Math.round(m.progress * 100)}% (this may take a moment on first use)`;
             }
           }
         });
         
-        if (activeInputElement) { // Word filtering will be applied here in the next step
-          const filteredText = filterRealWords(text); // Placeholder for now
-          if (filteredText) {
-            activeInputElement.value += (activeInputElement.value ? ' ' : '') + filteredText;
-            handleWordInput(); // Update counts and input size
-            status.textContent = `Appended recognized text!`;
-          } else {
-            status.textContent = 'No valid words recognized. Please try again.';
-          }
+        const filteredText = filterRealWords(text);
+        if (filteredText) {
+          activeInputElement.value += (activeInputElement.value ? ' ' : '') + filteredText;
+          handleWordInput();
+          status.textContent = `Appended recognized words!`;
         } else {
-            status.textContent = 'No active input field found.';
+          status.textContent = 'No valid words recognized. Please try again.';
         }
       } catch (err) {
         console.error(err);
         status.textContent = 'Could not recognize text. Please try again.';
       } finally {
-        setTimeout(closeCamera, 2000); // Increased delay for user to read status
+        setTimeout(closeCamera, 2000);
       }
     }
 
-    // Word filtering function
-    let wordSet; // To be initialized after dictionary.js loads
-    
-    function initializeWordSet() {
-        if (typeof wordList !== 'undefined' && wordList.length > 0) {
-            wordSet = new Set(wordList.map(word => word.toLowerCase()));
-            console.log(`Dictionary loaded with ${wordSet.size} words.`);
-        } else {
-            console.error("Word list not found or empty. OCR filtering will be basic.");
-            wordSet = new Set(); // Fallback to an empty set
-        }
-    }
-
     function filterRealWords(text) {
-        if (!wordSet || wordSet.size === 0) {
-            console.warn("WordSet not initialized or empty, returning raw cleaned text.");
-            return text.replace(/[^a-zA-Z\s'-]/g, "").replace(/(\r\n|\n|\r)/gm, " ").trim();
+      if (!wordSet || wordSet.size === 0) {
+        return text.replace(/[^a-zA-Z\s'-]/g, "").replace(/(\r\n|\n|\r)/gm, " ").trim();
+      }
+      const words = text.split(/\s+/);
+      const realWords = [];
+      for (const word of words) {
+        const cleanedWord = word.toLowerCase().replace(/[^a-z'-]|(^['-])|(['-]$)/g, "");
+        if (cleanedWord && wordSet.has(cleanedWord)) {
+          realWords.push(cleanedWord);
         }
-
-        console.log("Original OCR text for filtering:", text);
-        const words = text.split(/\s+/); // Split by any whitespace
-        const realWords = [];
-
-        for (const word of words) {
-            // Clean the word: remove punctuation (except internal hyphens/apostrophes), convert to lowercase
-            const cleanedWord = word.toLowerCase().replace(/[^a-z'-]|(^['-])|(['-]$)/g, "");
-            if (cleanedWord && wordSet.has(cleanedWord)) {
-                realWords.push(cleanedWord);
-            } else if (cleanedWord) {
-                console.log(`Filtered out: '${cleanedWord}' (Original: '${word}')`);
-            }
-        }
-        const result = realWords.join(" ").trim();
-        console.log("Filtered text:", result);
-        return result;
+      }
+      return realWords.join(" ").trim();
     }
   </script>
 

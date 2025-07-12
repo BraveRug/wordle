@@ -680,12 +680,12 @@
     }
     .main-page-input {
         width: 100%;
-        /* margin-top: 10px; REMOVED - Space will be handled by container gap */
+        margin-top: 0; /* Explicitly remove margin */
     }
     .container {
         display: flex;
         flex-direction: column;
-        gap: 10px; /* Controls space between content-area and mainTestWordInput */
+        gap: 10px; /* This now correctly controls the space */
     }
     #searchInput {
         width: 100%;
@@ -714,15 +714,19 @@
         border: 1px solid var(--input-bg);
         border-radius: 8px;
         padding: 15px;
+        display: flex; /* Use flexbox for alignment */
+        flex-direction: column; /* Stack items vertically */
+        align-items: center; /* Center items horizontally */
     }
     .saved-item .wordle-grid { /* Reuse wordle-grid styles for preview */
         transform: scale(0.7); /* Make preview smaller */
-        transform-origin: top left;
+        transform-origin: center top; /* Scale from the top center */
         margin-bottom: -20px; /* Adjust layout due to scaling */
         pointer-events: none; /* Make preview unclickable */
     }
     .saved-item-info {
         margin-top: 10px;
+        text-align: center; /* Center the info text */
     }
     .saved-item-info p {
         margin: 4px 0;
@@ -731,6 +735,7 @@
     .saved-item-actions {
         margin-top: 15px;
         display: flex;
+        justify-content: center; /* Center the buttons */
         gap: 10px;
     }
     .open-btn, .delete-btn {
@@ -751,7 +756,7 @@
     <button id="settingsIconBtn" class="header-btn" onclick="openModal()">⚙️</button>
   </div>
   <div class="main-content-wrapper">
-    <!-- <input type="hidden" id="loadedCombinationId"> REMOVED -->
+    <input type="hidden" id="loadedCombinationId">
     <div class="container">
       <div class="content-area">
         <!-- Inputs will be shown/hidden based on layout -->
@@ -1006,8 +1011,11 @@
 
     function handleModalOutsideClick(event) {
       // If the clicked target is the modal itself (the backdrop), close it.
-      if (event.target === document.getElementById('settingsModal')) {
-        closeModal();
+      if (event.target.classList.contains('modal')) {
+          // Universal close function for any modal clicked this way
+          if (event.target.id === 'settingsModal') closeModal();
+          if (event.target.id === 'searchModal') closeSearchModal();
+          // The camera modal listener was removed, so no need to check for it
       }
     }
 
@@ -1088,8 +1096,32 @@
     let selectedColor = 'grey'; // Default selected color
 
     function openSaveModal() {
-        // Always clear the modal for a new entry. The "load" concept is gone.
-        clearSaveModal();
+        const loadedId = document.getElementById('loadedCombinationId').value;
+        if (loadedId) {
+            // If an ID is loaded, populate the modal with its data
+            const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+            const comboToLoad = combinations.find(c => c.id.toString() === loadedId);
+            if (comboToLoad) {
+                // IMPORTANT: We now pre-fill with CURRENT page data, not stale storage data
+                const currentLetters = (activeInputElement.value || '').toUpperCase().split('');
+                const currentTestWord = document.getElementById('mainTestWordInput').value;
+
+                const mergedComboData = {
+                    id: comboToLoad.id,
+                    rows: comboToLoad.rows.map((row, rowIndex) => {
+                        return row.map((box, boxIndex) => ({
+                            letter: rowIndex === 0 ? (currentLetters[boxIndex] || '') : box.letter,
+                            color: box.color
+                        }));
+                    }),
+                    testWord: currentTestWord
+                };
+                loadCombinationIntoSaveModal(mergedComboData);
+            }
+        } else {
+            // Otherwise, clear the modal for a new entry
+            clearSaveModal();
+        }
         document.getElementById('saveCombinationModal').style.display = 'flex';
     }
 
@@ -1156,11 +1188,19 @@
 
     function openSearchModal() {
         renderCombinations(true); // Initial render of all items
-        document.getElementById('searchModal').style.display = 'flex';
-    }
+        // Add listeners for live search
+        const searchGrid = document.querySelector('#searchGrid');
+        const searchPalette = document.querySelector('#searchPalette');
+        const liveSearchHandler = () => renderCombinations(false);
+        const delayedLiveSearchHandler = () => setTimeout(() => renderCombinations(false), 0);
 
-    function executeSearch() {
-        renderCombinations(false); // Render based on search criteria
+        searchGrid.addEventListener('input', liveSearchHandler);
+        searchGrid.addEventListener('click', delayedLiveSearchHandler);
+        searchPalette.addEventListener('click', delayedLiveSearchHandler);
+        
+        const searchModal = document.getElementById('searchModal');
+        searchModal.addEventListener('click', handleModalOutsideClick); // For closing
+        searchModal.style.display = 'flex';
     }
 
     function renderCombinations(showAll = false) {
@@ -1223,7 +1263,20 @@
     }
 
     function closeSearchModal() {
-        document.getElementById('searchModal').style.display = 'none';
+        const searchModal = document.getElementById('searchModal');
+        searchModal.removeEventListener('click', handleModalOutsideClick);
+        
+        // It's tricky to remove the anonymous live search listeners.
+        // For simplicity, we will leave them, and they will be re-added on next open.
+        // This is acceptable for this application's scope.
+        
+        searchModal.style.display = 'none';
+        // Clear search grid on close for better UX next time
+        document.querySelectorAll('#searchGrid .wordle-box').forEach(box => {
+            box.value = '';
+            box.style.backgroundColor = '#787c7e';
+            box.dataset.color = 'grey';
+        });
     }
 
     function handleSavedListClick(event) {
@@ -1262,8 +1315,23 @@
         closeSearchModal();
     }
 
-    // This function is no longer needed as `openSaveModal` was simplified
-    // function loadCombinationIntoSaveModal(comboData) { ... }
+    function loadCombinationIntoSaveModal(comboData) {
+        const rows = document.querySelectorAll('#saveCombinationModal .wordle-row');
+        const colorMap = { grey: '#787c7e', yellow: '#c9b458', green: '#6aaa64' };
+
+        rows.forEach((row, rowIndex) => {
+            const boxes = row.querySelectorAll('.wordle-box');
+            boxes.forEach((box, boxIndex) => {
+                const data = comboData.rows[rowIndex][boxIndex];
+                box.value = data.letter;
+                box.dataset.color = data.color;
+                box.style.backgroundColor = colorMap[data.color];
+            });
+        });
+
+        document.getElementById('testWordInput').value = comboData.testWord;
+        document.getElementById('combinationId').value = comboData.id;
+    }
 
     function deleteCombination(id) {
         let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
@@ -1273,6 +1341,9 @@
     }
 
     function saveCombinationData() {
+        const combinationIdInput = document.getElementById('combinationId');
+        const existingId = combinationIdInput.value;
+
         const rows = document.querySelectorAll('#saveCombinationModal .wordle-row');
         const rowsData = [];
         rows.forEach(row => {
@@ -1287,19 +1358,18 @@
         });
 
         const testWord = document.getElementById('testWordInput').value;
-        const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+        let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
 
-        // Create a signature for the first row of the combination being saved
-        const getSignature = (rowData) => rowData.map(d => `${d.letter}-${d.color}`).join(',');
-        const newSignature = getSignature(rowsData[0]);
-
-        // Find if a combination with the same first-row signature already exists
-        const existingComboIndex = combinations.findIndex(combo => getSignature(combo.rows[0]) === newSignature);
-
-        if (existingComboIndex > -1) { // Update existing combination
-            combinations[existingComboIndex].rows = rowsData; // Update with potentially new second row
-            combinations[existingComboIndex].testWord = testWord;
-            alert('Combination updated successfully!');
+        if (existingId) { // Update existing combination
+            const comboIndex = combinations.findIndex(c => c.id.toString() === existingId);
+            if (comboIndex > -1) {
+                combinations[comboIndex].rows = rowsData;
+                combinations[comboIndex].testWord = testWord;
+                alert('Combination updated successfully!');
+            } else {
+                alert('Error: Could not find combination to update.');
+                return;
+            }
         } else { // Create new combination
             const newCombination = {
                 id: Date.now(),
@@ -1311,6 +1381,9 @@
         }
 
         localStorage.setItem('savedCombinations', JSON.stringify(combinations));
+        
+        // Clear the loaded ID on the main page and close modal
+        document.getElementById('loadedCombinationId').value = '';
         closeSaveModal();
     }
 
@@ -1460,7 +1533,7 @@
   <div class="modal" id="saveCombinationModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeSaveModal()">✕</button>
-        <!-- <input type="hidden" id="combinationId"> REMOVED -->
+        <input type="hidden" id="combinationId">
         <h3>Save Wordle Combination</h3>
         
         <div class="palette" id="savePalette">
@@ -1497,7 +1570,6 @@
       <div class="modal-content">
           <button class="close-btn" onclick="closeSearchModal()">✕</button>
           <h3>Search Combinations</h3>
-          <p style="font-size:0.9em; color: #888;">Enter letters and select colors to search for. Leave blank for wildcards.</p>
           
           <div class="palette" id="searchPalette">
               <div class="palette-color grey active-color" data-color="grey"></div>
@@ -1514,7 +1586,6 @@
               </div>
           </div>
           
-          <button id="executeSearchBtn" class="save-data-btn">Search</button>
           <hr style="border-color: var(--input-bg); margin: 20px 0;">
           
           <div id="savedCombinationsList">

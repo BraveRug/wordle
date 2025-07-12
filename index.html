@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Letter Frequency</title>
   <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
+  <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
   <style>
     /* Core Variables */
     :root {
@@ -523,6 +524,38 @@
     /* New Onyx Theme Button Colors */
     .obsidian-btn { background: #111111; color: white;} /* Dark BG, White text */
     .blackopal-btn { background: #111111; color: white;} /* Dark BG, White text */
+    
+    /* Camera Button and Modal Styles */
+    .camera-btn {
+      background-color: var(--accent);
+      color: white;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    .camera-btn:hover {
+      background-color: var(--text); /* Simple hover effect */
+    }
+    .camera-btn:active {
+      transform: scale(0.98);
+    }
+    #cameraStatus {
+      font-size: 1em;
+      margin-bottom: 15px;
+      min-height: 20px; /* Prevent layout shift when text changes */
+    }
+    #captureBtn {
+        background-color: var(--accent);
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1em;
+        cursor: pointer;
+    }
   </style>
 </head>
 <body class="light">
@@ -539,7 +572,12 @@
       <textarea id="wordInputTextarea" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()"></textarea>
       <div id="result" class="result-box"></div>
     </div>
+    <div style="text-align: center; margin-top: 20px;">
+        <button id="cameraBtn" class="camera-btn">📷 Camera Input</button>
+    </div>
   </div>
+
+  <!-- Settings Modal -->
   <div class="modal" id="settingsModal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal()">✕</button>
@@ -836,8 +874,100 @@
         // based on the active input, so no need to set them here initially.
         document.body.appendChild(textWidthHelper);
         
+        // Add event listener for camera button
+        document.getElementById('cameraBtn').addEventListener('click', openCamera);
+        document.getElementById('captureBtn').addEventListener('click', recognizeTextFromVideo);
+
         initializePage(); // Initialize after helper span is created
     });
+
+    let videoStream = null; // To hold the camera stream
+
+    async function openCamera() {
+      const cameraModal = document.getElementById('cameraModal');
+      const video = document.getElementById('videoFeed');
+      const status = document.getElementById('cameraStatus');
+      const captureBtn = document.getElementById('captureBtn');
+
+      cameraModal.style.display = 'flex';
+      status.textContent = 'Requesting camera access...';
+      captureBtn.style.display = 'none';
+      video.style.display = 'none';
+
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = videoStream;
+        video.onloadedmetadata = () => {
+          video.play();
+          video.style.display = 'block';
+          captureBtn.style.display = 'inline-block';
+          status.textContent = 'Point camera at text and capture.';
+        };
+      } catch (err) {
+        console.error("Camera Error:", err);
+        status.textContent = 'Could not access camera. Please check permissions.';
+        setTimeout(closeCamera, 3000); // Close after 3 seconds on error
+      }
+    }
+
+    function closeCamera() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+      }
+      videoStream = null;
+      document.getElementById('cameraModal').style.display = 'none';
+    }
+
+    async function recognizeTextFromVideo() {
+      const video = document.getElementById('videoFeed');
+      const canvas = document.getElementById('captureCanvas');
+      const context = canvas.getContext('2d');
+      const status = document.getElementById('cameraStatus');
+
+      // Set canvas size to video size
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      status.textContent = 'Recognizing text... (this may take a moment)';
+      document.getElementById('captureBtn').style.display = 'none'; // Hide button during processing
+
+      try {
+        const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
+          logger: m => {
+            console.log(m);
+            if (m.status === 'recognizing text') {
+              status.textContent = `Recognizing... ${Math.round(m.progress * 100)}%`;
+            }
+          }
+        });
+        
+        if (text && activeInputElement) {
+          activeInputElement.value += (activeInputElement.value ? ' ' : '') + text.replace(/(\r\n|\n|\r)/gm, " "); // Append recognized text
+          handleWordInput(); // Update counts and input size
+        }
+        status.textContent = `Appended recognized text!`;
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Could not recognize text. Please try again.';
+      } finally {
+        setTimeout(closeCamera, 1500); // Close after showing success/fail message
+      }
+    }
   </script>
+
+  <!-- Camera Modal -->
+  <div class="modal" id="cameraModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeCamera()">✕</button>
+      <p id="cameraStatus">Getting camera ready...</p>
+      <video id="videoFeed" playsinline style="width:100%; height:auto; display:none;"></video>
+      <canvas id="captureCanvas" style="display:none;"></canvas>
+      <div style="text-align: center; margin-top: 15px;">
+        <button id="captureBtn" style="display:none;">Capture Text</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

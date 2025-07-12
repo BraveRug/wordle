@@ -445,7 +445,8 @@
 
     /* Default: Side-by-Side Layout */
     .content-area {
-      flex-direction: row;
+      display: flex; /* Ensure this is always flex */
+      flex-direction: row; /* Default to side-by-side */
       justify-content: space-between;
       gap: 20px; 
     }
@@ -1026,7 +1027,7 @@
       const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
       
       document.body.className = savedTheme; 
-      applyLayout(savedLayout); // Apply layout first to set the correct activeInputElement
+      applyLayout(savedLayout); 
       updateActiveThemeButton(savedTheme);
 
       // Ensure the loaded ID is cleared on page load
@@ -1034,17 +1035,8 @@
         document.getElementById('loadedCombinationId').value = '';
       }
 
-      // Initial resize of the active input
-      if (activeInputElement) {
-        if (activeInputElement.id === 'wordInputTextarea') {
-            updateTextareaHeight(activeInputElement);
-        } else {
-            // No action needed for wordInputText as its size is pure CSS
-        }
-      }
-
       setupTextWidthHelperFont();
-      countLetters(); // Initial calculation
+      countLetters();
     }
 
     // DOMContentLoaded ensures that elements are available before JS tries to manipulate them
@@ -1086,35 +1078,8 @@
     let selectedColor = 'grey'; // Default selected color
 
     function openSaveModal() {
-        const loadedId = document.getElementById('loadedCombinationId').value;
-        if (loadedId) {
-            // If an ID is loaded, it's an update. Populate the modal with current main page data.
-            const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-            const originalCombo = combinations.find(c => c.id.toString() === loadedId);
-            
-            if (originalCombo) {
-                // Get current letters and test word from main page
-                const currentLetters = (activeInputElement.value || '').toUpperCase().split('');
-                const currentTestWord = document.getElementById('mainTestWordInput').value;
-
-                // Create a temporary combo object with current page data but original colors
-                const updatedComboData = {
-                    id: originalCombo.id,
-                    rows: originalCombo.rows.map((row, rowIndex) => {
-                        return row.map((box, boxIndex) => ({
-                            // Use current letter from main page for the first row, otherwise original
-                            letter: rowIndex === 0 ? (currentLetters[boxIndex] || '') : box.letter,
-                            color: box.color
-                        }));
-                    }),
-                    testWord: currentTestWord
-                };
-                loadCombinationIntoSaveModal(updatedComboData);
-            }
-        } else {
-            // Otherwise, clear the modal for a new entry
-            clearSaveModal();
-        }
+        // This function is now only for creating a NEW entry.
+        clearSaveModal();
         document.getElementById('saveCombinationModal').style.display = 'flex';
     }
 
@@ -1281,34 +1246,18 @@
         if (target.classList.contains('delete-btn')) {
             deleteCombination(comboId);
         } else if (target.classList.contains('open-btn')) {
-            loadCombinationToMainPage(comboId);
+            // Find the combo and open it in the save modal
+            const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+            const comboToLoad = combinations.find(c => c.id.toString() === comboId);
+            if(comboToLoad) {
+                loadCombinationIntoSaveModal(comboToLoad);
+            }
         }
-    }
-
-    function loadCombinationToMainPage(id) {
-        const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-        const comboToLoad = combinations.find(c => c.id.toString() === id.toString());
-
-        if (!comboToLoad) {
-            alert('Error: Could not find combination to load.');
-            return;
-        }
-        
-        // Populate main page inputs
-        const firstRowLetters = comboToLoad.rows[0].map(box => box.letter).join('');
-        if (activeInputElement) {
-            activeInputElement.value = firstRowLetters;
-            handleWordInput(); // Trigger count and resize
-        }
-        document.getElementById('mainTestWordInput').value = comboToLoad.testWord;
-        
-        // Track the loaded combination ID on the main page
-        document.getElementById('loadedCombinationId').value = comboToLoad.id;
-
-        closeSearchModal();
     }
 
     function loadCombinationIntoSaveModal(comboData) {
+        clearSaveModal(); // Ensure modal is clean before loading
+        
         const rows = document.querySelectorAll('#saveCombinationModal .wordle-row');
         const colorMap = { grey: '#787c7e', yellow: '#c9b458', green: '#6aaa64' };
 
@@ -1324,6 +1273,9 @@
 
         document.getElementById('testWordInput').value = comboData.testWord;
         document.getElementById('combinationId').value = comboData.id;
+        
+        document.getElementById('saveCombinationModal').style.display = 'flex';
+        closeSearchModal();
     }
 
     function deleteCombination(id) {
@@ -1360,8 +1312,10 @@
                 combinations[comboIndex].testWord = testWord;
                 alert('Combination updated successfully!');
             } else {
-                alert('Error: Could not find combination to update.');
-                return;
+                // This case should ideally not happen with the new workflow
+                alert('Error: Could not find combination to update. Saving as new.');
+                const newCombination = { id: Date.now(), rows: rowsData, testWord: testWord };
+                combinations.push(newCombination);
             }
         } else { // Create new combination
             const newCombination = {
@@ -1375,8 +1329,6 @@
 
         localStorage.setItem('savedCombinations', JSON.stringify(combinations));
         
-        // Clear the loaded ID on the main page and close modal
-        document.getElementById('loadedCombinationId').value = '';
         closeSaveModal();
     }
 

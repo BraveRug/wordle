@@ -313,7 +313,7 @@
     .header-btn {
         background: var(--settings-icon-bg);
         border: none;
-        font-size: 1.5em;
+        font-size: 1.2em; /* Unified smaller size */
         cursor: pointer;
         color: var(--text);
         border-radius: 50%;
@@ -335,12 +335,12 @@
 
     #settingsButtonContainer { /* This is the container for the icon button */
       /* This container is now redundant, settingsIconBtn will use .header-btn */
-      right: 0; /* Align to the right of the app-header */
-      top: 50%;
-      transform: translateY(-50%); /* Vertically center */
+      /* right: 0; Align to the right of the app-header */
+      /* top: 50%; */
+      /* transform: translateY(-50%); Vertically center */
     }
     #settingsIconBtn {
-      background: var(--settings-icon-bg);
+      /* background: var(--settings-icon-bg); Now handled by .header-btn */
       border: none;
       font-size: 1.5em; /* Adjust as needed */
       cursor: pointer;
@@ -678,7 +678,7 @@
     }
     .main-page-input {
         width: 100%;
-        margin-top: 20px;
+        margin-top: 10px; /* Reduced space */
     }
     #searchInput {
         width: 100%;
@@ -741,9 +741,7 @@
   <div class="app-header">
     <button id="searchBtn" class="header-btn">🔍</button>
     <h2>Letter Frequency</h2>
-    <div id="settingsButtonContainer" style="right:0;">
-      <button id="settingsIconBtn" class="header-btn" onclick="openModal()">⚙️</button>
-    </div>
+    <button id="settingsIconBtn" class="header-btn" style="right: 10px;" onclick="openModal()">⚙️</button>
   </div>
   <div class="main-content-wrapper">
     <input type="hidden" id="loadedCombinationId">
@@ -1081,11 +1079,28 @@
     function openSaveModal() {
         const loadedId = document.getElementById('loadedCombinationId').value;
         if (loadedId) {
-            // If an ID is loaded, populate the modal with its data
+            // If an ID is loaded, it's an update. Populate the modal with current main page data.
             const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-            const comboToLoad = combinations.find(c => c.id.toString() === loadedId);
-            if (comboToLoad) {
-                loadCombinationIntoSaveModal(comboToLoad);
+            const originalCombo = combinations.find(c => c.id.toString() === loadedId);
+            
+            if (originalCombo) {
+                // Get current letters and test word from main page
+                const currentLetters = (activeInputElement.value || '').toUpperCase().split('');
+                const currentTestWord = document.getElementById('mainTestWordInput').value;
+
+                // Create a temporary combo object with current page data but original colors
+                const updatedComboData = {
+                    id: originalCombo.id,
+                    rows: originalCombo.rows.map((row, rowIndex) => {
+                        return row.map((box, boxIndex) => ({
+                            // Use current letter from main page for the first row, otherwise original
+                            letter: rowIndex === 0 ? (currentLetters[boxIndex] || '') : box.letter,
+                            color: box.color
+                        }));
+                    }),
+                    testWord: currentTestWord
+                };
+                loadCombinationIntoSaveModal(updatedComboData);
             }
         } else {
             // Otherwise, clear the modal for a new entry

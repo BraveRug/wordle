@@ -1099,15 +1099,19 @@
         searchGrid.addEventListener('input', renderCombinations);
         searchGrid.addEventListener('click', renderCombinations);
       
+        // inside document.addEventListener('DOMContentLoaded', () => { … })
+
         document.getElementById('confirmBtn').addEventListener('click', () => {
-            // First, close the modal no matter what
+            // 1) Hide the confirmation dialog immediately
             closeModal('confirmationModal');
-            
-            // Then invoke the stored callback (which actually deletes & re‑renders)
-            if (confirmCallback) {
-              confirmCallback();
-            }
+        
+            // 2) Run the delete callback you stored in confirmCallback
+            if (confirmCallback) confirmCallback();
+        
+            // 3) Force a refresh of the search list so the deleted item is removed right away
+            renderCombinations();
         });
+
 
         document.getElementById('cancelBtn').addEventListener('click', () => {
             closeModal('confirmationModal');

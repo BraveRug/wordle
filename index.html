@@ -336,7 +336,7 @@
 
     #settingsButtonContainer {
         position: absolute;
-        right: 0;
+        right: 16px; /* Adjust this value to your preference */
         top: 50%;
         transform: translateY(-50%);
     }
@@ -766,7 +766,7 @@
   <!-- Settings Modal -->
   <div class="modal" id="settingsModal">
     <div class="modal-content">
-      <button class="close-btn" onclick="closeModal()">✕</button>
+      <button class="close-btn" onclick="closeModal('settingsModal')">✕</button>
       
       <div class="settings-section">
         <h3>Layout Options</h3>
@@ -912,7 +912,7 @@
       }
       localStorage.setItem('selectedTheme', theme);
       updateActiveThemeButton(theme);
-      closeModal(); // Close settings modal after theme selection
+      closeModal('settingsModal'); // Close settings modal after theme selection
     }
 
     function updateActiveThemeButton(activeTheme) {
@@ -983,7 +983,7 @@
         }
       }
       localStorage.setItem('selectedLayout', layoutName);
-      closeModal(); // Close modal after layout selection
+      closeModal('settingsModal'); // Close modal after layout selection
     }
 
     function openModal() {
@@ -997,16 +997,17 @@
       document.getElementById('settingsModal').addEventListener('click', handleModalOutsideClick);
     }
 
-    function closeModal() {
-      document.getElementById('settingsModal').style.display = 'none';
-      // Remove event listener when modal closes
-      document.getElementById('settingsModal').removeEventListener('click', handleModalOutsideClick);
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            modal.removeEventListener('click', handleModalOutsideClick);
+        }
     }
 
     function handleModalOutsideClick(event) {
-        // If the clicked target is a modal backdrop, close it.
         if (event.target.classList.contains('modal')) {
-            event.target.style.display = 'none';
+            closeModal(event.target.id);
         }
     }
 
@@ -1164,10 +1165,12 @@
 
     function openSearchModal() {
         renderCombinations(); // Initial render
-        const searchGrid = document.querySelector('#searchModal .wordle-grid');
+        const searchModal = document.getElementById('searchModal');
+        const searchGrid = searchModal.querySelector('.wordle-grid');
         searchGrid.addEventListener('input', renderCombinations);
         searchGrid.addEventListener('click', renderCombinations); // For color changes
-        document.getElementById('searchModal').style.display = 'flex';
+        searchModal.style.display = 'flex';
+        searchModal.addEventListener('click', handleModalOutsideClick);
     }
 
     function renderCombinations() {
@@ -1229,11 +1232,12 @@
     }
 
     function closeSearchModal() {
-        const searchGrid = document.querySelector('#searchModal .wordle-grid');
+        const searchModal = document.getElementById('searchModal');
+        const searchGrid = searchModal.querySelector('.wordle-grid');
         // Remove listeners to prevent multiple bindings if modal is reopened
         searchGrid.removeEventListener('input', renderCombinations);
         searchGrid.removeEventListener('click', renderCombinations);
-        document.getElementById('searchModal').style.display = 'none';
+        closeModal('searchModal');
     }
 
     function handleSavedListClick(event) {
@@ -1263,6 +1267,9 @@
         if (activeInputElement) {
             activeInputElement.value = words;
             handleWordInput(); // Trigger count and resize
+            if (activeInputElement.id === 'wordInputTextarea') {
+                updateTextareaHeight(activeInputElement);
+            }
         }
         document.getElementById('mainTestWordInput').value = comboToLoad.testWord;
         
@@ -1292,10 +1299,12 @@
     }
 
     function deleteCombination(id) {
-        let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-        combinations = combinations.filter(combo => combo.id.toString() !== id.toString());
-        localStorage.setItem('savedCombinations', JSON.stringify(combinations));
-        renderCombinations(); // Refresh the list
+        if (confirm('Are you sure you want to delete this combination?')) {
+            let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+            combinations = combinations.filter(combo => combo.id.toString() !== id.toString());
+            localStorage.setItem('savedCombinations', JSON.stringify(combinations));
+            renderCombinations(); // Refresh the list after deletion
+        }
     }
 
     function saveCombinationData() {
@@ -1323,16 +1332,7 @@
         if (existingId) { // Update existing combination
             const comboIndex = combinations.findIndex(c => c.id.toString() === existingId);
             if (comboIndex > -1) {
-                const words = activeInputElement.value.split(/\s+/).map(w => w.toUpperCase());
-                const newRowsData = combinations[comboIndex].rows.map((row, rowIndex) => {
-                    const word = words[rowIndex] || '';
-                    return row.map((box, boxIndex) => ({
-                        letter: word[boxIndex] || '',
-                        color: box.color
-                    }));
-                });
-
-                combinations[comboIndex].rows = newRowsData;
+                combinations[comboIndex].rows = rowsData; // Update with the new grid data from the modal
                 combinations[comboIndex].testWord = testWord;
                 // Optionally update a 'lastSaved' timestamp here if added to the object
                 alert('Combination updated successfully!');
@@ -1538,7 +1538,7 @@
   <!-- Search Modal -->
   <div class="modal" id="searchModal">
       <div class="modal-content">
-          <button class="close-btn" onclick="closeSearchModal()">✕</button>
+          <button class="close-btn" onclick="closeModal('searchModal')">✕</button>
           <h3>Search Combinations</h3>
           
           <div class="palette">

@@ -1093,7 +1093,7 @@
         document.getElementById('saveCombinationModal').addEventListener('click', handleModalOutsideClick);
 
         // Search Modal Listeners
-        document.getElementById('savedCombinationsList').addEventListener('click', handleSavedListClick);
+        document.getElementById('savedCombinationsList')?.addEventListener('click', handleSavedListClick);
         document.getElementById('searchModal').addEventListener('click', handleModalOutsideClick);
         
         initializePage(); // Initialize after helper span is created

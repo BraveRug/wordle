@@ -1355,7 +1355,11 @@
             let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
             combinations = combinations.filter(combo => combo.id.toString() !== id.toString());
             localStorage.setItem('savedCombinations', JSON.stringify(combinations));
+            const list = document.getElementById('savedCombinationsList');
+            list.innerHTML = '';
+
             renderCombinations(); // Refresh the list after deletion
+            document.getElementById('savedCombinationsList').scrollTop = 0;
         });
     }
 

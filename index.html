@@ -1098,6 +1098,17 @@
         const searchGrid = document.querySelector('#searchModal .wordle-grid');
         searchGrid.addEventListener('input', renderCombinations);
         searchGrid.addEventListener('click', renderCombinations);
+      
+        document.getElementById('confirmBtn').addEventListener('click', () => {
+            if (confirmCallback) {
+                confirmCallback();
+            }
+            closeModal('confirmationModal');
+        });
+
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            closeModal('confirmationModal');
+        });
         
         initializePage(); // Initialize after helper span is created
     });

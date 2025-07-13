@@ -308,6 +308,7 @@
     #searchBtn {
         position: absolute;
         left: 0;
+        font-size: 1.2em;
     }
 
     .header-btn {
@@ -710,9 +711,11 @@
     }
     .saved-item .wordle-grid { /* Reuse wordle-grid styles for preview */
         transform: scale(0.7); /* Make preview smaller */
-        transform-origin: top left;
+        transform-origin: top center;
         margin-bottom: -20px; /* Adjust layout due to scaling */
         pointer-events: none; /* Make preview unclickable */
+        margin-left: auto;
+        margin-right: auto;
     }
     .saved-item-info {
         margin-top: 10px;
@@ -725,6 +728,7 @@
         margin-top: 15px;
         display: flex;
         gap: 10px;
+        justify-content: center;
     }
     .open-btn, .delete-btn {
         padding: 8px 12px;
@@ -1006,6 +1010,17 @@
       }
     }
 
+    function alignSettingsButton() {
+        const container = document.querySelector('.container');
+        const settingsContainer = document.getElementById('settingsButtonContainer');
+        const containerRect = container.getBoundingClientRect();
+        const bodyRect = document.body.getBoundingClientRect();
+        
+        // Calculate the 'right' offset from the viewport edge
+        const rightOffset = bodyRect.right - containerRect.right;
+        settingsContainer.style.right = `${rightOffset}px`;
+    }
+
     function initializePage() {
       const wordInputText = document.getElementById('wordInputText');
       const wordInputTextarea = document.getElementById('wordInputTextarea');
@@ -1042,6 +1057,8 @@
       }
 
       countLetters(); // Initial calculation
+      alignSettingsButton();
+      window.addEventListener('resize', alignSettingsButton);
     }
 
     // DOMContentLoaded ensures that elements are available before JS tries to manipulate them
@@ -1088,8 +1105,9 @@
                 loadCombinationIntoSaveModal(comboToLoad);
             }
         } else {
-            // Otherwise, clear the modal for a new entry
+            // Otherwise, clear the modal for a new entry and pre-fill the test word
             clearSaveModal();
+            document.getElementById('testWordInput').value = document.getElementById('mainTestWordInput').value;
         }
         document.getElementById('saveCombinationModal').style.display = 'flex';
     }
@@ -1156,20 +1174,42 @@
     }
 
     function openSearchModal() {
-        const searchInput = document.getElementById('searchInput');
         renderCombinations(); // Initial render
-        searchInput.addEventListener('input', renderCombinations);
+        const searchGrid = document.querySelector('#searchModal .wordle-grid');
+        searchGrid.addEventListener('input', renderCombinations);
+        searchGrid.addEventListener('click', renderCombinations); // For color changes
         document.getElementById('searchModal').style.display = 'flex';
     }
 
     function renderCombinations() {
         const listContainer = document.getElementById('savedCombinationsList');
         const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        
+        // Get search criteria from the search modal's grid
+        const searchRows = document.querySelectorAll('#searchModal .wordle-row');
+        const searchCriteria = [];
+        searchRows.forEach(row => {
+            const rowCriteria = [];
+            row.querySelectorAll('.wordle-box').forEach(box => {
+                rowCriteria.push({
+                    letter: box.value.toUpperCase(),
+                    color: box.dataset.color || 'grey'
+                });
+            });
+            searchCriteria.push(rowCriteria);
+        });
 
-        const filteredCombinations = combinations.filter(combo => 
-            (combo.testWord || '').toLowerCase().includes(searchTerm)
-        );
+        const filteredCombinations = combinations.filter(combo => {
+            // Match every search box condition with the corresponding box in the saved combination
+            return searchCriteria.every((searchRow, rowIndex) => {
+                return searchRow.every((searchBox, boxIndex) => {
+                    const savedBox = combo.rows[rowIndex][boxIndex];
+                    const letterMatch = !searchBox.letter || (savedBox.letter === searchBox.letter);
+                    const colorMatch = savedBox.color === searchBox.color;
+                    return letterMatch && colorMatch;
+                });
+            });
+        });
 
         if (filteredCombinations.length === 0) {
             listContainer.innerHTML = '<p>No matching combinations found.</p>';
@@ -1200,8 +1240,10 @@
     }
 
     function closeSearchModal() {
-        // Remove listener to prevent multiple bindings if modal is reopened
-        document.getElementById('searchInput').removeEventListener('input', renderCombinations);
+        const searchGrid = document.querySelector('#searchModal .wordle-grid');
+        // Remove listeners to prevent multiple bindings if modal is reopened
+        searchGrid.removeEventListener('input', renderCombinations);
+        searchGrid.removeEventListener('click', renderCombinations);
         document.getElementById('searchModal').style.display = 'none';
     }
 
@@ -1228,9 +1270,9 @@
         }
         
         // Populate main page inputs
-        const firstRowLetters = comboToLoad.rows[0].map(box => box.letter).join('');
+        const words = comboToLoad.rows.map(row => row.map(box => box.letter).join('')).join(' ');
         if (activeInputElement) {
-            activeInputElement.value = firstRowLetters;
+            activeInputElement.value = words;
             handleWordInput(); // Trigger count and resize
         }
         document.getElementById('mainTestWordInput').value = comboToLoad.testWord;
@@ -1499,8 +1541,31 @@
   <div class="modal" id="searchModal">
       <div class="modal-content">
           <button class="close-btn" onclick="closeSearchModal()">✕</button>
-          <h3>Saved Combinations</h3>
-          <input type="text" id="searchInput" placeholder="Search by test word..." class="test-word-input">
+          <h3>Search Combinations</h3>
+          
+          <div class="palette">
+              <div class="palette-color grey active-color" data-color="grey"></div>
+              <div class="palette-color yellow" data-color="yellow"></div>
+              <div class="palette-color green" data-color="green"></div>
+          </div>
+
+          <div class="wordle-grid">
+              <div class="wordle-row">
+                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" />
+              </div>
+              <div class="wordle-row">
+                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" />
+              </div>
+          </div>
+
           <div id="savedCombinationsList">
               <!-- Saved items will be dynamically injected here -->
           </div>

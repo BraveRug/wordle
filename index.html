@@ -1204,11 +1204,8 @@
         searchModal.addEventListener('click', handleModalOutsideClick);
     }
 
-    function renderCombinations() {
-        const listContainer = document.getElementById('savedCombinationsList');
+    function getFilteredCombinations() {
         const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-        
-        // Get search criteria from the search modal's grid
         const searchRows = document.querySelectorAll('#searchModal .wordle-row');
         const searchCriteria = [];
         searchRows.forEach(row => {
@@ -1222,8 +1219,7 @@
             searchCriteria.push(rowCriteria);
         });
 
-        const filteredCombinations = combinations.filter(combo => {
-            // Match every search box condition with the corresponding box in the saved combination
+        return combinations.filter(combo => {
             return searchCriteria.every((searchRow, rowIndex) => {
                 return searchRow.every((searchBox, boxIndex) => {
                     const savedBox = combo.rows[rowIndex][boxIndex];
@@ -1233,33 +1229,20 @@
                 });
             });
         });
+    }
 
-        if (filteredCombinations.length === 0) {
-            listContainer.innerHTML = '<p>No matching combinations found.</p>';
+    function openFirstMatchingCombination() {
+        const filtered = getFilteredCombinations();
+        if (filtered.length > 0) {
+            loadCombinationToMainPage(filtered[0].id);
         } else {
-            listContainer.innerHTML = filteredCombinations.map(combo => {
-                const date = new Date(combo.id).toLocaleString();
-                const gridHtml = combo.rows.map(row => `
-                    <div class="wordle-row">
-                        ${row.map(box => `<div class="wordle-box" style="background-color:${box.color};">${box.letter}</div>`).join('')}
-                    </div>
-                `).join('');
-
-                return `
-                    <div class="saved-item">
-                        <div class="wordle-grid">${gridHtml}</div>
-                        <div class="saved-item-info">
-                            <p><strong>Test Word:</strong> ${combo.testWord || 'None'}</p>
-                            <p><strong>Saved on:</strong> ${date}</p>
-                        </div>
-                        <div class="saved-item-actions">
-                            <button class="open-btn" data-id="${combo.id}">Open</button>
-                            <button class="delete-btn" data-id="${combo.id}">Delete</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            alert('No matching combination found.');
         }
+    }
+
+    function renderCombinations() {
+        // This function is now primarily for filtering in the background
+        // The UI part is removed.
     }
 
     function closeSearchModal() {
@@ -1384,29 +1367,43 @@
 
         const testWord = document.getElementById('testWordInput').value;
         let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+        const originalWords = activeInputElement.value;
 
         if (existingId) { // Update existing combination
             const comboIndex = combinations.findIndex(c => c.id.toString() === existingId);
-            combinations[comboIndex].originalWords = originalWords;
             if (comboIndex > -1) {
-                combinations[comboIndex].rows = rowsData; // Update with the new grid data from the modal
+                combinations[comboIndex].rows = rowsData;
                 combinations[comboIndex].testWord = testWord;
-                // Optionally update a 'lastSaved' timestamp here if added to the object
+                const existingWords = combinations[comboIndex].originalWords.split('\n');
+                const newWords = originalWords.split('\n');
+                const mergedWords = [...new Set([...existingWords, ...newWords])].join('\n');
+                combinations[comboIndex].originalWords = mergedWords;
                 alert('Combination updated successfully!');
             } else {
                 alert('Error: Could not find combination to update.');
-                return; // Exit if a bad ID was found
+                return;
             }
-        } else { // Create new combination
-          const originalWords = activeInputElement.value;
-          const newCombination = {
-              id: Date.now(),
-              rows: rowsData,
-              testWord: testWord,
-              originalWords: originalWords
-          };
-            combinations.push(newCombination);
-            alert('Combination saved successfully!');
+        } else { // Create or merge new combination
+            const existingComboIndex = combinations.findIndex(c => c.testWord === testWord);
+            if (existingComboIndex > -1) {
+                // Merge with existing combination
+                const existingWords = combinations[existingComboIndex].originalWords.split('\n');
+                const newWords = originalWords.split('\n');
+                const mergedWords = [...new Set([...existingWords, ...newWords])].filter(w => w).join('\n');
+                combinations[existingComboIndex].originalWords = mergedWords;
+                combinations[existingComboIndex].rows = rowsData; // Also update the grid to the latest save
+                alert('Combination merged successfully!');
+            } else {
+                // Create new combination
+                const newCombination = {
+                    id: Date.now(),
+                    rows: rowsData,
+                    testWord: testWord,
+                    originalWords: originalWords
+                };
+                combinations.push(newCombination);
+                alert('Combination saved successfully!');
+            }
         }
 
         localStorage.setItem('savedCombinations', JSON.stringify(combinations));
@@ -1545,6 +1542,29 @@
       }
       return realWords.join(" ").trim();
     }
+
+    function setupTestData() {
+      localStorage.setItem('savedCombinations', JSON.stringify([
+        {
+          id: 1,
+          rows: [
+            [{ letter: 'A', color: 'green' }, { letter: 'B', color: 'grey' }, { letter: 'C', color: 'grey' }, { letter: 'D', color: 'grey' }, { letter: 'E', color: 'grey' }],
+            [{ letter: 'F', color: 'grey' }, { letter: 'G', color: 'grey' }, { letter: 'H', color: 'grey' }, { letter: 'I', color: 'grey' }, { letter: 'J', color: 'grey' }]
+          ],
+          testWord: 'test1',
+          originalWords: 'word1\nword2'
+        },
+        {
+          id: 2,
+          rows: [
+            [{ letter: 'K', color: 'yellow' }, { letter: 'L', color: 'grey' }, { letter: 'M', color: 'grey' }, { letter: 'N', color: 'grey' }, { letter: 'O', color: 'grey' }],
+            [{ letter: 'P', color: 'grey' }, { letter: 'Q', color: 'grey' }, { letter: 'R', color: 'grey' }, { letter: 'S', color: 'grey' }, { letter: 'T', color: 'grey' }]
+          ],
+          testWord: 'test2',
+          originalWords: 'word3\nword4'
+        }
+      ]));
+    }
   </script>
 
   <!-- Camera Modal -->
@@ -1625,7 +1645,8 @@
               </div>
           </div>
 
-          <div id="savedCombinationsList">
+          <button class="open-btn" style="margin-top: 15px;" onclick="openFirstMatchingCombination()">Open</button>
+          <div id="savedCombinationsList" style="display: none;">
               <!-- Saved items will be dynamically injected here -->
           </div>
       </div>

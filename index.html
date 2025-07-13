@@ -1100,10 +1100,13 @@
         searchGrid.addEventListener('click', renderCombinations);
       
         document.getElementById('confirmBtn').addEventListener('click', () => {
-            if (confirmCallback) {
-                confirmCallback();
-            }
+            // First, close the modal no matter what
             closeModal('confirmationModal');
+            
+            // Then invoke the stored callback (which actually deletes & re‑renders)
+            if (confirmCallback) {
+              confirmCallback();
+            }
         });
 
         document.getElementById('cancelBtn').addEventListener('click', () => {

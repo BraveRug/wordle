@@ -1183,8 +1183,11 @@
         renderCombinations(); // Initial render
         const searchModal = document.getElementById('searchModal');
         const searchGrid = searchModal.querySelector('.wordle-grid');
-        searchGrid.addEventListener('input', renderCombinations);
-        searchGrid.addEventListener('click', renderCombinations); // For color changes
+        if (!searchGrid.dataset.listenersAdded) {
+            searchGrid.addEventListener('input', renderCombinations);
+            searchGrid.addEventListener('click', renderCombinations);
+            searchGrid.dataset.listenersAdded = "true";
+        }
         searchModal.style.display = 'flex';
         searchModal.addEventListener('click', handleModalOutsideClick);
     }
@@ -1281,9 +1284,8 @@
         // Populate main page inputs
         const words = comboToLoad.rows.map(row => row.map(box => box.letter).join('')).join('\n');
         const layout = localStorage.getItem('selectedLayout') || 'side-by-side';
-        const inputElement = layout === 'original' ? document.getElementById('wordInputText') : document.getElementById('wordInputTextarea');
-        
-        inputElement.value = words;
+        inputElement.value = comboToLoad.originalWords || '';
+
         handleWordInput(); // Trigger count and resize
         if (inputElement.id === 'wordInputTextarea') {
             updateTextareaHeight(inputElement);
@@ -1352,6 +1354,7 @@
 
         if (existingId) { // Update existing combination
             const comboIndex = combinations.findIndex(c => c.id.toString() === existingId);
+            combinations[comboIndex].originalWords = originalWords;
             if (comboIndex > -1) {
                 combinations[comboIndex].rows = rowsData; // Update with the new grid data from the modal
                 combinations[comboIndex].testWord = testWord;
@@ -1362,11 +1365,13 @@
                 return; // Exit if a bad ID was found
             }
         } else { // Create new combination
-            const newCombination = {
-                id: Date.now(),
-                rows: rowsData,
-                testWord: testWord
-            };
+          const originalWords = activeInputElement.value;
+          const newCombination = {
+              id: Date.now(),
+              rows: rowsData,
+              testWord: testWord,
+              originalWords: originalWords
+          };
             combinations.push(newCombination);
             alert('Combination saved successfully!');
         }

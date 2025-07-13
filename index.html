@@ -325,20 +325,20 @@
         width: 40px;
         height: 40px;
         transition: background-color 0.3s;
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
     }
     .header-btn:hover {
       background: var(--accent);
       color: white;
     }
 
-    #settingsButtonContainer {
-        position: absolute;
-        right: 16px; /* Adjust this value to your preference */
-        top: 50%;
-        transform: translateY(-50%);
+    .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 500px;
+        position: relative;
+        margin-bottom: 20px;
     }
     #settingsIconBtn {
       background: var(--settings-icon-bg);
@@ -739,15 +739,32 @@
     }
     .open-btn { background-color: var(--accent); }
     .delete-btn { background-color: #e63946; } /* A consistent delete color */
+
+    .confirmation-actions {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    #confirmBtn, #cancelBtn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        color: white;
+        font-size: 1em;
+    }
+
+    #confirmBtn { background-color: #e63946; }
+    #cancelBtn { background-color: var(--accent); }
   </style>
 </head>
 <body class="light">
   <div class="app-header">
-    <button id="searchBtn" class="header-btn">🔍</button>
+    <button id="searchBtn" class="header-btn" onclick="openSearchModal()">🔍</button>
     <h2>Letter Frequency</h2>
-    <div id="settingsButtonContainer" style="right:0;">
-      <button id="settingsIconBtn" class="header-btn" onclick="openModal()">⚙️</button>
-    </div>
+    <button id="settingsIconBtn" class="header-btn" onclick="openModal()">⚙️</button>
   </div>
   <div class="main-content-wrapper">
     <input type="hidden" id="loadedCombinationId">
@@ -1076,7 +1093,6 @@
         document.getElementById('saveCombinationModal').addEventListener('click', handleModalOutsideClick);
 
         // Search Modal Listeners
-        document.getElementById('searchBtn').addEventListener('click', openSearchModal);
         document.getElementById('savedCombinationsList').addEventListener('click', handleSavedListClick);
         document.getElementById('searchModal').addEventListener('click', handleModalOutsideClick);
         
@@ -1264,12 +1280,13 @@
         
         // Populate main page inputs
         const words = comboToLoad.rows.map(row => row.map(box => box.letter).join('')).join('\n');
-        if (activeInputElement) {
-            activeInputElement.value = words;
-            handleWordInput(); // Trigger count and resize
-            if (activeInputElement.id === 'wordInputTextarea') {
-                updateTextareaHeight(activeInputElement);
-            }
+        const layout = localStorage.getItem('selectedLayout') || 'side-by-side';
+        const inputElement = layout === 'original' ? document.getElementById('wordInputText') : document.getElementById('wordInputTextarea');
+        
+        inputElement.value = words;
+        handleWordInput(); // Trigger count and resize
+        if (inputElement.id === 'wordInputTextarea') {
+            updateTextareaHeight(inputElement);
         }
         document.getElementById('mainTestWordInput').value = comboToLoad.testWord;
         
@@ -1298,13 +1315,17 @@
         document.getElementById('combinationId').value = comboData.id;
     }
 
+    let a,b;
+    function openConfirmationModal(c,d){a=c,b=d,document.getElementById("confirmationMessage").textContent=c,document.getElementById("confirmationModal").style.display="flex"}
+    document.getElementById("confirmBtn").addEventListener("click",()=>{b(),closeModal("confirmationModal")}),document.getElementById("cancelBtn").addEventListener("click",()=>closeModal("confirmationModal"));
+
     function deleteCombination(id) {
-        if (confirm('Are you sure you want to delete this combination?')) {
+        openConfirmationModal('Are you sure you want to delete this combination?', () => {
             let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
             combinations = combinations.filter(combo => combo.id.toString() !== id.toString());
             localStorage.setItem('savedCombinations', JSON.stringify(combinations));
             renderCombinations(); // Refresh the list after deletion
-        }
+        });
     }
 
     function saveCombinationData() {
@@ -1569,6 +1590,17 @@
           </div>
       </div>
   </div>
+
+  <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal">
+        <div class="modal-content">
+            <p id="confirmationMessage">Are you sure?</p>
+            <div class="confirmation-actions">
+                <button id="confirmBtn">Yes</button>
+                <button id="cancelBtn">No</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

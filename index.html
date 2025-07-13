@@ -334,11 +334,11 @@
       color: white;
     }
 
-    #settingsButtonContainer { /* This is the container for the icon button */
-      /* This container is now redundant, settingsIconBtn will use .header-btn */
-      right: 0; /* Align to the right of the app-header */
-      top: 50%;
-      transform: translateY(-50%); /* Vertically center */
+    #settingsButtonContainer {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
     }
     #settingsIconBtn {
       background: var(--settings-icon-bg);
@@ -1004,21 +1004,10 @@
     }
 
     function handleModalOutsideClick(event) {
-      // If the clicked target is the modal itself (the backdrop), close it.
-      if (event.target === document.getElementById('settingsModal')) {
-        closeModal();
-      }
-    }
-
-    function alignSettingsButton() {
-        const container = document.querySelector('.container');
-        const settingsContainer = document.getElementById('settingsButtonContainer');
-        const containerRect = container.getBoundingClientRect();
-        const bodyRect = document.body.getBoundingClientRect();
-        
-        // Calculate the 'right' offset from the viewport edge
-        const rightOffset = bodyRect.right - containerRect.right;
-        settingsContainer.style.right = `${rightOffset}px`;
+        // If the clicked target is a modal backdrop, close it.
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
     }
 
     function initializePage() {
@@ -1057,8 +1046,6 @@
       }
 
       countLetters(); // Initial calculation
-      alignSettingsButton();
-      window.addEventListener('resize', alignSettingsButton);
     }
 
     // DOMContentLoaded ensures that elements are available before JS tries to manipulate them
@@ -1081,14 +1068,16 @@
         
         // Save Combination Modal Listeners
         document.getElementById('saveCombinationBtn').addEventListener('click', openSaveModal);
-        document.querySelector('.palette').addEventListener('click', selectPaletteColor);
-        document.querySelector('.wordle-grid').addEventListener('click', colorWordleBox);
-        document.querySelector('.wordle-grid').addEventListener('keydown', handleWordleBoxKeyDown);
+        document.querySelector('#saveCombinationModal .palette').addEventListener('click', selectPaletteColor);
+        document.querySelector('#saveCombinationModal .wordle-grid').addEventListener('click', colorWordleBox);
+        document.querySelector('#saveCombinationModal .wordle-grid').addEventListener('keydown', handleWordleBoxKeyDown);
         document.getElementById('saveCombinationDataBtn').addEventListener('click', saveCombinationData);
+        document.getElementById('saveCombinationModal').addEventListener('click', handleModalOutsideClick);
 
         // Search Modal Listeners
         document.getElementById('searchBtn').addEventListener('click', openSearchModal);
         document.getElementById('savedCombinationsList').addEventListener('click', handleSavedListClick);
+        document.getElementById('searchModal').addEventListener('click', handleModalOutsideClick);
         
         initializePage(); // Initialize after helper span is created
     });
@@ -1270,7 +1259,7 @@
         }
         
         // Populate main page inputs
-        const words = comboToLoad.rows.map(row => row.map(box => box.letter).join('')).join(' ');
+        const words = comboToLoad.rows.map(row => row.map(box => box.letter).join('')).join('\n');
         if (activeInputElement) {
             activeInputElement.value = words;
             handleWordInput(); // Trigger count and resize
@@ -1306,7 +1295,7 @@
         let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
         combinations = combinations.filter(combo => combo.id.toString() !== id.toString());
         localStorage.setItem('savedCombinations', JSON.stringify(combinations));
-        openSearchModal(); // Refresh the list
+        renderCombinations(); // Refresh the list
     }
 
     function saveCombinationData() {
@@ -1334,7 +1323,16 @@
         if (existingId) { // Update existing combination
             const comboIndex = combinations.findIndex(c => c.id.toString() === existingId);
             if (comboIndex > -1) {
-                combinations[comboIndex].rows = rowsData;
+                const words = activeInputElement.value.split(/\s+/).map(w => w.toUpperCase());
+                const newRowsData = combinations[comboIndex].rows.map((row, rowIndex) => {
+                    const word = words[rowIndex] || '';
+                    return row.map((box, boxIndex) => ({
+                        letter: word[boxIndex] || '',
+                        color: box.color
+                    }));
+                });
+
+                combinations[comboIndex].rows = newRowsData;
                 combinations[comboIndex].testWord = testWord;
                 // Optionally update a 'lastSaved' timestamp here if added to the object
                 alert('Combination updated successfully!');

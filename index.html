@@ -1333,6 +1333,7 @@
         document.getElementById('confirmationModal').style.display = 'flex';
     }
 
+    /*
     document.getElementById('confirmBtn').addEventListener('click', () => {
         if (confirmCallback) {
             confirmCallback();
@@ -1343,6 +1344,7 @@
     document.getElementById('cancelBtn').addEventListener('click', () => {
         closeModal('confirmationModal');
     });
+    */
 
     function deleteCombination(id) {
         openConfirmationModal('Are you sure you want to delete this combination?', () => {

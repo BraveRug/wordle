@@ -1390,10 +1390,9 @@
             if (comboIndex > -1) {
                 combinations[comboIndex].rows = rowsData;
                 combinations[comboIndex].testWord = testWord;
-                const existingWords = combinations[comboIndex].originalWords.split('\n');
-                const newWords = originalWords.split('\n');
-                const mergedWords = [...new Set([...existingWords, ...newWords])].join('\n');
-                combinations[comboIndex].originalWords = mergedWords;
+                // When updating, we now override the word list and test word completely.
+                combinations[comboIndex].originalWords = originalWords;
+                combinations[comboIndex].testWord = testWord;
                 alert('Combination updated successfully!');
             } else {
                 alert('Error: Could not find combination to update.');

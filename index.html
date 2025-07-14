@@ -737,6 +737,10 @@
         cursor: pointer;
         color: white;
     }
+    #searchModal .open-btn {
+        padding: 12px 24px;
+        font-size: 1.2em;
+    }
     .open-btn { background-color: var(--accent); }
     .delete-btn { background-color: #e63946; } /* A consistent delete color */
 
@@ -1098,6 +1102,7 @@
         const searchGrid = document.querySelector('#searchModal .wordle-grid');
         searchGrid.addEventListener('input', renderCombinations);
         searchGrid.addEventListener('click', renderCombinations);
+        searchGrid.addEventListener('keydown', handleWordleBoxKeyDown);
       
         // inside document.addEventListener('DOMContentLoaded', () => { … })
 
@@ -1198,6 +1203,12 @@
     }
 
     function openSearchModal() {
+        const searchGrid = document.querySelector('#searchModal .wordle-grid');
+        searchGrid.querySelectorAll('.wordle-box').forEach(box => {
+            box.value = '';
+            box.style.backgroundColor = '#787c7e';
+            box.dataset.color = 'grey';
+        });
         renderCombinations(); // Initial render
         const searchModal = document.getElementById('searchModal');
         searchModal.style.display = 'flex';

@@ -1407,6 +1407,13 @@
                 const newWords = originalWords.split('\n');
                 const mergedWords = [...new Set([...existingWords, ...newWords])].filter(w => w).join('\n');
                 combinations[existingComboIndex].originalWords = mergedWords;
+
+                // Merge testWord if it's different and not already included
+                const existingTestWord = combinations[existingComboIndex].testWord;
+                if (testWord && existingTestWord !== testWord && !existingTestWord.includes(testWord)) {
+                    combinations[existingComboIndex].testWord = `${existingTestWord} ${testWord}`;
+                }
+                
                 // The grid is identical, so no need to update it.
                 alert('Combination merged successfully!');
             } else {

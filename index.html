@@ -1127,18 +1127,20 @@
 
     function openSaveModal() {
         const loadedId = document.getElementById('loadedCombinationId').value;
-        if (loadedId) {
-            // If an ID is loaded, populate the modal with its data
-            const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-            const comboToLoad = combinations.find(c => c.id.toString() === loadedId);
-            if (comboToLoad) {
-                loadCombinationIntoSaveModal(comboToLoad);
-            }
+        const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+        const comboToLoad = loadedId ? combinations.find(c => c.id.toString() === loadedId) : null;
+
+        if (comboToLoad) {
+            // If a combination is loaded, populate the grid from saved data
+            loadCombinationIntoSaveModal(comboToLoad);
         } else {
-            // Otherwise, clear the modal for a new entry and pre-fill the test word
+            // Otherwise, it's a new combination, so clear the modal
             clearSaveModal();
-            document.getElementById('testWordInput').value = document.getElementById('mainTestWordInput').value;
         }
+        
+        // ALWAYS pre-fill the test word input from the main page's input
+        document.getElementById('testWordInput').value = document.getElementById('mainTestWordInput').value;
+        
         document.getElementById('saveCombinationModal').style.display = 'flex';
     }
 

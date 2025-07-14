@@ -1326,7 +1326,7 @@
         const comboToLoad = combinations.find(c => c.id.toString() === id.toString());
 
         if (!comboToLoad) {
-            alert('Error: Could not find combination to load.');
+            showMessage('Error: Could not find combination to load.', 'error');
             return;
         }
         
@@ -1345,6 +1345,7 @@
         document.getElementById('loadedCombinationId').value = comboToLoad.id;
 
         closeSearchModal();
+        showMessage('Combination loaded successfully!');
     }
 
     function loadCombinationIntoSaveModal(comboData) {

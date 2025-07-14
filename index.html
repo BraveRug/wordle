@@ -1099,9 +1099,10 @@
         // Search Modal Listeners
         document.getElementById('savedCombinationsList')?.addEventListener('click', handleSavedListClick);
         document.getElementById('searchModal').addEventListener('click', handleModalOutsideClick);
+        document.querySelector('#searchModal .palette').addEventListener('click', selectPaletteColor);
         const searchGrid = document.querySelector('#searchModal .wordle-grid');
         searchGrid.addEventListener('input', renderCombinations);
-        searchGrid.addEventListener('click', renderCombinations);
+        searchGrid.addEventListener('click', colorWordleBox);
         searchGrid.addEventListener('keydown', handleWordleBoxKeyDown);
       
         // inside document.addEventListener('DOMContentLoaded', () => { … })
@@ -1380,6 +1381,10 @@
         let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
         const originalWords = activeInputElement.value;
 
+        const areGridsIdentical = (grid1, grid2) => {
+            return JSON.stringify(grid1) === JSON.stringify(grid2);
+        };
+
         if (existingId) { // Update existing combination
             const comboIndex = combinations.findIndex(c => c.id.toString() === existingId);
             if (comboIndex > -1) {
@@ -1395,14 +1400,14 @@
                 return;
             }
         } else { // Create or merge new combination
-            const existingComboIndex = combinations.findIndex(c => c.testWord === testWord);
+            const existingComboIndex = combinations.findIndex(c => areGridsIdentical(c.rows, rowsData));
             if (existingComboIndex > -1) {
                 // Merge with existing combination
                 const existingWords = combinations[existingComboIndex].originalWords.split('\n');
                 const newWords = originalWords.split('\n');
                 const mergedWords = [...new Set([...existingWords, ...newWords])].filter(w => w).join('\n');
                 combinations[existingComboIndex].originalWords = mergedWords;
-                combinations[existingComboIndex].rows = rowsData; // Also update the grid to the latest save
+                // The grid is identical, so no need to update it.
                 alert('Combination merged successfully!');
             } else {
                 // Create new combination

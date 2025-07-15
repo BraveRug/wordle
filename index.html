@@ -317,6 +317,8 @@
         left: 50%;
         transform: translateX(-50%);
         margin: 0;
+        white-space: nowrap;
+        font-size: clamp(1rem, 5vw, 1.4rem);
     }
 
 
@@ -369,6 +371,11 @@
       width: 40px; /* Explicit width */
       height: 40px; /* Explicit height */
       transition: background-color 0.3s; /* Smooth transition for background */
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+
     }
     #settingsIconBtn:hover {
       background: var(--accent);
@@ -691,6 +698,9 @@
         background: var(--input-bg);
         color: var(--text);
         margin-bottom: 0px;
+    }
+    #saveCombinationModal .test-word-input {
+    margin-top: 10px;
     }
     .main-page-input {
         width: 100%;
@@ -1259,6 +1269,27 @@
             }, 0);
         }
     }
+
+    function handleWordleBoxInput(e){
+        const box = e.target;
+        if(box.value.length > 1){          // user pasted or held a key
+            box.value = box.value.slice(-1); // keep only the last char
+        }
+        if(box.value && box.nextElementSibling){
+            box.nextElementSibling.focus();  // move forward when a letter is typed
+        }
+        if(!box.value && e.inputType === 'deleteContentBackward' && box.previousElementSibling){
+            box.previousElementSibling.focus(); // move back on mobile backspace
+        }
+    }
+
+    /* attach both handlers to every .wordle-box once, at startup */
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.wordle-box').forEach(box => {
+            box.addEventListener('keydown', handleWordleBoxKeyDown); // existing
+            box.addEventListener('input',  handleWordleBoxInput);    // new – mobile friendly
+        });
+    });
 
     function openSearchModal() {
         const searchGrid = document.querySelector('#searchModal .wordle-grid');

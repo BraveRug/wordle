@@ -310,6 +310,7 @@
         max-width: 500px;
         position: relative;
         margin-bottom: 20px;
+        min-height: 60px;
     }
 
     .app-header h2 {
@@ -700,7 +701,8 @@
         margin-bottom: 0px;
     }
     #saveCombinationModal .test-word-input {
-    margin-top: 10px;
+        margin-top: 10px;
+        margin-bottom: 15px; /* ← Add this */
     }
     .main-page-input {
         width: 100%;
@@ -1286,7 +1288,7 @@
     /* attach both handlers to every .wordle-box once, at startup */
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.wordle-box').forEach(box => {
-            box.addEventListener('keydown', handleWordleBoxKeyDown); // existing
+            //box.addEventListener('keydown', handleWordleBoxKeyDown); // existing
             box.addEventListener('input',  handleWordleBoxInput);    // new – mobile friendly
         });
     });

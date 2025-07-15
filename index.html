@@ -310,7 +310,7 @@
         max-width: 500px;
         position: relative;
         margin-bottom: 20px;
-        min-height: 60px;
+        min-height: 20px;
     }
 
     .app-header h2 {
@@ -1775,6 +1775,39 @@
             </div>
         </div>
     </div>
+<script>
+function handleWordleBoxInput(e) {
+  const box = e.target;
+  const inputType = e.inputType || '';
+
+  // Handle typing letters or pasting text
+  if (inputType.startsWith('insert')) {
+    box.value = box.value.slice(-1).toUpperCase();
+    if (box.nextElementSibling) {
+      box.nextElementSibling.focus();
+    }
+    return;
+  }
+
+  // Handle backspace
+  if (inputType === 'deleteContentBackward') {
+    if (box.value) {
+      box.value = '';
+    } else if (box.previousElementSibling) {
+      box.previousElementSibling.focus();
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.wordle-box').forEach(box => {
+    box.addEventListener('input', handleWordleBoxInput);
+  });
+});
+</script>
+
+</body>
+</html>
 
 </body>
 </html>

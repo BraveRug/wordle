@@ -1777,37 +1777,48 @@
     </div>
 
 <script>
-function handleWordleBoxInput(e) {
-  const box = e.target;
-  const inputType = e.inputType || '';
-  const isLetter = /^[a-zA-Z]$/.test(box.value);
-  const prev = box.previousElementSibling;
-  const next = box.nextElementSibling;
+  function onBoxBeforeInput(e) {
+    const box = e.target;
+    const prev = box.previousElementSibling;
+    const next = box.nextElementSibling;
+    const type = e.inputType;
 
-  if (inputType === 'insertText' && isLetter) {
-    // Keep only the last typed character, uppercase it
-    box.value = box.value.slice(-1).toUpperCase();
-    if (next) next.focus();
-  } else if (inputType === 'deleteContentBackward') {
-    // Backspace
-    // Don't auto-clear previous box unless you're *already* there
-    if (box.value !== '') {
-      box.value = ''; // Just clear this box
-    } else if (prev) {
-      prev.focus();
-      // Delay clearing previous box slightly so the focus move is clean
-      setTimeout(() => {
+    if (type === 'deleteContentBackward') {
+      // Prevent the browser from deleting for us
+      e.preventDefault();
+
+      if (box.value !== '') {
+        // If this box has a letter, clear it
+        box.value = '';
+        box.focus();
+      } else if (prev) {
+        // If it's already empty, go left and clear that one
         prev.value = '';
-      }, 0);
+        prev.focus();
+      }
     }
   }
-}
-  
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.wordle-box').forEach(box => {
-    box.addEventListener('input', handleWordleBoxInput);
+
+  function onBoxInput(e) {
+    const box = e.target;
+    const next = box.nextElementSibling;
+    const val = box.value;
+    const letter = val.slice(-1);            // grab last char
+    if (/^[a-zA-Z]$/.test(letter)) {
+      box.value = letter.toUpperCase();      // enforce one uppercase letter
+      if (next) next.focus();
+    } else {
+      // If they pasted weird text or non‑letters, strip it
+      box.value = '';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.wordle-box').forEach(box => {
+      box.addEventListener('beforeinput', onBoxBeforeInput);
+      box.addEventListener('input',      onBoxInput);
+    });
   });
-});
 </script>
 
 </body>

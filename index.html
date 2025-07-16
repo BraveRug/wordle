@@ -1785,16 +1785,20 @@ function handleWordleBoxInput(e) {
   const next = box.nextElementSibling;
 
   if (inputType === 'insertText' && isLetter) {
-    // Typing a letter
+    // Keep only the last typed character, uppercase it
     box.value = box.value.slice(-1).toUpperCase();
     if (next) next.focus();
   } else if (inputType === 'deleteContentBackward') {
     // Backspace
+    // Don't auto-clear previous box unless you're *already* there
     if (box.value !== '') {
-      box.value = ''; // Only clear current box, stay here
+      box.value = ''; // Just clear this box
     } else if (prev) {
-      prev.focus();   // Move left first
-      prev.value = ''; // Then clear that one — only one box affected
+      prev.focus();
+      // Delay clearing previous box slightly so the focus move is clean
+      setTimeout(() => {
+        prev.value = '';
+      }, 0);
     }
   }
 }

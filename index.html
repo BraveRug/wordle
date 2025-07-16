@@ -310,7 +310,7 @@
         max-width: 500px;
         position: relative;
         margin-bottom: 20px;
-        min-height: 20px;
+        min-height: 40px;
     }
 
     .app-header h2 {
@@ -1780,22 +1780,21 @@
 function handleWordleBoxInput(e) {
   const box = e.target;
   const inputType = e.inputType || '';
+  const prev = box.previousElementSibling;
+  const next = box.nextElementSibling;
 
-  // Handle typing letters or pasting text
+  // Handle inserting text (letter typed or pasted)
   if (inputType.startsWith('insert')) {
     box.value = box.value.slice(-1).toUpperCase();
-    if (box.nextElementSibling) {
-      box.nextElementSibling.focus();
-    }
+    if (next) next.focus();
     return;
   }
 
-  // Handle backspace
+  // Handle backspace: move left, clear that box, and stay there
   if (inputType === 'deleteContentBackward') {
-    if (box.value) {
-      box.value = '';
-    } else if (box.previousElementSibling) {
-      box.previousElementSibling.focus();
+    if (prev) {
+      prev.value = '';
+      prev.focus();
     }
   }
 }

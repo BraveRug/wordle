@@ -1780,20 +1780,20 @@
 function handleWordleBoxInput(e) {
   const box = e.target;
   const inputType = e.inputType || '';
+  const isLetter = /^[a-zA-Z]$/.test(box.value);
   const prev = box.previousElementSibling;
   const next = box.nextElementSibling;
 
-  // Handle inserting text (letter typed or pasted)
-  if (inputType.startsWith('insert')) {
+  if (inputType === 'insertText' && isLetter) {
+    // Typing a letter
     box.value = box.value.slice(-1).toUpperCase();
     if (next) next.focus();
-    return;
-  }
-
-  // Handle backspace: move left, clear that box, and stay there
-  if (inputType === 'deleteContentBackward') {
-    if (prev) {
-      prev.value = '';
+  } else if (inputType === 'deleteContentBackward') {
+    // Backspace
+    if (box.value) {
+      box.value = ''; // First backspace clears box
+    } else if (prev) {
+      prev.value = ''; // Second backspace clears previous box
       prev.focus();
     }
   }

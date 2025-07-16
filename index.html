@@ -1790,15 +1790,15 @@ function handleWordleBoxInput(e) {
     if (next) next.focus();
   } else if (inputType === 'deleteContentBackward') {
     // Backspace
-    if (box.value) {
-      box.value = ''; // First backspace clears box
+    if (box.value !== '') {
+      box.value = ''; // Only clear current box, stay here
     } else if (prev) {
-      prev.value = ''; // Second backspace clears previous box
-      prev.focus();
+      prev.focus();   // Move left first
+      prev.value = ''; // Then clear that one — only one box affected
     }
   }
 }
-
+  
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.wordle-box').forEach(box => {
     box.addEventListener('input', handleWordleBoxInput);

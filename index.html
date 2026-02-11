@@ -404,7 +404,8 @@
     function countLetters() {
         if (!activeInputElement) return;
         const text = activeInputElement.value.toLowerCase();
-        const words = text.match(/\b\w+\b/g) || [];
+        // Regex adjusted to match words that are NOT followed by an asterisk
+        const words = text.match(/\b\w+\b(?!\*)/g) || [];
         const letterMap = {};
         
         for (const word of words) {

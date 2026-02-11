@@ -18,6 +18,7 @@
       --input-bg: #f0f0f0;
       --card-bg: #ffffff;
       --settings-icon-bg: rgba(128, 128, 128, 0.2);
+      --btn-text: white; /* Default button text color */
       
       /* Static Colors */
       --grey-box: #787c7e;
@@ -31,7 +32,7 @@
     body.solarized      { --bg: #fdf6e3; --text: #657b83; --accent: #268bd2; --input-bg: #eee8d5; --card-bg: #fdf6e3; }
     body.cherry         { --bg: #fff0f0; --text: #5a0000; --accent: #d32f2f; --input-bg: #ffebee; --card-bg: #ffcdd2; }
     body.peach          { --bg: #fff3e0; --text: #5d4037; --accent: #ff7043; --input-bg: #ffe0b2; --card-bg: #ffccbc; }
-    body.sunshine       { --bg: #fffde7; --text: #5d4037; --accent: #fbc02d; --input-bg: #fff9c4; --card-bg: #fff59d; }
+    body.sunshine       { --bg: #fffde7; --text: #5d4037; --accent: #fbc02d; --input-bg: #fff9c4; --card-bg: #fff59d; --btn-text: #333; }
     body.forest         { --bg: #e8f5e9; --text: #1b5e20; --accent: #43a047; --input-bg: #c8e6c9; --card-bg: #a5d6a7; }
     body.ocean          { --bg: #e0f7fa; --text: #006064; --accent: #00bcd4; --input-bg: #b2ebf2; --card-bg: #80deea; }
     body.azure          { --bg: #e3f2fd; --text: #0d47a1; --accent: #42a5f5; --input-bg: #bbdefb; --card-bg: #90caf9; }
@@ -56,25 +57,25 @@
     body.dark        { --bg: #121212; --text: #e0e0e0; --accent: #4a90e2; --input-bg: #2a2a2a; --card-bg: #1e1e1e; }
     body.midnight    { --bg: #0d1b2a; --text: #e0e1dd; --accent: #415a77; --input-bg: #1b263b; --card-bg: #1e2a3a; }
     body.reddark     { --bg: #1a0f0f; --text: #ffdad4; --accent: #e57373; --input-bg: #2d1a1a; --card-bg: #3b2020; }
-    body.orangedark  { --bg: #1a140f; --text: #ffe0b2; --accent: #ffb74d; --input-bg: #332414; --card-bg: #402d18; }
-    body.yellowdark  { --bg: #1a180b; --text: #fff9c4; --accent: #ffd54f; --input-bg: #333114; --card-bg: #424017; }
-    body.greendark   { --bg: #0e1b0e; --text: #c8e6c9; --accent: #81c784; --input-bg: #1b331b; --card-bg: #224022; }
-    body.cyandark    { --bg: #0b1a1a; --text: #b2ebf2; --accent: #4dd0e1; --input-bg: #143333; --card-bg: #194040; }
-    body.azuredark   { --bg: #0d1626; --text: #bbdefb; --accent: #64b5f6; --input-bg: #172640; --card-bg: #1e3357; }
-    body.deepsea     { --bg: #0a141c; --text: #b3e5fc; --accent: #4fc3f7; --input-bg: #122533; --card-bg: #172f40; }
+    body.orangedark  { --bg: #1a140f; --text: #ffe0b2; --accent: #ffb74d; --input-bg: #332414; --card-bg: #402d18; --btn-text: #333; }
+    body.yellowdark  { --bg: #1a180b; --text: #fff9c4; --accent: #ffd54f; --input-bg: #333114; --card-bg: #424017; --btn-text: #333; }
+    body.greendark   { --bg: #0e1b0e; --text: #c8e6c9; --accent: #81c784; --input-bg: #1b331b; --card-bg: #224022; --btn-text: #333; }
+    body.cyandark    { --bg: #0b1a1a; --text: #b2ebf2; --accent: #4dd0e1; --input-bg: #143333; --card-bg: #194040; --btn-text: #333; }
+    body.azuredark   { --bg: #0d1626; --text: #bbdefb; --accent: #64b5f6; --input-bg: #172640; --card-bg: #1e3357; --btn-text: #333; }
+    body.deepsea     { --bg: #0a141c; --text: #b3e5fc; --accent: #4fc3f7; --input-bg: #122533; --card-bg: #172f40; --btn-text: #333; }
     body.violetnight { --bg: #12101c; --text: #d1c4e9; --accent: #9575cd; --input-bg: #221e33; --card-bg: #2c2742; }
     body.purpledark  { --bg: #140d1c; --text: #e1bee7; --accent: #ba68c8; --input-bg: #261933; --card-bg: #322142; }
     body.merlot      { --bg: #1a0d14; --text: #f8bbd0; --accent: #f06292; --input-bg: #331926; --card-bg: #422031; }
     body.browndark   { --bg: #1a120f; --text: #d7ccc8; --accent: #a1887f; --input-bg: #33241d; --card-bg: #422e25; }
-    body.charcoal    { --bg: #181818; --text: #e0e0e0; --accent: #9e9e9e; --input-bg: #2e2e2e; --card-bg: #383838; }
+    body.charcoal    { --bg: #181818; --text: #e0e0e0; --accent: #9e9e9e; --input-bg: #2e2e2e; --card-bg: #383838; --btn-text: #111; }
 
     /* --- ONYX THEMES (Pure Black) --- */
-    body.onyx       { --bg: #000000; --text: #ffffff; --accent: #ffffff; --input-bg: #111111; --card-bg: #0a0a0a; --settings-icon-bg: rgba(50,50,50,0.5); }
+    body.onyx       { --bg: #000000; --text: #ffffff; --accent: #ffffff; --input-bg: #111111; --card-bg: #0a0a0a; --settings-icon-bg: rgba(50,50,50,0.5); --btn-text: #000; }
     body.onyxred    { --bg: #000000; --text: #fff; --accent: #ff003c; --input-bg: #111; --card-bg: #0d0d0d; }
-    body.onyxblue   { --bg: #000000; --text: #fff; --accent: #00e5ff; --input-bg: #111; --card-bg: #0d0d0d; }
-    body.onyxgreen  { --bg: #000000; --text: #fff; --accent: #00ff41; --input-bg: #111; --card-bg: #0d0d0d; }
+    body.onyxblue   { --bg: #000000; --text: #fff; --accent: #00e5ff; --input-bg: #111; --card-bg: #0d0d0d; --btn-text: #000; }
+    body.onyxgreen  { --bg: #000000; --text: #fff; --accent: #00ff41; --input-bg: #111; --card-bg: #0d0d0d; --btn-text: #000; }
     body.onyxpurple { --bg: #000000; --text: #fff; --accent: #bf00ff; --input-bg: #111; --card-bg: #0d0d0d; }
-    body.onyxorange { --bg: #000000; --text: #fff; --accent: #ff8c00; --input-bg: #111; --card-bg: #0d0d0d; }
+    body.onyxorange { --bg: #000000; --text: #fff; --accent: #ff8c00; --input-bg: #111; --card-bg: #0d0d0d; --btn-text: #000; }
 
     /* =========================================
        GLOBAL STYLES
@@ -112,13 +113,14 @@
 
     /* Modals */
     .modal { position:fixed; top:0; left:0; right:0; bottom:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); z-index:100; }
-    .modal-content { background:var(--card-bg); padding:20px; border-radius:12px; width:90%; max-width:400px; text-align:center; position:relative; max-height:80vh; overflow-y:auto; }
+    .modal-content { background:var(--card-bg); padding:20px; border-radius:12px; width:90%; max-width:600px; text-align:center; position:relative; max-height:80vh; overflow-y:auto; }
     .close-btn { position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.2em; color:var(--text); cursor:pointer; }
     
     /* Settings & Theme Selection */
-    .settings-section h3, .modal-content > h3, .theme-section h3 { margin: 20px 0 10px; font-size: 1.15em; color: var(--text); border-bottom: 1px solid var(--input-bg); padding-bottom: 8px; }
-    .theme-section h3 { font-size: 1.05em; margin-top: 15px; border-bottom-style: dashed; }
-    .theme-option { display:block; width:100%; padding:12px; margin:6px 0; border:none; border-radius:8px; font-size:1em; cursor:pointer; color:white; }
+    .settings-section h3, .modal-content > h3 { margin: 20px 0 10px; font-size: 1.15em; color: var(--text); border-bottom: 1px solid var(--input-bg); padding-bottom: 8px; }
+    .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
+    .theme-column h3 { font-size: 1.05em; margin-top: 0; margin-bottom: 10px; border-bottom: 1px dashed var(--input-bg); padding-bottom: 5px; color: var(--text); }
+    .theme-option { display:block; width:100%; padding:10px; margin:5px 0; border:none; border-radius:8px; font-size:0.9em; cursor:pointer; color:white; }
     .theme-option.active-theme { border: 2px solid var(--text); box-shadow: 0 0 8px rgba(0,0,0,0.3); font-weight: bold; }
 
     /* Layout Selection Buttons */
@@ -132,7 +134,14 @@
     .light-btn { background:#0077cc; } .solarized-btn { background:#268bd2; } .cherry-btn { background:#d32f2f; } .peach-btn { background:#ff7043; } .sunshine-btn { background:#fbc02d; color:#000; } .forest-btn { background:#43a047; } .ocean-btn { background:#00bcd4; } .azure-btn { background:#42a5f5; } .bluelight-btn { background:#2962ff; } .violetlight-btn { background:#7e57c2; } .plum-btn { background:#ab47bc; } .reddishpurple-btn { background:#ec407a; } .blush-btn { background:#ff4081; } .rose-btn { background:#d500f9; } .brownlight-btn { background:#8d6e63; } .greyscale-btn { background:#757575; }
     .ash-btn { background: #607d8b; } .ashblue-btn { background: #64748b; } .ashred-btn { background: #b08d8d; } .ashgreen-btn { background: #8db096; } .ashpurple-btn { background: #a58db0; } .ashorange-btn { background: #b09e8d; }
     .dark-btn { background:#333; } .midnight-btn { background:#415a77; } .reddark-btn { background:#e57373; } .orangedark-btn { background:#ffb74d; color: #333; } .yellowdark-btn { background:#ffd54f; color: #333; } .greendark-btn { background:#81c784; color: #333; } .cyandark-btn { background:#4dd0e1; color: #333; } .azuredark-btn { background:#64b5f6; color: #333; } .deepsea-btn { background:#4fc3f7; color: #333; } .violetnight-btn { background:#9575cd; } .purpledark-btn { background:#ba68c8; } .merlot-btn { background:#f06292; } .browndark-btn { background:#a1887f; } .charcoal-btn { background:#9e9e9e; color: #111; }
-    .onyx-btn { background: #000; border: 1px solid #333; } .onyxred-btn { background: #ff003c; } .onyxblue-btn { background: #00e5ff; color:#000; } .onyxgreen-btn { background: #00ff41; color:#000; } .onyxpurple-btn { background: #bf00ff; } .onyxorange-btn { background: #ff8c00; color:#000; }
+    
+    /* Onyx Buttons (Dimmed & Contrast Adjusted) */
+    .onyx-btn { background: #000; border: 1px solid #333; } 
+    .onyxred-btn { background: #cc0033; } 
+    .onyxblue-btn { background: #00b8cc; color:#000; } 
+    .onyxgreen-btn { background: #00cc33; color:#000; } 
+    .onyxpurple-btn { background: #9900cc; } 
+    .onyxorange-btn { background: #cc7000; color:#000; }
 
     /* Wordle Grid & Inputs */
     .wordle-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
@@ -149,10 +158,10 @@
     .palette-color.green { background-color: var(--green-box); }
 
     /* Buttons & Lists */
-    #saveCombinationBtn, .save-data-btn, #confirmBtn, #cancelBtn, .open-btn, .delete-btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 1em; cursor: pointer; transition: 0.2s; color: white; background-color: var(--accent); }
+    #saveCombinationBtn, .save-data-btn, #confirmBtn, #cancelBtn, .open-btn, .delete-btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 1em; cursor: pointer; transition: 0.2s; color: var(--btn-text); background-color: var(--accent); }
     #saveCombinationBtn { margin-top: 15px; }
-    #saveCombinationBtn:hover { background-color: var(--text); }
-    #confirmBtn, .delete-btn { background-color: var(--delete-red); }
+    #saveCombinationBtn:hover { background-color: var(--text); color: var(--bg); }
+    #confirmBtn, .delete-btn { background-color: var(--delete-red); color: white; }
     
     .test-word-input { width: 100%; max-width: 290px; margin: 0 auto; display: block; padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); }
     .main-page-input { width: 100%; max-width: 100%; margin-top: 20px; }
@@ -209,59 +218,43 @@
       </div>
 
       <h3>Select a Theme</h3>
-      <div class="theme-section">
-        <h3>Light Themes</h3>
-        <button class="theme-option light-btn" onclick="setTheme('light')">Light</button>
-        <button class="theme-option solarized-btn" onclick="setTheme('solarized')">Polarized</button>
-        <button class="theme-option cherry-btn" onclick="setTheme('cherry')">Cherry</button>
-        <button class="theme-option peach-btn" onclick="setTheme('peach')">Peach</button>
-        <button class="theme-option sunshine-btn" onclick="setTheme('sunshine')">Sunbeam</button>
-        <button class="theme-option forest-btn" onclick="setTheme('forest')">Mint</button>
-        <button class="theme-option ocean-btn" onclick="setTheme('ocean')">Aqua</button>
-        <button class="theme-option azure-btn" onclick="setTheme('azure')">Cornflower</button>
-        <button class="theme-option bluelight-btn" onclick="setTheme('bluelight')">Azure</button>
-        <button class="theme-option violetlight-btn" onclick="setTheme('violetlight')">Violet</button>
-        <button class="theme-option plum-btn" onclick="setTheme('plum')">Lavendar</button>
-        <button class="theme-option reddishpurple-btn" onclick="setTheme('reddishpurple')">Plum</button>
-        <button class="theme-option blush-btn" onclick="setTheme('blush')">Blush</button>
-        <button class="theme-option rose-btn" onclick="setTheme('rose')">Fuchsia</button>
-        <button class="theme-option brownlight-btn" onclick="setTheme('brownlight')">Clay</button>
-        <button class="theme-option greyscale-btn" onclick="setTheme('greyscale')">Fog</button>
-      </div>
-      <div class="theme-section">
-        <h3>Ash Themes (Mid-Tone)</h3>
-        <button class="theme-option ash-btn" onclick="setTheme('ash')">Ash Neutral</button>
-        <button class="theme-option ashred-btn" onclick="setTheme('ashred')">Volcanic Ash</button>
-        <button class="theme-option ashblue-btn" onclick="setTheme('ashblue')">Storm</button>
-        <button class="theme-option ashgreen-btn" onclick="setTheme('ashgreen')">Glade</button>
-        <button class="theme-option ashpurple-btn" onclick="setTheme('ashpurple')">Dusk</button>
-        <button class="theme-option ashorange-btn" onclick="setTheme('ashorange')">Sandstone</button>
-      </div>
-      <div class="theme-section">
-        <h3>Dark Themes</h3>
-        <button class="theme-option dark-btn" onclick="setTheme('dark')">Dark</button>
-        <button class="theme-option midnight-btn" onclick="setTheme('midnight')">Midnight</button>
-        <button class="theme-option reddark-btn" onclick="setTheme('reddark')">Red Dark</button>
-        <button class="theme-option orangedark-btn" onclick="setTheme('orangedark')">Orange Dark</button>
-        <button class="theme-option yellowdark-btn" onclick="setTheme('yellowdark')">Yellow Dark</button>
-        <button class="theme-option greendark-btn" onclick="setTheme('greendark')">Green Dark</button>
-        <button class="theme-option cyandark-btn" onclick="setTheme('cyandark')">Cyan Dark</button>
-        <button class="theme-option azuredark-btn" onclick="setTheme('azuredark')">Cornflower Blue Dark</button>
-        <button class="theme-option deepsea-btn" onclick="setTheme('deepsea')">Normal Blue Dark</button>
-        <button class="theme-option violetnight-btn" onclick="setTheme('violetnight')">Bluish Purple Dark</button>
-        <button class="theme-option purpledark-btn" onclick="setTheme('purpledark')">Normal Purple Dark</button>
-        <button class="theme-option merlot-btn" onclick="setTheme('merlot')">Reddish Purple Dark</button>
-        <button class="theme-option browndark-btn" onclick="setTheme('browndark')">Brown Dark</button>
-        <button class="theme-option charcoal-btn" onclick="setTheme('charcoal')">Grey Dark</button>
-      </div>
-      <div class="theme-section">
-        <h3>Onyx Themes (True Black)</h3>
-        <button class="theme-option onyx-btn" onclick="setTheme('onyx')">Obsidian</button>
-        <button class="theme-option onyxred-btn" onclick="setTheme('onyxred')">Sith</button>
-        <button class="theme-option onyxblue-btn" onclick="setTheme('onyxblue')">Tron</button>
-        <button class="theme-option onyxgreen-btn" onclick="setTheme('onyxgreen')">Matrix</button>
-        <button class="theme-option onyxpurple-btn" onclick="setTheme('onyxpurple')">Ultraviolet</button>
-        <button class="theme-option onyxorange-btn" onclick="setTheme('onyxorange')">Magma</button>
+      <div class="theme-grid">
+        <div class="theme-column">
+          <h3>Light</h3>
+          <button class="theme-option light-btn" onclick="setTheme('light')">Neutral</button>
+          <button class="theme-option cherry-btn" onclick="setTheme('cherry')">Red</button>
+          <button class="theme-option bluelight-btn" onclick="setTheme('bluelight')">Blue</button>
+          <button class="theme-option forest-btn" onclick="setTheme('forest')">Green</button>
+          <button class="theme-option violetlight-btn" onclick="setTheme('violetlight')">Purple</button>
+          <button class="theme-option peach-btn" onclick="setTheme('peach')">Orange</button>
+        </div>
+        <div class="theme-column">
+          <h3>Ash</h3>
+          <button class="theme-option ash-btn" onclick="setTheme('ash')">Neutral</button>
+          <button class="theme-option ashred-btn" onclick="setTheme('ashred')">Red</button>
+          <button class="theme-option ashblue-btn" onclick="setTheme('ashblue')">Blue</button>
+          <button class="theme-option ashgreen-btn" onclick="setTheme('ashgreen')">Green</button>
+          <button class="theme-option ashpurple-btn" onclick="setTheme('ashpurple')">Purple</button>
+          <button class="theme-option ashorange-btn" onclick="setTheme('ashorange')">Orange</button>
+        </div>
+        <div class="theme-column">
+          <h3>Dark</h3>
+          <button class="theme-option dark-btn" onclick="setTheme('dark')">Neutral</button>
+          <button class="theme-option reddark-btn" onclick="setTheme('reddark')">Red</button>
+          <button class="theme-option azuredark-btn" onclick="setTheme('azuredark')">Blue</button>
+          <button class="theme-option greendark-btn" onclick="setTheme('greendark')">Green</button>
+          <button class="theme-option purpledark-btn" onclick="setTheme('purpledark')">Purple</button>
+          <button class="theme-option orangedark-btn" onclick="setTheme('orangedark')">Orange</button>
+        </div>
+        <div class="theme-column">
+          <h3>Onyx</h3>
+          <button class="theme-option onyx-btn" onclick="setTheme('onyx')">Neutral</button>
+          <button class="theme-option onyxred-btn" onclick="setTheme('onyxred')">Red</button>
+          <button class="theme-option onyxblue-btn" onclick="setTheme('onyxblue')">Blue</button>
+          <button class="theme-option onyxgreen-btn" onclick="setTheme('onyxgreen')">Green</button>
+          <button class="theme-option onyxpurple-btn" onclick="setTheme('onyxpurple')">Purple</button>
+          <button class="theme-option onyxorange-btn" onclick="setTheme('onyxorange')">Orange</button>
+        </div>
       </div>
     </div>
   </div>

@@ -6,863 +6,168 @@
   <title>Letter Frequency</title>
   <link href="https://fonts.googleapis.com/css2?family=Didact+Gothic&display=swap" rel="stylesheet">
   <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
-  <script src="dictionary.js"></script>
   <style>
-    /* Core Variables */
+    /* =========================================
+       CSS VARIABLES & THEME ENGINE
+       ========================================= */
     :root {
+      /* Base Defaults (Light) */
       --bg: #ffffff;
-      --text: #111;
+      --text: #111111;
       --accent: #0077cc;
       --input-bg: #f0f0f0;
       --card-bg: #ffffff;
       --settings-icon-bg: rgba(128, 128, 128, 0.2);
+      
+      /* Static Colors */
+      --grey-box: #787c7e;
+      --yellow-box: #c9b458;
+      --green-box: #6aaa64;
+      --delete-red: #e63946;
     }
+
+    /* --- LIGHT THEMES --- */
+    body.light          { /* default vars apply */ }
+    body.solarized      { --bg: #fdf6e3; --text: #657b83; --accent: #268bd2; --input-bg: #eee8d5; --card-bg: #fdf6e3; }
+    body.cherry         { --bg: #fff0f0; --text: #5a0000; --accent: #d32f2f; --input-bg: #ffebee; --card-bg: #ffcdd2; }
+    body.peach          { --bg: #fff3e0; --text: #5d4037; --accent: #ff7043; --input-bg: #ffe0b2; --card-bg: #ffccbc; }
+    body.sunshine       { --bg: #fffde7; --text: #5d4037; --accent: #fbc02d; --input-bg: #fff9c4; --card-bg: #fff59d; }
+    body.forest         { --bg: #e8f5e9; --text: #1b5e20; --accent: #43a047; --input-bg: #c8e6c9; --card-bg: #a5d6a7; }
+    body.ocean          { --bg: #e0f7fa; --text: #006064; --accent: #00bcd4; --input-bg: #b2ebf2; --card-bg: #80deea; }
+    body.azure          { --bg: #e3f2fd; --text: #0d47a1; --accent: #42a5f5; --input-bg: #bbdefb; --card-bg: #90caf9; }
+    body.bluelight      { --bg: #f0f8ff; --text: #002171; --accent: #2962ff; --input-bg: #e1f5fe; --card-bg: #b3e5fc; }
+    body.violetlight    { --bg: #ede7f6; --text: #311b92; --accent: #7e57c2; --input-bg: #d1c4e9; --card-bg: #b39ddb; }
+    body.plum           { --bg: #f3e5f5; --text: #4a148c; --accent: #ab47bc; --input-bg: #e1bee7; --card-bg: #ce93d8; }
+    body.reddishpurple  { --bg: #fce4ec; --text: #880e4f; --accent: #ec407a; --input-bg: #f8bbd0; --card-bg: #f48fb1; }
+    body.blush          { --bg: #fff0f5; --text: #880e4f; --accent: #ff4081; --input-bg: #fce4ec; --card-bg: #f8bbd0; }
+    body.rose           { --bg: #fae3f4; --text: #4a0072; --accent: #d500f9; --input-bg: #f3e5f5; --card-bg: #e1bee7; }
+    body.brownlight     { --bg: #efebe9; --text: #3e2723; --accent: #8d6e63; --input-bg: #d7ccc8; --card-bg: #bcaaa4; }
+    body.greyscale      { --bg: #f5f5f5; --text: #212121; --accent: #757575; --input-bg: #e0e0e0; --card-bg: #eeeeee; }
+
+    /* --- ASH THEMES (Mid-Tone) --- */
+    body.ash       { --bg: #454955; --text: #F3F5F7; --accent: #AAB7B8; --input-bg: #373b44; --card-bg: #555b69; --settings-icon-bg: rgba(255,255,255,0.1); }
+    body.ashblue   { --bg: #374151; --text: #e2e8f0; --accent: #64748b; --input-bg: #1f2937; --card-bg: #475569; --settings-icon-bg: rgba(255,255,255,0.1); }
+    body.ashred    { --bg: #4a4040; --text: #ebdada; --accent: #b08d8d; --input-bg: #382e2e; --card-bg: #5e5050; --settings-icon-bg: rgba(255,255,255,0.1); }
+    body.ashgreen  { --bg: #404a42; --text: #daebe0; --accent: #8db096; --input-bg: #2e3830; --card-bg: #526155; --settings-icon-bg: rgba(255,255,255,0.1); }
+    body.ashpurple { --bg: #45404a; --text: #e8daeb; --accent: #a58db0; --input-bg: #342e38; --card-bg: #595061; --settings-icon-bg: rgba(255,255,255,0.1); }
+    body.ashorange { --bg: #4a4540; --text: #ebe3da; --accent: #b09e8d; --input-bg: #38322e; --card-bg: #615950; --settings-icon-bg: rgba(255,255,255,0.1); }
+
+    /* --- DARK THEMES --- */
+    body.dark        { --bg: #121212; --text: #e0e0e0; --accent: #4a90e2; --input-bg: #2a2a2a; --card-bg: #1e1e1e; }
+    body.midnight    { --bg: #0d1b2a; --text: #e0e1dd; --accent: #415a77; --input-bg: #1b263b; --card-bg: #1e2a3a; }
+    body.reddark     { --bg: #1a0f0f; --text: #ffdad4; --accent: #e57373; --input-bg: #2d1a1a; --card-bg: #3b2020; }
+    body.orangedark  { --bg: #1a140f; --text: #ffe0b2; --accent: #ffb74d; --input-bg: #332414; --card-bg: #402d18; }
+    body.yellowdark  { --bg: #1a180b; --text: #fff9c4; --accent: #ffd54f; --input-bg: #333114; --card-bg: #424017; }
+    body.greendark   { --bg: #0e1b0e; --text: #c8e6c9; --accent: #81c784; --input-bg: #1b331b; --card-bg: #224022; }
+    body.cyandark    { --bg: #0b1a1a; --text: #b2ebf2; --accent: #4dd0e1; --input-bg: #143333; --card-bg: #194040; }
+    body.azuredark   { --bg: #0d1626; --text: #bbdefb; --accent: #64b5f6; --input-bg: #172640; --card-bg: #1e3357; }
+    body.deepsea     { --bg: #0a141c; --text: #b3e5fc; --accent: #4fc3f7; --input-bg: #122533; --card-bg: #172f40; }
+    body.violetnight { --bg: #12101c; --text: #d1c4e9; --accent: #9575cd; --input-bg: #221e33; --card-bg: #2c2742; }
+    body.purpledark  { --bg: #140d1c; --text: #e1bee7; --accent: #ba68c8; --input-bg: #261933; --card-bg: #322142; }
+    body.merlot      { --bg: #1a0d14; --text: #f8bbd0; --accent: #f06292; --input-bg: #331926; --card-bg: #422031; }
+    body.browndark   { --bg: #1a120f; --text: #d7ccc8; --accent: #a1887f; --input-bg: #33241d; --card-bg: #422e25; }
+    body.charcoal    { --bg: #181818; --text: #e0e0e0; --accent: #9e9e9e; --input-bg: #2e2e2e; --card-bg: #383838; }
+
+    /* --- ONYX THEMES (Pure Black) --- */
+    body.onyx       { --bg: #000000; --text: #ffffff; --accent: #ffffff; --input-bg: #111111; --card-bg: #0a0a0a; --settings-icon-bg: rgba(50,50,50,0.5); }
+    body.onyxred    { --bg: #000000; --text: #fff; --accent: #ff003c; --input-bg: #111; --card-bg: #0d0d0d; }
+    body.onyxblue   { --bg: #000000; --text: #fff; --accent: #00e5ff; --input-bg: #111; --card-bg: #0d0d0d; }
+    body.onyxgreen  { --bg: #000000; --text: #fff; --accent: #00ff41; --input-bg: #111; --card-bg: #0d0d0d; }
+    body.onyxpurple { --bg: #000000; --text: #fff; --accent: #bf00ff; --input-bg: #111; --card-bg: #0d0d0d; }
+    body.onyxorange { --bg: #000000; --text: #fff; --accent: #ff8c00; --input-bg: #111; --card-bg: #0d0d0d; }
 
     /* =========================================
-       LIGHT THEMES (Standard White/Tinted BGs)
+       GLOBAL STYLES
        ========================================= */
-    body.light {
-      --bg: #ffffff;
-      --text: #111;
-      --accent: #0077cc;
-      --input-bg: #f0f0f0;
-      --card-bg: #ffffff;
-      --settings-icon-bg: rgba(128, 128, 128, 0.2);
-    }
-    body.solarized { /* Polarized */
-      --bg: #fdf6e3;
-      --text: #657b83;
-      --accent: #268bd2;
-      --input-bg: #eee8d5;
-      --card-bg: #fdf6e3;
-      --settings-icon-bg: rgba(101, 123, 131, 0.2);
-    }
-    body.cherry { /* Red Light */
-      --bg: #fff0f0;
-      --text: #5a0000;
-      --accent: #d32f2f;
-      --input-bg: #ffebee;
-      --card-bg: #ffcdd2;
-    }
-    body.peach { /* Orange Light */
-      --bg: #fff3e0;
-      --text: #5d4037;
-      --accent: #ff7043;
-      --input-bg: #ffe0b2;
-      --card-bg: #ffccbc;
-    }
-    body.sunshine { /* Yellow Light */
-      --bg: #fffde7;
-      --text: #5d4037;
-      --accent: #fbc02d;
-      --input-bg: #fff9c4;
-      --card-bg: #fff59d;
-    }
-    body.forest { /* Green Light */
-      --bg: #e8f5e9;
-      --text: #1b5e20;
-      --accent: #43a047;
-      --input-bg: #c8e6c9;
-      --card-bg: #a5d6a7;
-    }
-    body.ocean { /* Aqua Light */
-      --bg: #e0f7fa;
-      --text: #006064;
-      --accent: #00bcd4;
-      --input-bg: #b2ebf2;
-      --card-bg: #80deea;
-    }
-    body.azure { /* Cornflower Light */
-      --bg: #e3f2fd;
-      --text: #0d47a1;
-      --accent: #42a5f5;
-      --input-bg: #bbdefb;
-      --card-bg: #90caf9;
-    }
-    body.bluelight { /* Azure Light */
-      --bg: #f0f8ff;
-      --text: #002171;
-      --accent: #2962ff;
-      --input-bg: #e1f5fe;
-      --card-bg: #b3e5fc;
-    }
-    body.violetlight { /* Bluish Purple Light */
-      --bg: #ede7f6;
-      --text: #311b92;
-      --accent: #7e57c2;
-      --input-bg: #d1c4e9;
-      --card-bg: #b39ddb;
-    }
-    body.plum { /* Lavender Light */
-      --bg: #f3e5f5;
-      --text: #4a148c;
-      --accent: #ab47bc;
-      --input-bg: #e1bee7;
-      --card-bg: #ce93d8;
-    }
-    body.reddishpurple { /* Reddish Purple Light */
-      --bg: #fce4ec;
-      --text: #880e4f;
-      --accent: #ec407a;
-      --input-bg: #f8bbd0;
-      --card-bg: #f48fb1;
-    }
-    body.blush { /* Light Pink Light */
-      --bg: #fff0f5;
-      --text: #880e4f;
-      --accent: #ff4081;
-      --input-bg: #fce4ec;
-      --card-bg: #f8bbd0;
-    }
-    body.rose { /* Fuchsia Light */
-      --bg: #fae3f4;
-      --text: #4a0072;
-      --accent: #d500f9;
-      --input-bg: #f3e5f5;
-      --card-bg: #e1bee7;
-    }
-    body.brownlight { /* Brown Light */
-      --bg: #efebe9;
-      --text: #3e2723;
-      --accent: #8d6e63;
-      --input-bg: #d7ccc8;
-      --card-bg: #bcaaa4;
-    }
-    body.greyscale { /* Grey Light */
-      --bg: #f5f5f5;
-      --text: #212121;
-      --accent: #757575;
-      --input-bg: #e0e0e0;
-      --card-bg: #eeeeee;
-    }
-
-    /* =========================================
-       ASH THEMES (Mid-tone / Muted / Slate)
-       ========================================= */
-    /* Ash Concept: Low contrast, desaturated backgrounds, soft pastel text */
-    
-    body.ash { /* Standard Ash (Grey) */
-      --bg: #454955; 
-      --text: #F3F5F7; 
-      --accent: #AAB7B8;  
-      --input-bg: #373b44;
-      --card-bg: #555b69;
-      --settings-icon-bg: rgba(255, 255, 255, 0.1);
-    }
-    body.ashblue { /* Storm */
-      --bg: #374151;
-      --text: #e2e8f0;
-      --accent: #64748b; /* Blue-grey accent */
-      --input-bg: #1f2937;
-      --card-bg: #475569;
-    }
-    body.ashred { /* Ember */
-      --bg: #4a4040;
-      --text: #ebdada;
-      --accent: #b08d8d; /* Muted Red */
-      --input-bg: #382e2e;
-      --card-bg: #5e5050;
-    }
-    body.ashgreen { /* Sage */
-      --bg: #404a42;
-      --text: #daebe0;
-      --accent: #8db096; /* Muted Green */
-      --input-bg: #2e3830;
-      --card-bg: #526155;
-    }
-    body.ashpurple { /* Dusk */
-      --bg: #45404a;
-      --text: #e8daeb;
-      --accent: #a58db0; /* Muted Purple */
-      --input-bg: #342e38;
-      --card-bg: #595061;
-    }
-    body.ashorange { /* Clay */
-      --bg: #4a4540;
-      --text: #ebe3da;
-      --accent: #b09e8d; /* Muted Orange/Brown */
-      --input-bg: #38322e;
-      --card-bg: #615950;
-    }
-
-    /* =========================================
-       DARK THEMES (Standard Dark Mode)
-       ========================================= */
-    body.dark {
-      --bg: #121212;
-      --text: #e0e0e0;
-      --accent: #4a90e2;
-      --input-bg: #2a2a2a;
-      --card-bg: #1e1e1e;
-    }
-    body.midnight {
-      --bg: #0d1b2a;
-      --text: #e0e1dd;
-      --accent: #415a77;
-      --input-bg: #1b263b;
-      --card-bg: #1e2a3a;
-    }
-    body.reddark { 
-      --bg: #1a0f0f; 
-      --text: #ffdad4; 
-      --accent: #e57373; 
-      --input-bg: #2d1a1a; 
-      --card-bg: #3b2020; 
-    }
-    body.orangedark { 
-      --bg: #1a140f; 
-      --text: #ffe0b2; 
-      --accent: #ffb74d; 
-      --input-bg: #332414; 
-      --card-bg: #402d18; 
-    }
-    body.yellowdark { 
-      --bg: #1a180b; 
-      --text: #fff9c4; 
-      --accent: #ffd54f; 
-      --input-bg: #333114; 
-      --card-bg: #424017; 
-    }
-    body.greendark {
-      --bg: #0e1b0e;
-      --text: #c8e6c9;
-      --accent: #81c784;
-      --input-bg: #1b331b;
-      --card-bg: #224022;
-    }
-    body.cyandark { 
-      --bg: #0b1a1a; 
-      --text: #b2ebf2; 
-      --accent: #4dd0e1; 
-      --input-bg: #143333; 
-      --card-bg: #194040; 
-    }
-    body.azuredark {
-      --bg: #0d1626;
-      --text: #bbdefb;
-      --accent: #64b5f6;
-      --input-bg: #172640;
-      --card-bg: #1e3357;
-    }
-    body.deepsea {
-      --bg: #0a141c;
-      --text: #b3e5fc;
-      --accent: #4fc3f7;
-      --input-bg: #122533;
-      --card-bg: #172f40;
-    }
-    body.violetnight {
-      --bg: #12101c;
-      --text: #d1c4e9;
-      --accent: #9575cd;
-      --input-bg: #221e33;
-      --card-bg: #2c2742;
-    }
-    body.purpledark {
-      --bg: #140d1c;
-      --text: #e1bee7;
-      --accent: #ba68c8;
-      --input-bg: #261933;
-      --card-bg: #322142;
-    }
-    body.merlot { 
-      --bg: #1a0d14;    
-      --text: #f8bbd0;    
-      --accent: #f06292;  
-      --input-bg: #331926; 
-      --card-bg: #422031;   
-    }
-    body.browndark {
-      --bg: #1a120f;
-      --text: #d7ccc8;
-      --accent: #a1887f;
-      --input-bg: #33241d;
-      --card-bg: #422e25;
-    }
-    body.charcoal { 
-      --bg: #181818;
-      --text: #e0e0e0;
-      --accent: #9e9e9e;
-      --input-bg: #2e2e2e;
-      --card-bg: #383838;
-    }
-
-    /* =========================================
-       ONYX THEMES (Pure Black / High Contrast / Neon)
-       ========================================= */
-    /* Onyx Concept: Pure Black BG (#000000), Stark White Text, Neon Accents */
-    
-    body.onyx { /* Pure Black */
-      --bg: #000000; 
-      --text: #ffffff; 
-      --accent: #ffffff; 
-      --input-bg: #111111;
-      --card-bg: #0a0a0a;
-      --settings-icon-bg: rgba(50, 50, 50, 0.5);
-    }
-    body.onyxred { /* Sith */
-      --bg: #000000;
-      --text: #fff;
-      --accent: #ff003c; /* Neon Red */
-      --input-bg: #111;
-      --card-bg: #0d0d0d;
-    }
-    body.onyxblue { /* Tron */
-      --bg: #000000;
-      --text: #fff;
-      --accent: #00e5ff; /* Cyan */
-      --input-bg: #111;
-      --card-bg: #0d0d0d;
-    }
-    body.onyxgreen { /* Matrix */
-      --bg: #000000;
-      --text: #fff;
-      --accent: #00ff41; /* Terminal Green */
-      --input-bg: #111;
-      --card-bg: #0d0d0d;
-    }
-    body.onyxpurple { /* Ultraviolet */
-      --bg: #000000;
-      --text: #fff;
-      --accent: #bf00ff; /* Electric Purple */
-      --input-bg: #111;
-      --card-bg: #0d0d0d;
-    }
-    body.onyxorange { /* Magma */
-      --bg: #000000;
-      --text: #fff;
-      --accent: #ff8c00; /* Neon Orange */
-      --input-bg: #111;
-      --card-bg: #0d0d0d;
-    }
-
-
-    /* Global Styles */
     * { box-sizing: border-box; font-family: 'Didact Gothic', sans-serif; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
     body { margin:0; background:var(--bg); color:var(--text); display:flex; flex-direction:column; align-items:center; padding:20px; min-height:100vh; }
     
-    .app-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        max-width: 500px;
-        position: relative;
-        margin-bottom: 20px;
-        min-height: 40px;
-    }
+    /* Layout & Utilities */
+    .app-header { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 500px; position: relative; margin-bottom: 20px; min-height: 40px; }
+    .app-header h2 { position: absolute; left: 50%; transform: translateX(-50%); margin: 0; white-space: nowrap; font-size: clamp(1rem, 5vw, 1.4rem); }
+    
+    /* Header Buttons */
+    .header-btn { background: var(--settings-icon-bg); border: none; font-size: 1.5em; cursor: pointer; color: var(--text); border-radius: 50%; padding: 8px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; transition: background-color 0.3s; }
+    .header-btn:hover { background: var(--accent); color: white; }
+    #searchBtn { position: absolute; left: 0; }
+    #settingsIconBtn { position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
 
-    .app-header h2 {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        margin: 0;
-        white-space: nowrap;
-        font-size: clamp(1rem, 5vw, 1.4rem);
-    }
+    /* Main Containers */
+    .main-content-wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: flex-start; }
+    .container { background:var(--card-bg); padding:25px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); width:100%; }
+    
+    /* Input Areas */
+    .content-area { display: flex; width: 100%; flex-direction: row; justify-content: space-between; gap: 20px; }
+    .result-box { background:var(--input-bg); padding:16px; border-radius:10px; font-family:'Courier New', monospace; white-space:pre-wrap; font-size:1em; color:var(--text); flex-basis: calc(50% - 10px); align-self: stretch; }
+    
+    #wordInputTextarea { flex-basis: calc(50% - 10px); padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); resize: none; overflow-y: hidden; min-height: 50px; white-space: pre-wrap; word-wrap: break-word; font-family: 'Didact Gothic', sans-serif; }
+    #wordInputText { width: 100%; padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); margin-bottom: 10px; display:none; }
+    ::placeholder { color: #888; }
 
+    /* Layout overrides */
+    body.layout-original .content-area { flex-direction: column; gap: 10px; }
+    body.layout-original #wordInputText { display: block; }
+    body.layout-original #wordInputTextarea { display: none; }
+    body.layout-original .result-box { width: 100%; flex-basis: auto; }
 
-    #searchBtn {
-        position: absolute;
-        left: 0;
-        font-size: 1.2em;
-    }
-
-    .header-btn {
-        background: var(--settings-icon-bg);
-        border: none;
-        font-size: 1.5em;
-        cursor: pointer;
-        color: var(--text);
-        border-radius: 50%;
-        padding: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        transition: background-color 0.3s;
-    }
-    .header-btn:hover {
-      background: var(--accent);
-      color: white;
-    }
-
-    .app-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-        max-width: 500px;
-        position: relative;
-        margin-bottom: 20px;
-    }
-    #settingsIconBtn {
-      background: var(--settings-icon-bg);
-      border: none;
-      font-size: 1.5em; /* Adjust as needed */
-      cursor: pointer;
-      color: var(--text);
-      border-radius: 50%; /* Rounded */
-      padding: 8px; /* Padding around the icon */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px; /* Explicit width */
-      height: 40px; /* Explicit height */
-      transition: background-color 0.3s; /* Smooth transition for background */
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-
-    }
-    #settingsIconBtn:hover {
-      background: var(--accent);
-      color: white;
-    }
-
-    .container { background:var(--card-bg); padding:25px; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.15); width:100%; max-width:500px; /* position:relative; no longer needed if settings btn is in header */ }
-    /* input styles will be handled by #wordInputText and #wordInputTextarea directly */
-    .result-box { background:var(--input-bg); padding:16px; border-radius:10px; font-family:'Courier New', monospace; white-space:pre-wrap; font-size:1em; color:var(--text); }
-    /* .theme-btn removed */
+    /* Modals */
     .modal { position:fixed; top:0; left:0; right:0; bottom:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); z-index:100; }
     .modal-content { background:var(--card-bg); padding:20px; border-radius:12px; width:90%; max-width:400px; text-align:center; position:relative; max-height:80vh; overflow-y:auto; }
     .close-btn { position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.2em; color:var(--text); cursor:pointer; }
-    .theme-section { text-align:left; margin-top:15px; }
-    .theme-section h3 { margin-bottom:10px; font-size:1em; border-bottom:1px solid var(--input-bg); padding-bottom:5px; }
+    
+    /* Settings & Theme Selection */
+    .settings-section h3, .modal-content > h3, .theme-section h3 { margin: 20px 0 10px; font-size: 1.15em; color: var(--text); border-bottom: 1px solid var(--input-bg); padding-bottom: 8px; }
+    .theme-section h3 { font-size: 1.05em; margin-top: 15px; border-bottom-style: dashed; }
     .theme-option { display:block; width:100%; padding:12px; margin:6px 0; border:none; border-radius:8px; font-size:1em; cursor:pointer; color:white; }
+    .theme-option.active-theme { border: 2px solid var(--text); box-shadow: 0 0 8px rgba(0,0,0,0.3); font-weight: bold; }
 
-    /* Settings Modal & Layout Options */
-    #settingsIconBtn { /* Already has inline styles, but can be enhanced here if needed */
-      padding: 5px; /* Ensure it's not too large */
-    }
-    .settings-section h3, .modal-content > h3 { /* Target direct h3 under modal-content and specific section h3s */
-      margin-top: 20px;
-      margin-bottom: 10px;
-      font-size: 1.15em; /* Unified font size */
-      color: var(--text);
-      border-bottom: 1px solid var(--input-bg);
-      padding-bottom: 8px;
-    }
-    .theme-section h3 { /* Sub-headings for Light/Dark themes */
-        font-size: 1.05em; /* Slightly smaller than main section titles */
-        margin-top: 15px;
-        margin-bottom: 8px;
-        border-bottom-style: dashed; /* Differentiate sub-section borders */
-    }
-    .layout-option {
-      cursor: pointer;
-      padding: 10px;
-      border-radius: 8px;
-      text-align: center;
-      background-color: var(--input-bg);
-      color: var(--text);
-      width: calc(50% - 10px); /* Two options side-by-side */
-      transition: background-color 0.2s;
-    }
-    .layout-option:hover {
-      background-color: var(--accent);
-      color: white;
-    }
-    .layout-option.active-layout {
-      background-color: var(--accent); /* Similar to hover, or a distinct color */
-      color: white;
-      border: 2px solid var(--bg); 
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
-    }
-    .layout-option { /* Ensure the whole button is a flex column */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center; /* Center content vertically if there's extra space */
-      /* width, padding, etc. already defined and seem okay */
-    }
-    .layout-icon { /* Container for the SVG */
-      margin-bottom: 5px; /* Space between icon and text */
-      height: 35px;  /* Slightly increased icon visual height */
-      width: auto;   /* Maintain aspect ratio based on height */
-      display: flex; 
-      align-items: center; 
-      justify-content: center; 
-    }
-    .layout-icon svg {
-      fill: currentColor; 
-      height: 100%; /* SVG takes full height of .layout-icon */
-      width: auto;  /* Maintain aspect ratio */
-    }
-    .theme-option.active-theme {
-      border: 2px solid var(--text); 
-      box-shadow: 0 0 8px rgba(0,0,0,0.3);
-      font-weight: bold;
-    }
+    /* Layout Selection Buttons */
+    .layout-option { display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; padding: 10px; border-radius: 8px; background-color: var(--input-bg); color: var(--text); width: calc(50% - 10px); transition: background-color 0.2s; }
+    .layout-option:hover, .layout-option.active-layout { background-color: var(--accent); color: white; }
+    .layout-option.active-layout { border: 2px solid var(--bg); box-shadow: 0 0 5px rgba(0,0,0,0.2); }
+    .layout-icon { margin-bottom: 5px; height: 35px; width: auto; display: flex; align-items: center; justify-content: center; }
+    .layout-icon svg { fill: currentColor; height: 100%; width: auto; }
 
+    /* Theme Button Colors Mappings */
+    .light-btn { background:#0077cc; } .solarized-btn { background:#268bd2; } .cherry-btn { background:#d32f2f; } .peach-btn { background:#ff7043; } .sunshine-btn { background:#fbc02d; color:#000; } .forest-btn { background:#43a047; } .ocean-btn { background:#00bcd4; } .azure-btn { background:#42a5f5; } .bluelight-btn { background:#2962ff; } .violetlight-btn { background:#7e57c2; } .plum-btn { background:#ab47bc; } .reddishpurple-btn { background:#ec407a; } .blush-btn { background:#ff4081; } .rose-btn { background:#d500f9; } .brownlight-btn { background:#8d6e63; } .greyscale-btn { background:#757575; }
+    .ash-btn { background: #607d8b; } .ashblue-btn { background: #64748b; } .ashred-btn { background: #b08d8d; } .ashgreen-btn { background: #8db096; } .ashpurple-btn { background: #a58db0; } .ashorange-btn { background: #b09e8d; }
+    .dark-btn { background:#333; } .midnight-btn { background:#415a77; } .reddark-btn { background:#e57373; } .orangedark-btn { background:#ffb74d; color: #333; } .yellowdark-btn { background:#ffd54f; color: #333; } .greendark-btn { background:#81c784; color: #333; } .cyandark-btn { background:#4dd0e1; color: #333; } .azuredark-btn { background:#64b5f6; color: #333; } .deepsea-btn { background:#4fc3f7; color: #333; } .violetnight-btn { background:#9575cd; } .purpledark-btn { background:#ba68c8; } .merlot-btn { background:#f06292; } .browndark-btn { background:#a1887f; } .charcoal-btn { background:#9e9e9e; color: #111; }
+    .onyx-btn { background: #000; border: 1px solid #333; } .onyxred-btn { background: #ff003c; } .onyxblue-btn { background: #00e5ff; color:#000; } .onyxgreen-btn { background: #00ff41; color:#000; } .onyxpurple-btn { background: #bf00ff; } .onyxorange-btn { background: #ff8c00; color:#000; }
 
-    /* Content Area Layouts */
-    .content-area {
-      display: flex;
-      width: 100%;
-    }
-
-    /* Default: Side-by-Side Layout */
-    .content-area {
-      flex-direction: row;
-      justify-content: space-between;
-      gap: 20px; 
-    }
-    /* Styles for wordInputTextarea (Side-by-Side) */
-    #wordInputTextarea {
-      flex-basis: calc(50% - 10px); /* Restored flex-basis */
-      padding: 12px;
-      font-size: 1em;
-      border: 1px solid var(--input-bg); /* Subtle border */
-      border-radius: 8px;
-      background: var(--input-bg);
-      color: var(--text);
-      margin-bottom: 0;
-      resize: none; /* Disabled manual resize, will be dynamic */
-      overflow-y: hidden; /* Hide scrollbar, height adjusts */
-      min-height: 50px; /* Start with a decent min-height */
-      white-space: pre-wrap; 
-      word-wrap: break-word; 
-      font-family: 'Didact Gothic', sans-serif; /* Ensure font consistency */
-    }
-     #wordInputTextarea::placeholder { color:#888; }
-
-    .result-box {
-      flex-basis: calc(50% - 10px);
-      align-self: stretch; 
-    }
-
-    /* Original Layout Override Styles */
-    body.layout-original .content-area {
-      flex-direction: column;
-      gap: 20px; 
-    }
-    /* Styles for wordInputText (Original) */
-    body.layout-original #wordInputText {
-      width: 100%; /* Restored width property */
-      padding: 12px;
-      font-size: 1em;
-      border: 1px solid var(--input-bg); 
-      border-radius: 8px;
-      background: var(--input-bg);
-      color: var(--text);
-      margin-bottom: 10px; /* Restored margin-bottom */
-      font-family: 'Didact Gothic', sans-serif; 
-    }
-    body.layout-original #wordInputText::placeholder { color:#888; }
-
-    body.layout-original .result-box {
-      flex-basis: auto; 
-      width: 100%;
-    }
-    body.layout-original .content-area {
-      flex-direction: column;
-      gap: 10px; /* Restored gap property */
-    }
+    /* Wordle Grid & Inputs */
+    .wordle-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .wordle-row { display: flex; justify-content: center; gap: 10px; }
+    .wordle-box { width: 50px; height: 50px; border: 2px solid #565758; background-color: var(--grey-box); color: white; font-size: 1.8em; font-weight: bold; text-align: center; text-transform: uppercase; caret-color: transparent; cursor: pointer; }
+    .wordle-box[data-color="yellow"] { background-color: var(--yellow-box); }
+    .wordle-box[data-color="green"] { background-color: var(--green-box); }
     
-    /* Hidden helper span for text width calculation - still needed for other potential uses or if we bring back dynamic width for something else */
-    #text-width-helper {
-      position: absolute;
-      visibility: hidden;
-      white-space: nowrap;
-      font-family: 'Didact Gothic', sans-serif; 
-      font-size: 1em; 
-      padding: 0 12px; 
-    }
+    .palette { display: flex; justify-content: center; gap: 15px; margin: 15px 0; }
+    .palette-color { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.2s, border-color 0.2s; }
+    .palette-color:hover, .palette-color.active-color { transform: scale(1.15); border-color: var(--accent); }
+    .palette-color.grey { background-color: var(--grey-box); }
+    .palette-color.yellow { background-color: var(--yellow-box); }
+    .palette-color.green { background-color: var(--green-box); }
 
-    /* Light Button Colors */
-    .light-btn { background:#0077cc; }
-    .solarized-btn { background:#268bd2; }
-    .cherry-btn { background:#d32f2f; }
-    .peach-btn { background:#ff7043; }
-    .sunshine-btn { background:#fbc02d; color:#000; }
-    .forest-btn { background:#43a047; }
-    .ocean-btn { background:#00bcd4; }
-    .azure-btn { background:#42a5f5; }
-    .bluelight-btn { background:#2962ff; }
-    .violetlight-btn { background:#7e57c2; }
-    .plum-btn { background:#ab47bc; }
-    .reddishpurple-btn { background:#ec407a; }
-    .blush-btn { background:#ff4081; }
-    .rose-btn { background:#d500f9; }
-    .brownlight-btn { background:#8d6e63; }
-    .greyscale-btn { background:#757575; }
-
-    /* Ash Button Colors (Muted Accents) */
-    .ash-btn { background: #607d8b; }
-    .ashblue-btn { background: #64748b; }
-    .ashred-btn { background: #b08d8d; }
-    .ashgreen-btn { background: #8db096; }
-    .ashpurple-btn { background: #a58db0; }
-    .ashorange-btn { background: #b09e8d; }
-
-    /* Dark Button Colors */
-    .dark-btn { background:#333; }
-    .midnight-btn { background:#415a77; }
-    .reddark-btn { background:#e57373; }
-    .orangedark-btn { background:#ffb74d; color: #333; }
-    .yellowdark-btn { background:#ffd54f; color: #333; }
-    .greendark-btn { background:#81c784; color: #333; }
-    .cyandark-btn { background:#4dd0e1; color: #333; }
-    .azuredark-btn { background:#64b5f6; color: #333; }
-    .deepsea-btn { background:#4fc3f7; color: #333; }
-    .violetnight-btn { background:#9575cd; }
-    .purpledark-btn { background:#ba68c8; }
-    .merlot-btn { background:#f06292; }
-    .browndark-btn { background:#a1887f; }
-    .charcoal-btn { background:#9e9e9e; color: #111; }
-
-    /* Onyx Button Colors (Neons) */
-    .onyx-btn { background: #000000; border: 1px solid #333; }
-    .onyxred-btn { background: #ff003c; color: #fff; }
-    .onyxblue-btn { background: #00e5ff; color: #000; }
-    .onyxgreen-btn { background: #00ff41; color: #000; }
-    .onyxpurple-btn { background: #bf00ff; color: #fff; }
-    .onyxorange-btn { background: #ff8c00; color: #000; }
+    /* Buttons & Lists */
+    #saveCombinationBtn, .save-data-btn, #confirmBtn, #cancelBtn, .open-btn, .delete-btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 1em; cursor: pointer; transition: 0.2s; color: white; background-color: var(--accent); }
+    #saveCombinationBtn { margin-top: 15px; }
+    #saveCombinationBtn:hover { background-color: var(--text); }
+    #confirmBtn, .delete-btn { background-color: var(--delete-red); }
     
-    /* Camera Button and Modal Styles */
-    .main-content-wrapper {
-      width: 100%;
-      max-width: 500px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start; /* Aligns children to the left */
-    }
-    .camera-btn-repositioned {
-      background-color: var(--accent);
-      color: white;
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      margin-top: 15px; /* Space below the main container */
-    }
-    .camera-btn-repositioned {
-        display: none; /* Hiding the camera button as requested */
-    }
-    #saveCombinationBtn {
-      background-color: var(--accent);
-      color: white;
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1em;
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.1s;
-      margin-top: 15px;
-    }
-    #saveCombinationBtn:hover {
-      background-color: var(--text);
-    }
-    #saveCombinationBtn:active {
-      transform: scale(0.98);
-    }
-    #cameraStatus {
-      font-size: 1em;
-      margin-bottom: 15px;
-      min-height: 20px;
-    }
-    #captureBtn {
-        background-color: var(--accent);
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 8px;
-        font-size: 1.1em;
-        cursor: pointer;
-    }
+    .test-word-input { width: 100%; max-width: 290px; margin: 0 auto; display: block; padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); }
+    .main-page-input { width: 100%; max-width: 100%; margin-top: 20px; }
 
-    /* Save Combination Modal Styles */
-    .palette {
-        display: flex;
-        justify-content: center;
-        gap: 15px;
-        margin: 15px 0;
-    }
-    .palette-color {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        cursor: pointer;
-        border: 3px solid transparent;
-        transition: transform 0.2s, border-color 0.2s;
-    }
-    .palette-color:hover {
-        transform: scale(1.1);
-    }
-    .palette-color.active-color {
-        border-color: var(--accent);
-        transform: scale(1.15);
-    }
-    .palette-color.grey { background-color: #787c7e; }
-    .palette-color.yellow { background-color: #c9b458; }
-    .palette-color.green { background-color: #6aaa64; }
-    
-    .saved-item .wordle-box {
-        background-color: #787c7e; /* Default grey for preview */
-    }
-    .saved-item .wordle-box[style*="yellow"] { background-color: #c9b458 !important; }
-    .saved-item .wordle-box[style*="green"] { background-color: #6aaa64 !important; }
-    .saved-item .wordle-box[style*="grey"] { background-color: #787c7e !important; }
+    #savedCombinationsList { display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding-right: 10px; }
+    .saved-item { border: 1px solid var(--input-bg); border-radius: 8px; padding: 15px; }
+    .saved-item .wordle-grid { transform: scale(0.7); margin-bottom: -20px; pointer-events: none; }
+    .saved-item-actions { margin-top: 15px; display: flex; gap: 10px; justify-content: center; }
 
-
-    .wordle-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    .wordle-row {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-    }
-    .wordle-box {
-        width: 50px;
-        height: 50px;
-        border: 2px solid #565758;
-        background-color: #787c7e; /* Default to grey */
-        color: white;
-        font-size: 1.8em;
-        font-weight: bold;
-        text-align: center;
-        text-transform: uppercase;
-        caret-color: transparent; /* Hide cursor */
-    }
-    .test-word-input {
-        width: 290px; /* 5 boxes * 50px + 4 gaps * 10px = 290px */
-        margin-left: auto;
-        margin-right: auto;
-        display: block;
-        padding: 12px;
-        font-size: 1em;
-        border: 1px solid var(--input-bg);
-        border-radius: 8px;
-        background: var(--input-bg);
-        color: var(--text);
-        margin-bottom: 0px;
-    }
-    #saveCombinationModal .test-word-input {
-        margin-top: 10px;
-        margin-bottom: 15px; /* ← Add this */
-    }
-    .main-page-input {
-        width: 100%;
-        margin-top: 20px;
-    }
-    #searchInput {
-        width: 100%;
-        margin-bottom: 15px;
-    }
-    .save-data-btn {
-        background-color: var(--accent);
-        color: white;
-        padding: 12px 20px;
-        border: none;
-        border-radius: 8px;
-        font-size: 1.1em;
-        cursor: pointer;
-    }
-
-    /* Search Modal List Styles */
-    #savedCombinationsList {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        max-height: 60vh; /* Make list scrollable if it gets too long */
-        overflow-y: auto;
-        padding-right: 10px; /* Space for scrollbar */
-    }
-    .saved-item {
-        border: 1px solid var(--input-bg);
-        border-radius: 8px;
-        padding: 15px;
-    }
-    .saved-item .wordle-grid { /* Reuse wordle-grid styles for preview */
-        transform: scale(0.7); /* Make preview smaller */
-        transform-origin: top center;
-        margin-bottom: -20px; /* Adjust layout due to scaling */
-        pointer-events: none; /* Make preview unclickable */
-        margin-left: auto;
-        margin-right: auto;
-    }
-    .saved-item-info {
-        margin-top: 10px;
-    }
-    .saved-item-info p {
-        margin: 4px 0;
-        font-size: 0.9em;
-    }
-    .saved-item-actions {
-        margin-top: 15px;
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-    }
-    .open-btn, .delete-btn {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        color: white;
-    }
-    #searchModal .open-btn {
-        padding: 12px 24px;
-        font-size: 1.2em;
-    }
-    .open-btn { background-color: var(--accent); }
-    .delete-btn { background-color: #e63946; } /* A consistent delete color */
-
-    .confirmation-actions {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-    }
-
-    #confirmBtn, #cancelBtn {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        color: white;
-        font-size: 1em;
-    }
-
-    #confirmBtn { background-color: #e63946; }
-    #cancelBtn { background-color: var(--accent); }
-
-    #message-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .message {
-        padding: 15px 20px;
-        border-radius: 8px;
-        color: white;
-        font-size: 1em;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        opacity: 0.95;
-        transition: opacity 0.5s, transform 0.5s;
-    }
-
-    .message.success {
-        background-color: #28a745; /* Green for success */
-    }
-
-    .message.error {
-        background-color: #dc3545; /* Red for error */
-    }
+    /* Notifications */
+    #message-container { position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+    .message { padding: 15px 20px; border-radius: 8px; color: white; font-size: 1em; box-shadow: 0 2px 10px rgba(0,0,0,0.2); opacity: 0.95; }
+    .message.success { background-color: #28a745; }
+    .message.error { background-color: var(--delete-red); }
+    .confirmation-actions { margin-top: 20px; display: flex; justify-content: center; gap: 20px; }
   </style>
 </head>
 <body class="light">
@@ -876,8 +181,8 @@
     <input type="hidden" id="loadedCombinationId">
     <div class="container">
       <div class="content-area">
-        <input type="text" id="wordInputText" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()" />
-        <textarea id="wordInputTextarea" placeholder="Type words here..." style="display:none;" oninput="handleWordInput()"></textarea>
+        <input type="text" id="wordInputText" placeholder="Type words here..." oninput="handleWordInput()" />
+        <textarea id="wordInputTextarea" placeholder="Type words here..." oninput="handleWordInput()"></textarea>
         <div id="result" class="result-box"></div>
       </div>
       <input type="text" id="mainTestWordInput" placeholder="Enter test word here..." class="test-word-input main-page-input">
@@ -893,15 +198,11 @@
         <h3>Layout Options</h3>
         <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
           <div id="layout-side-by-side" class="layout-option" onclick="setLayout('side-by-side')">
-            <div class="layout-icon">
-              <svg viewBox="0 0 100 60"><rect x="10" y="5" width="35" height="50" rx="3"/><rect x="55" y="5" width="35" height="50" rx="3"/></svg>
-            </div>
+            <div class="layout-icon"><svg viewBox="0 0 100 60"><rect x="10" y="5" width="35" height="50" rx="3"/><rect x="55" y="5" width="35" height="50" rx="3"/></svg></div>
             <div>Side-by-Side</div>
           </div>
           <div id="layout-original" class="layout-option" onclick="setLayout('original')">
-            <div class="layout-icon">
-              <svg viewBox="0 0 100 60"><rect x="10" y="15" width="80" height="30" rx="3"/></svg>
-            </div>
+            <div class="layout-icon"><svg viewBox="0 0 100 60"><rect x="10" y="15" width="80" height="30" rx="3"/></svg></div>
             <div>Original</div>
           </div>
         </div>
@@ -964,783 +265,6 @@
       </div>
     </div>
   </div>
-  <script>
-    // Helper span for dynamic input width calculation
-    let textWidthHelper; 
-
-    function setupTextWidthHelperFont() {
-        if (textWidthHelper && activeInputElement) {
-            const style = window.getComputedStyle(activeInputElement);
-            textWidthHelper.style.fontFamily = style.fontFamily;
-            textWidthHelper.style.fontSize = style.fontSize;
-            textWidthHelper.style.paddingLeft = style.paddingLeft; // Use the actual padding of the input
-            textWidthHelper.style.paddingRight = style.paddingRight;
-        }
-    }
-
-    function updateInputWidth(inputElement) {
-      // This function is no longer used for dynamic width expansion of wordInputText.
-      // It was for the previous behavior. Keeping it here for now in case
-      // any other input might need it in the future, or it can be removed later.
-      // console.log("updateInputWidth called, but is deprecated for wordInputText");
-    }
-
-    function updateTextareaHeight(textareaElement) {
-      textareaElement.style.height = 'auto'; // Temporarily shrink to get correct scrollHeight
-      // Increased max-height: 500px fixed, or 60% of viewport height
-      const maxHeight = Math.min(500, window.innerHeight * 0.6); 
-      
-      // Only apply scrollHeight if it's different and less than maxHeight, or if it's beyond maxHeight
-      const newHeight = textareaElement.scrollHeight;
-
-      if (newHeight > maxHeight) {
-        textareaElement.style.height = maxHeight + 'px';
-        textareaElement.style.overflowY = 'auto'; // Show scrollbar if content exceeds max-height
-      } else {
-        textareaElement.style.height = newHeight + 'px';
-        textareaElement.style.overflowY = 'hidden'; // Hide scrollbar if content is within bounds
-      }
-    }
-
-    let activeInputElement; // To store the currently active input
-
-    function handleWordInput() {
-        if (activeInputElement) {
-            if (activeInputElement.id === 'wordInputText') {
-                // No longer calling updateInputWidth for wordInputText
-            } else if (activeInputElement.id === 'wordInputTextarea') {
-                updateTextareaHeight(activeInputElement);
-            }
-        }
-        countLetters();
-    }
-
-    function countLetters() {
-      if (!activeInputElement) return; // Do nothing if no input is active
-      const inputValue = activeInputElement.value.toLowerCase();
-      const words = inputValue.match(/\b\w+\b/g) || [];
-      const letterMap = {};
-      words.forEach(word => {
-        const uniqueLetters = new Set(word.replace(/[^a-z]/g, ''));
-        uniqueLetters.forEach(letter => {
-          letterMap[letter] = (letterMap[letter] || 0) + 1;
-        });
-      });
-      const sorted = Object.entries(letterMap).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-      const output = sorted.map(([letter, count]) => `${letter}: ${count}`).join('\n');
-      document.getElementById('result').textContent = output || 'No letters found.';
-    }
-    function setTheme(theme) {
-      // Preserve layout class when changing theme
-      const currentLayoutClass = document.body.classList.contains('layout-original') ? 'layout-original' : '';
-      document.body.className = theme; // This overwrites all classes
-      if (currentLayoutClass) {
-        document.body.classList.add(currentLayoutClass);
-      }
-      localStorage.setItem('selectedTheme', theme);
-      updateActiveThemeButton(theme);
-      closeModal('settingsModal'); // Close settings modal after theme selection
-    }
-
-    function updateActiveThemeButton(activeTheme) {
-      document.querySelectorAll('.theme-option').forEach(btn => {
-        if (btn.textContent.toLowerCase() === activeTheme.replace(/-/g, ' ').toLowerCase() || 
-            btn.onclick.toString().includes(`setTheme('${activeTheme}')`)) {
-          btn.classList.add('active-theme');
-        } else {
-          btn.classList.remove('active-theme');
-        }
-      });
-    }
-    
-    function updateActiveLayoutButton(activeLayout) {
-        document.querySelectorAll('.layout-option').forEach(btn => btn.classList.remove('active-layout'));
-        const activeBtn = document.getElementById(`layout-${activeLayout}`);
-        if (activeBtn) {
-            activeBtn.classList.add('active-layout');
-        }
-    }
-
-    function applyLayout(layoutName) {
-      const wordInputText = document.getElementById('wordInputText');
-      const wordInputTextarea = document.getElementById('wordInputTextarea');
-
-      if (layoutName === 'original') {
-        document.body.classList.add('layout-original');
-        wordInputText.style.display = 'block'; 
-        wordInputTextarea.style.display = 'none';
-        activeInputElement = wordInputText;
-        // No longer calling updateInputWidth here for wordInputText
-        wordInputText.style.width = '100%'; // Ensure it's full width on layout switch
-      } else { // 'side-by-side' or default
-        document.body.classList.remove('layout-original');
-        wordInputText.style.display = 'none';
-        wordInputTextarea.style.display = 'block';
-        activeInputElement = wordInputTextarea;
-        updateTextareaHeight(activeInputElement); // Set initial height for textarea
-      }
-      // Transfer value between inputs if necessary, or clear the hidden one
-      const visibleInput = (layoutName === 'original') ? wordInputText : wordInputTextarea;
-      const hiddenInput = (layoutName === 'original') ? wordInputTextarea : wordInputText;
-      // visibleInput.value = hiddenInput.value; // Option 1: transfer value
-      // hiddenInput.value = ''; // Option 2: clear hidden (let's go with this to avoid confusion)
-      // Let's try to keep the value if the user switches back and forth for a better UX
-      if (document.activeElement !== visibleInput) { // Avoid clearing if user is typing and layout switches programmatically
-          // No, this is complex. Let's just ensure the current activeInput has the value.
-          // When switching, the value of the *newly visible* input should be what matters.
-          // If they were sharing a value, it's simpler. Let's assume they should share value.
-      }
-      // If values are not shared, ensure countLetters runs on the new activeInputElement's value
-      countLetters(); 
-
-
-      updateActiveLayoutButton(layoutName);
-    }
-
-    function setLayout(layoutName) {
-      const oldActiveValue = activeInputElement ? activeInputElement.value : "";
-      applyLayout(layoutName); // This now sets the new activeInputElement
-      if (activeInputElement) { // The new active input
-        activeInputElement.value = oldActiveValue; // Preserve text across layout changes
-        // Trigger the appropriate resize function for the now visible and value-filled input
-        if (activeInputElement.id === 'wordInputText') {
-          updateInputWidth(activeInputElement);
-        } else if (activeInputElement.id === 'wordInputTextarea') {
-          updateTextareaHeight(activeInputElement);
-        }
-      }
-      localStorage.setItem('selectedLayout', layoutName);
-      closeModal('settingsModal'); // Close modal after layout selection
-    }
-
-    function openModal() {
-      document.getElementById('settingsModal').style.display = 'flex';
-      // Refresh active buttons when modal opens
-      const savedTheme = localStorage.getItem('selectedTheme') || 'light';
-      const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
-      updateActiveThemeButton(savedTheme);
-      updateActiveLayoutButton(savedLayout);
-      // Add event listener for outside click when modal opens
-      document.getElementById('settingsModal').addEventListener('click', handleModalOutsideClick);
-    }
-
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-            modal.removeEventListener('click', handleModalOutsideClick);
-        }
-    }
-
-    function handleModalOutsideClick(event) {
-        if (event.target.classList.contains('modal')) {
-            closeModal(event.target.id);
-        }
-    }
-
-    function showMessage(message, type = 'success') {
-        const container = document.getElementById('message-container');
-        const messageElement = document.createElement('div');
-        messageElement.className = `message ${type}`;
-        messageElement.textContent = message;
-        container.appendChild(messageElement);
-        setTimeout(() => {
-            messageElement.remove();
-        }, 3000);
-    }
-
-    function initializePage() {
-      const wordInputText = document.getElementById('wordInputText');
-      const wordInputTextarea = document.getElementById('wordInputTextarea');
-
-      const savedTheme = localStorage.getItem('selectedTheme') || 'light';
-      const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
-      
-      document.body.className = savedTheme; 
-      // Determine which input to show initially based on savedLayout
-      if (savedLayout === 'original') {
-        wordInputText.style.display = 'block';
-        wordInputTextarea.style.display = 'none';
-        activeInputElement = wordInputText;
-      } else {
-        wordInputText.style.display = 'none';
-        wordInputTextarea.style.display = 'block';
-        activeInputElement = wordInputTextarea;
-      }
-      
-      applyLayout(savedLayout); // This will also call updateActiveLayoutButton and initial resize
-      
-      updateActiveThemeButton(savedTheme);
-
-      // Ensure initial state of inputs is good if there's no saved text.
-      // If there was saved text, setLayout would have handled it.
-      // This mainly ensures the initial placeholder resize is correct.
-      // Also, setup the font for the helper span based on the initially active input.
-      setupTextWidthHelperFont(); // Still useful if textWidthHelper is used for anything else
-      if (activeInputElement.id === 'wordInputText') {
-          // No initial width update needed for wordInputText as it's 100% CSS driven now
-          activeInputElement.style.width = '100%'; // Ensure it is 100% on init
-      } else if (activeInputElement.id === 'wordInputTextarea') {
-          updateTextareaHeight(activeInputElement);
-      }
-
-      countLetters(); // Initial calculation
-    }
-
-    // DOMContentLoaded ensures that elements are available before JS tries to manipulate them
-    document.addEventListener('DOMContentLoaded', () => {
-        // Create the helper span once DOM is loaded
-        textWidthHelper = document.createElement('span');
-        textWidthHelper.id = 'text-width-helper'; // ID for potential CSS styling if needed
-        textWidthHelper.style.position = 'absolute';
-        textWidthHelper.style.visibility = 'hidden';
-        textWidthHelper.style.whiteSpace = 'nowrap';
-        // Font family, size, and padding will be set by setupTextWidthHelperFont() 
-        // based on the active input, so no need to set them here initially.
-        document.body.appendChild(textWidthHelper);
-        
-        // Add event listener for camera button - REMOVED
-        // document.getElementById('cameraBtn').addEventListener('click', openCamera); - REMOVED
-        // document.getElementById('captureBtn').addEventListener('click', recognizeTextFromVideo); - REMOVED
-        
-        // initializeWordSet(); // Initialize the dictionary Set - REMOVED
-        
-        // Save Combination Modal Listeners
-        document.getElementById('saveCombinationBtn').addEventListener('click', openSaveModal);
-        document.querySelector('#saveCombinationModal .palette').addEventListener('click', selectPaletteColor);
-        document.querySelector('#saveCombinationModal .wordle-grid').addEventListener('click', colorWordleBox);
-        document.querySelector('#saveCombinationModal .wordle-grid').addEventListener('keydown', handleWordleBoxKeyDown);
-        document.getElementById('saveCombinationDataBtn').addEventListener('click', saveCombinationData);
-        document.getElementById('saveCombinationModal').addEventListener('click', handleModalOutsideClick);
-
-        // Search Modal Listeners
-        document.getElementById('savedCombinationsList')?.addEventListener('click', handleSavedListClick);
-        document.getElementById('searchModal').addEventListener('click', handleModalOutsideClick);
-        document.querySelector('#searchModal .palette').addEventListener('click', selectPaletteColor);
-        const searchGrid = document.querySelector('#searchModal .wordle-grid');
-        searchGrid.addEventListener('input', renderCombinations);
-        searchGrid.addEventListener('click', colorWordleBox);
-        searchGrid.addEventListener('keydown', handleWordleBoxKeyDown);
-      
-        // inside document.addEventListener('DOMContentLoaded', () => { … })
-
-        document.getElementById('confirmBtn').addEventListener('click', () => {
-            // 1) Hide the confirmation dialog immediately
-            closeModal('confirmationModal');
-        
-            // 2) Run the delete callback you stored in confirmCallback
-            if (confirmCallback) confirmCallback();
-        });
-
-
-        document.getElementById('cancelBtn').addEventListener('click', () => {
-            closeModal('confirmationModal');
-        });
-        
-        initializePage(); // Initialize after helper span is created
-    });
-
-    let selectedColor = 'grey'; // Default selected color
-
-    function openSaveModal() {
-        const loadedId = document.getElementById('loadedCombinationId').value;
-        const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-        const comboToLoad = loadedId ? combinations.find(c => c.id.toString() === loadedId) : null;
-
-        if (comboToLoad) {
-            // If a combination is loaded, populate the grid from saved data
-            loadCombinationIntoSaveModal(comboToLoad);
-        } else {
-            // Otherwise, it's a new combination, so clear the modal
-            clearSaveModal();
-        }
-        
-        // ALWAYS pre-fill the test word input from the main page's input
-        document.getElementById('testWordInput').value = document.getElementById('mainTestWordInput').value;
-        
-        document.getElementById('saveCombinationModal').style.display = 'flex';
-    }
-
-    function closeSaveModal() {
-        document.getElementById('saveCombinationModal').style.display = 'none';
-        clearSaveModal(); // Always clear modal on close
-    }
-
-    function clearSaveModal() {
-        document.querySelectorAll('#saveCombinationModal .wordle-box').forEach(box => {
-            box.value = '';
-            box.style.backgroundColor = '#787c7e';
-            box.dataset.color = 'grey';
-        });
-        document.getElementById('testWordInput').value = '';
-        document.getElementById('combinationId').value = '';
-    }
-
-    function selectPaletteColor(event) {
-        const target = event.target;
-        if (!target.classList.contains('palette-color')) return;
-
-        // Update selected color variable
-        selectedColor = target.dataset.color;
-        
-        // Update active class
-        document.querySelectorAll('.palette-color').forEach(c => c.classList.remove('active-color'));
-        target.classList.add('active-color');
-    }
-
-    function colorWordleBox(event) {
-        const target = event.target;
-        if (!target.classList.contains('wordle-box')) return;
-        
-        const colorMap = {
-            grey: '#787c7e',
-            yellow: '#c9b458',
-            green: '#6aaa64'
-        };
-
-        target.style.backgroundColor = colorMap[selectedColor];
-        target.dataset.color = selectedColor; // Store color on the element
-    }
-
-    function handleWordleBoxKeyDown(event) {
-        const target = event.target;
-        const key = event.key;
-
-        // On Backspace, if the current box is empty, move to the previous box
-        if (key === 'Backspace' && target.value === '' && target.previousElementSibling) {
-            target.previousElementSibling.focus();
-        }
-        
-        // On letter/number input, replace content and move to the next box
-        if (/^[a-zA-Z0-9]$/.test(key)) {
-            target.value = ''; // Clear the box before setting new value to handle replacement
-            setTimeout(() => { // Use a timeout to ensure the value is set before moving focus
-                if (target.value && target.nextElementSibling) {
-                    target.nextElementSibling.focus();
-                }
-            }, 0);
-        }
-    }
-
-    function handleWordleBoxInput(e){
-        const box = e.target;
-        if(box.value.length > 1){          // user pasted or held a key
-            box.value = box.value.slice(-1); // keep only the last char
-        }
-        if(box.value && box.nextElementSibling){
-            box.nextElementSibling.focus();  // move forward when a letter is typed
-        }
-        if(!box.value && e.inputType === 'deleteContentBackward' && box.previousElementSibling){
-            box.previousElementSibling.focus(); // move back on mobile backspace
-        }
-    }
-
-    /* attach both handlers to every .wordle-box once, at startup */
-    document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.wordle-box').forEach(box => {
-            //box.addEventListener('keydown', handleWordleBoxKeyDown); // existing
-            box.addEventListener('input',  handleWordleBoxInput);    // new – mobile friendly
-        });
-    });
-
-    function openSearchModal() {
-        const searchGrid = document.querySelector('#searchModal .wordle-grid');
-        searchGrid.querySelectorAll('.wordle-box').forEach(box => {
-            box.value = '';
-            box.style.backgroundColor = '#787c7e';
-            box.dataset.color = 'grey';
-        });
-        renderCombinations(); // Initial render
-        const searchModal = document.getElementById('searchModal');
-        searchModal.style.display = 'flex';
-        searchModal.addEventListener('click', handleModalOutsideClick);
-    }
-
-    function getFilteredCombinations() {
-        const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-        const searchRows = document.querySelectorAll('#searchModal .wordle-row');
-        const searchCriteria = [];
-        searchRows.forEach(row => {
-            const rowCriteria = [];
-            row.querySelectorAll('.wordle-box').forEach(box => {
-                rowCriteria.push({
-                    letter: box.value.toUpperCase(),
-                    color: box.dataset.color || 'grey'
-                });
-            });
-            searchCriteria.push(rowCriteria);
-        });
-
-        return combinations.filter(combo => {
-            return searchCriteria.every((searchRow, rowIndex) => {
-                return searchRow.every((searchBox, boxIndex) => {
-                    const savedBox = combo.rows[rowIndex][boxIndex];
-                    const letterMatch = !searchBox.letter || (savedBox.letter === searchBox.letter);
-                    const colorMatch = savedBox.color === searchBox.color;
-                    return letterMatch && colorMatch;
-                });
-            });
-        });
-    }
-
-    function openFirstMatchingCombination() {
-        const filtered = getFilteredCombinations();
-        if (filtered.length > 0) {
-            loadCombinationToMainPage(filtered[0].id);
-        } else {
-            showMessage('No matching combination found.', 'error');
-        }
-    }
-
-    function renderCombinations() {
-        // This function is now primarily for filtering in the background
-        // The UI part is removed.
-    }
-
-    function closeSearchModal() {
-        const searchModal = document.getElementById('searchModal');
-        const searchGrid = searchModal.querySelector('.wordle-grid');
-        // Remove listeners to prevent multiple bindings if modal is reopened
-        searchGrid.removeEventListener('input', renderCombinations);
-        searchGrid.removeEventListener('click', renderCombinations);
-        closeModal('searchModal');
-    }
-
-    function handleSavedListClick(event) {
-        const target = event.target;
-        const comboId = target.dataset.id;
-
-        if (!comboId) return;
-
-        if (target.classList.contains('delete-btn')) {
-            deleteCombination(comboId);
-        } else if (target.classList.contains('open-btn')) {
-            loadCombinationToMainPage(comboId);
-        }
-    }
-
-    function loadCombinationToMainPage(id) {
-        const combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-        const comboToLoad = combinations.find(c => c.id.toString() === id.toString());
-
-        if (!comboToLoad) {
-            showMessage('Error: Could not find combination to load.', 'error');
-            return;
-        }
-        
-        // Populate main page inputs
-        const words = comboToLoad.rows.map(row => row.map(box => box.letter).join('')).join('\n');
-        const layout = localStorage.getItem('selectedLayout') || 'side-by-side';
-        activeInputElement.value = comboToLoad.originalWords || '';
-
-        handleWordInput(); // Trigger count and resize
-        if (activeInputElement.id === 'wordInputTextarea') {
-            updateTextareaHeight(activeInputElement);
-        }
-        document.getElementById('mainTestWordInput').value = comboToLoad.testWord;
-        
-        // Track the loaded combination ID on the main page
-        document.getElementById('loadedCombinationId').value = comboToLoad.id;
-
-        closeSearchModal();
-        showMessage('Combination loaded successfully!');
-    }
-
-    function loadCombinationIntoSaveModal(comboData) {
-        // This function populates the save modal, it doesn't open it
-        const rows = document.querySelectorAll('#saveCombinationModal .wordle-row');
-        const colorMap = { grey: '#787c7e', yellow: '#c9b458', green: '#6aaa64' };
-
-        rows.forEach((row, rowIndex) => {
-            const boxes = row.querySelectorAll('.wordle-box');
-            boxes.forEach((box, boxIndex) => {
-                const data = comboData.rows[rowIndex][boxIndex];
-                box.value = data.letter;
-                box.dataset.color = data.color;
-                box.style.backgroundColor = colorMap[data.color];
-            });
-        });
-
-        document.getElementById('testWordInput').value = comboData.testWord;
-        document.getElementById('combinationId').value = comboData.id;
-    }
-
-    let confirmCallback = null;
-
-    function openConfirmationModal(message, callback) {
-        confirmCallback = callback;
-        document.getElementById('confirmationMessage').textContent = message;
-        document.getElementById('confirmationModal').style.display = 'flex';
-    }
-
-    /*
-    document.getElementById('confirmBtn').addEventListener('click', () => {
-        if (confirmCallback) {
-            confirmCallback();
-        }
-        closeModal('confirmationModal');
-    });
-
-    document.getElementById('cancelBtn').addEventListener('click', () => {
-        closeModal('confirmationModal');
-    });
-    */
-
-    function deleteCombination(id) {
-        openConfirmationModal('Are you sure you want to delete this combination?', () => {
-            let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-            combinations = combinations.filter(combo => combo.id.toString() !== id.toString());
-            localStorage.setItem('savedCombinations', JSON.stringify(combinations));
-            const list = document.getElementById('savedCombinationsList');
-            list.innerHTML = '';
-
-            renderCombinations(); // Refresh the list after deletion
-            document.getElementById('savedCombinationsList').scrollTop = 0;
-        });
-    }
-
-    function saveCombinationData() {
-        const combinationIdInput = document.getElementById('combinationId');
-        const existingId = combinationIdInput.value;
-
-        const rows = document.querySelectorAll('#saveCombinationModal .wordle-row');
-        const rowsData = [];
-
-        rows.forEach(row => {
-            const rowData = [];
-            const boxes = row.querySelectorAll('.wordle-box');
-            boxes.forEach(box => {
-                rowData.push({
-                    letter: box.value.toUpperCase() || '',
-                    color: box.dataset.color || 'grey'
-                });
-            });
-            rowsData.push(rowData);
-        });
-
-        const testWord = document.getElementById('testWordInput').value;
-        let combinations = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-        const originalWords = activeInputElement.value;
-
-        const areGridsIdentical = (grid1, grid2) => {
-            return JSON.stringify(grid1) === JSON.stringify(grid2);
-        };
-
-        if (existingId) { // Update existing combination
-            const comboIndex = combinations.findIndex(c => c.id.toString() === existingId);
-            if (comboIndex > -1) {
-                combinations[comboIndex].rows = rowsData;
-                combinations[comboIndex].testWord = testWord;
-                // When updating, we now override the word list and test word completely.
-                combinations[comboIndex].originalWords = originalWords;
-                combinations[comboIndex].testWord = testWord;
-                showMessage('Combination updated successfully!');
-            } else {
-                showMessage('Error: Could not find combination to update.', 'error');
-                return;
-            }
-        } else { // Create or merge new combination
-            const existingComboIndex = combinations.findIndex(c => areGridsIdentical(c.rows, rowsData));
-            if (existingComboIndex > -1) {
-                // Merge with existing combination
-                const existingWords = combinations[existingComboIndex].originalWords.split('\n');
-                const newWords = originalWords.split('\n');
-                const mergedWords = [...new Set([...existingWords, ...newWords])].filter(w => w).join('\n');
-                combinations[existingComboIndex].originalWords = mergedWords;
-
-                // Merge testWord if it's different and not already included
-                const existingTestWord = combinations[existingComboIndex].testWord;
-                if (testWord && existingTestWord !== testWord && !existingTestWord.includes(testWord)) {
-                    combinations[existingComboIndex].testWord = `${existingTestWord} ${testWord}`;
-                }
-                
-                // The grid is identical, so no need to update it.
-                showMessage('Combination merged successfully!');
-            } else {
-                // Create new combination
-                const newCombination = {
-                    id: Date.now(),
-                    rows: rowsData,
-                    testWord: testWord,
-                    originalWords: originalWords
-                };
-                combinations.push(newCombination);
-                showMessage('Combination saved successfully!');
-            }
-        }
-
-        localStorage.setItem('savedCombinations', JSON.stringify(combinations));
-        
-        // Clear the hidden ID input and close modal
-        combinationIdInput.value = '';
-        closeSaveModal();
-    }
-
-    // All camera and OCR related functions and variables below are removed.
-    // let videoStream = null; 
-    // async function openCamera() { ... }
-    // function closeCamera() { ... }
-    // async function recognizeTextFromVideo() { ... }
-    // let wordSet; 
-    // function initializeWordSet() { ... }
-    // function filterRealWords(text) { ... }
-
-    let videoStream = null;
-    let wordSet;
-
-    /*
-    document.addEventListener('DOMContentLoaded', () => {
-        textWidthHelper = document.createElement('span');
-        textWidthHelper.id = 'text-width-helper';
-        textWidthHelper.style.position = 'absolute';
-        textWidthHelper.style.visibility = 'hidden';
-        textWidthHelper.style.whiteSpace = 'nowrap';
-        document.body.appendChild(textWidthHelper);
-        
-        document.getElementById('cameraBtn').addEventListener('click', openCamera);
-        document.getElementById('captureBtn').addEventListener('click', recognizeTextFromVideo);
-        
-        initializeWordSet();
-        initializePage();
-    });
-    */
-
-    function initializeWordSet() {
-        if (typeof wordList !== 'undefined' && wordList.length > 0) {
-            wordSet = new Set(wordList.map(word => word.toLowerCase()));
-            console.log(`Dictionary loaded with ${wordSet.size} words.`);
-        } else {
-            console.error("Word list not found or empty. OCR filtering will be basic.");
-            wordSet = new Set();
-        }
-    }
-
-    async function openCamera() {
-      const cameraModal = document.getElementById('cameraModal');
-      const video = document.getElementById('videoFeed');
-      const status = document.getElementById('cameraStatus');
-      const captureBtn = document.getElementById('captureBtn');
-
-      cameraModal.style.display = 'flex';
-      status.textContent = 'Requesting camera access...';
-      captureBtn.style.display = 'none';
-      video.style.display = 'none';
-
-      try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        video.srcObject = videoStream;
-        video.onloadedmetadata = () => {
-          video.play();
-          video.style.display = 'block';
-          captureBtn.style.display = 'inline-block';
-          status.textContent = 'Point camera at handwritten text and capture.';
-        };
-      } catch (err) {
-        console.error("Camera Error:", err);
-        status.textContent = 'Could not access camera. Please check permissions.';
-        setTimeout(closeCamera, 3000);
-      }
-    }
-
-    function closeCamera() {
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-      }
-      videoStream = null;
-      document.getElementById('cameraModal').style.display = 'none';
-    }
-
-    async function recognizeTextFromVideo() {
-      const video = document.getElementById('videoFeed');
-      const canvas = document.getElementById('captureCanvas');
-      const context = canvas.getContext('2d');
-      const status = document.getElementById('cameraStatus');
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      status.textContent = 'Loading Handwriting Recognition Model...';
-      document.getElementById('captureBtn').style.display = 'none';
-
-      try {
-        const { data: { text } } = await Tesseract.recognize(canvas, 'eng', {
-          logger: m => {
-            console.log(m);
-            if (m.status === 'recognizing text') {
-              status.textContent = `Recognizing... ${Math.round(m.progress * 100)}%`;
-            } else if (m.status === 'loading language model') {
-              status.textContent = `Loading Model: ${Math.round(m.progress * 100)}% (this may take a moment on first use)`;
-            }
-          }
-        });
-        
-        const filteredText = filterRealWords(text);
-        if (filteredText) {
-          activeInputElement.value += (activeInputElement.value ? ' ' : '') + filteredText;
-          handleWordInput();
-          status.textContent = `Appended recognized words!`;
-        } else {
-          status.textContent = 'No valid words recognized. Please try again.';
-        }
-      } catch (err) {
-        console.error(err);
-        status.textContent = 'Could not recognize text. Please try again.';
-      } finally {
-        setTimeout(closeCamera, 2000);
-      }
-    }
-
-    function filterRealWords(text) {
-      if (!wordSet || wordSet.size === 0) {
-        return text.replace(/[^a-zA-Z\s'-]/g, "").replace(/(\r\n|\n|\r)/gm, " ").trim();
-      }
-      const words = text.split(/\s+/);
-      const realWords = [];
-      for (const word of words) {
-        const cleanedWord = word.toLowerCase().replace(/[^a-z'-]|(^['-])|(['-]$)/g, "");
-        if (cleanedWord && wordSet.has(cleanedWord)) {
-          realWords.push(cleanedWord);
-        }
-      }
-      return realWords.join(" ").trim();
-    }
-
-    function setupTestData() {
-      localStorage.setItem('savedCombinations', JSON.stringify([
-        {
-          id: 1,
-          rows: [
-            [{ letter: 'A', color: 'green' }, { letter: 'B', color: 'grey' }, { letter: 'C', color: 'grey' }, { letter: 'D', color: 'grey' }, { letter: 'E', color: 'grey' }],
-            [{ letter: 'F', color: 'grey' }, { letter: 'G', color: 'grey' }, { letter: 'H', color: 'grey' }, { letter: 'I', color: 'grey' }, { letter: 'J', color: 'grey' }]
-          ],
-          testWord: 'test1',
-          originalWords: 'word1\nword2'
-        },
-        {
-          id: 2,
-          rows: [
-            [{ letter: 'K', color: 'yellow' }, { letter: 'L', color: 'grey' }, { letter: 'M', color: 'grey' }, { letter: 'N', color: 'grey' }, { letter: 'O', color: 'grey' }],
-            [{ letter: 'P', color: 'grey' }, { letter: 'Q', color: 'grey' }, { letter: 'R', color: 'grey' }, { letter: 'S', color: 'grey' }, { letter: 'T', color: 'grey' }]
-          ],
-          testWord: 'test2',
-          originalWords: 'word3\nword4'
-        }
-      ]));
-    }
-  </script>
-
-  <div class="modal" id="cameraModal">
-    <div class="modal-content">
-      <button class="close-btn" onclick="closeCamera()">✕</button>
-      <p id="cameraStatus">Getting camera ready...</p>
-      <video id="videoFeed" playsinline style="width:100%; height:auto; display:none;"></video>
-      <canvas id="captureCanvas" style="display:none;"></canvas>
-      <div style="text-align: center; margin-top: 15px;">
-        <button id="captureBtn" style="display:none;">Capture Text</button>
-      </div>
-    </div>
-  </div>
 
   <div class="modal" id="saveCombinationModal">
     <div class="modal-content">
@@ -1756,23 +280,14 @@
 
         <div class="wordle-grid">
             <div class="wordle-row">
-                <input type="text" maxlength="1" class="wordle-box" />
-                <input type="text" maxlength="1" class="wordle-box" />
-                <input type="text" maxlength="1" class="wordle-box" />
-                <input type="text" maxlength="1" class="wordle-box" />
-                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" />
             </div>
             <div class="wordle-row">
-                <input type="text" maxlength="1" class="wordle-box" />
-                <input type="text" maxlength="1" class="wordle-box" />
-                <input type="text" maxlength="1" class="wordle-box" />
-                <input type="text" maxlength="1" class="wordle-box" />
-                <input type="text" maxlength="1" class="wordle-box" />
+                <input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" />
             </div>
         </div>
 
-        <input type="text" id="testWordInput" placeholder="Your test word..." class="test-word-input">
-        
+        <input type="text" id="testWordInput" placeholder="Your test word..." class="test-word-input" style="margin-top:10px; margin-bottom:15px;">
         <button id="saveCombinationDataBtn" class="save-data-btn">Save Combination</button>
     </div>
   </div>
@@ -1790,81 +305,392 @@
 
           <div class="wordle-grid">
               <div class="wordle-row">
-                  <input type="text" maxlength="1" class="wordle-box" />
-                  <input type="text" maxlength="1" class="wordle-box" />
-                  <input type="text" maxlength="1" class="wordle-box" />
-                  <input type="text" maxlength="1" class="wordle-box" />
-                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" />
               </div>
               <div class="wordle-row">
-                  <input type="text" maxlength="1" class="wordle-box" />
-                  <input type="text" maxlength="1" class="wordle-box" />
-                  <input type="text" maxlength="1" class="wordle-box" />
-                  <input type="text" maxlength="1" class="wordle-box" />
-                  <input type="text" maxlength="1" class="wordle-box" />
+                  <input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" />
               </div>
           </div>
 
           <button class="open-btn" style="margin-top: 15px;" onclick="openFirstMatchingCombination()">Open</button>
-          <div id="savedCombinationsList" style="display: none;">
-              </div>
+          <div id="savedCombinationsList" style="display: none;"></div>
       </div>
   </div>
 
   <div class="modal" id="confirmationModal">
-        <div class="modal-content">
-            <p id="confirmationMessage">Are you sure?</p>
-            <div class="confirmation-actions">
-                <button id="confirmBtn">Yes</button>
-                <button id="cancelBtn">No</button>
-            </div>
+    <div class="modal-content">
+        <p id="confirmationMessage">Are you sure?</p>
+        <div class="confirmation-actions">
+            <button id="confirmBtn">Yes</button>
+            <button id="cancelBtn">No</button>
         </div>
     </div>
+  </div>
 
-<script>
-  function onBoxBeforeInput(e) {
-    const box = e.target;
-    const prev = box.previousElementSibling;
-    const next = box.nextElementSibling;
-    const type = e.inputType;
+  <script>
+    /* =========================================
+       STATE MANAGEMENT
+       ========================================= */
+    let activeInputElement;
+    let selectedColor = 'grey';
+    let confirmCallback = null;
+    let inputDebounceTimer;
 
-    if (type === 'deleteContentBackward') {
-      // Prevent the browser from deleting for us
-      e.preventDefault();
-
-      if (box.value !== '') {
-        // If this box has a letter, clear it
-        box.value = '';
-        box.focus();
-      } else if (prev) {
-        // If it's already empty, go left and clear that one
-        prev.value = '';
-        prev.focus();
-      }
-    }
-  }
-
-  function onBoxInput(e) {
-    const box = e.target;
-    const next = box.nextElementSibling;
-    const val = box.value;
-    const letter = val.slice(-1);            // grab last char
-    if (/^[a-zA-Z]$/.test(letter)) {
-      box.value = letter.toUpperCase();      // enforce one uppercase letter
-      if (next) next.focus();
-    } else {
-      // If they pasted weird text or non‑letters, strip it
-      box.value = '';
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.wordle-box').forEach(box => {
-      box.addEventListener('beforeinput', onBoxBeforeInput);
-      box.addEventListener('input',      onBoxInput);
+    /* =========================================
+       INITIALIZATION
+       ========================================= */
+    document.addEventListener('DOMContentLoaded', () => {
+        initializePage();
+        attachEventListeners();
     });
-  });
-</script>
 
+    function initializePage() {
+        const savedTheme = localStorage.getItem('selectedTheme') || 'light';
+        const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
+        
+        setTheme(savedTheme, false); // false = don't close modal on init
+        applyLayout(savedLayout);
+    }
+
+    function attachEventListeners() {
+        // Debounce main input
+        const handleInput = () => {
+            clearTimeout(inputDebounceTimer);
+            inputDebounceTimer = setTimeout(handleWordInput, 300); // 300ms delay
+        };
+        document.getElementById('wordInputText').addEventListener('input', handleInput);
+        document.getElementById('wordInputTextarea').addEventListener('input', handleInput);
+
+        // Modals
+        document.getElementById('settingsModal').addEventListener('click', handleModalOutsideClick);
+        document.getElementById('saveCombinationModal').addEventListener('click', handleModalOutsideClick);
+        document.getElementById('searchModal').addEventListener('click', handleModalOutsideClick);
+        
+        // Save Combination
+        document.getElementById('saveCombinationBtn').addEventListener('click', openSaveModal);
+        document.getElementById('saveCombinationDataBtn').addEventListener('click', saveCombinationData);
+        
+        // Search / Load
+        document.getElementById('savedCombinationsList')?.addEventListener('click', handleSavedListClick);
+
+        // Confirmation
+        document.getElementById('confirmBtn').addEventListener('click', () => {
+            closeModal('confirmationModal');
+            if (confirmCallback) confirmCallback();
+        });
+        document.getElementById('cancelBtn').addEventListener('click', () => closeModal('confirmationModal'));
+
+        // Palette Delegation (for both modals)
+        document.querySelectorAll('.palette').forEach(p => p.addEventListener('click', selectPaletteColor));
+        
+        // Wordle Grid Delegation (Input handling)
+        document.querySelectorAll('.wordle-grid').forEach(grid => {
+            grid.addEventListener('click', colorWordleBox);
+            grid.addEventListener('keydown', handleWordleBoxKeyDown);
+            grid.addEventListener('beforeinput', onBoxBeforeInput);
+            grid.addEventListener('input', onBoxInput);
+        });
+    }
+
+    /* =========================================
+       CORE LOGIC
+       ========================================= */
+    function handleWordInput() {
+        if (!activeInputElement) return;
+        if (activeInputElement.id === 'wordInputTextarea') updateTextareaHeight(activeInputElement);
+        countLetters();
+    }
+
+    function countLetters() {
+        if (!activeInputElement) return;
+        const text = activeInputElement.value.toLowerCase();
+        const words = text.match(/\b\w+\b/g) || [];
+        const letterMap = {};
+        
+        for (const word of words) {
+            const unique = new Set(word.replace(/[^a-z]/g, ''));
+            for (const letter of unique) {
+                letterMap[letter] = (letterMap[letter] || 0) + 1;
+            }
+        }
+        
+        const sorted = Object.entries(letterMap).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        const output = sorted.map(([l, c]) => `${l}: ${c}`).join('\n');
+        document.getElementById('result').textContent = output || 'No letters found.';
+    }
+
+    function updateTextareaHeight(el) {
+        el.style.height = 'auto';
+        const maxHeight = Math.min(500, window.innerHeight * 0.6);
+        el.style.height = (el.scrollHeight > maxHeight ? maxHeight : el.scrollHeight) + 'px';
+        el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
+    }
+
+    /* =========================================
+       THEMING & LAYOUT
+       ========================================= */
+    function setTheme(theme, autoClose = true) {
+        const layoutClass = document.body.classList.contains('layout-original') ? 'layout-original' : '';
+        document.body.className = `${theme} ${layoutClass}`;
+        localStorage.setItem('selectedTheme', theme);
+        
+        // Update Active Button UI
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            const isMatch = btn.textContent.toLowerCase() === theme.replace(/-/g, ' ').toLowerCase() || 
+                            btn.getAttribute('onclick').includes(`'${theme}'`);
+            btn.classList.toggle('active-theme', isMatch);
+        });
+
+        if (autoClose) closeModal('settingsModal');
+    }
+
+    function setLayout(layoutName) {
+        const oldVal = activeInputElement ? activeInputElement.value : "";
+        applyLayout(layoutName);
+        if (activeInputElement) {
+            activeInputElement.value = oldVal;
+            handleWordInput(); // Restore height/count
+        }
+        localStorage.setItem('selectedLayout', layoutName);
+        closeModal('settingsModal');
+    }
+
+    function applyLayout(layout) {
+        const textInput = document.getElementById('wordInputText');
+        const areaInput = document.getElementById('wordInputTextarea');
+        const isOriginal = layout === 'original';
+
+        document.body.classList.toggle('layout-original', isOriginal);
+        textInput.style.display = isOriginal ? 'block' : 'none';
+        areaInput.style.display = isOriginal ? 'none' : 'block';
+        activeInputElement = isOriginal ? textInput : areaInput;
+
+        document.querySelectorAll('.layout-option').forEach(btn => btn.classList.remove('active-layout'));
+        document.getElementById(`layout-${layout}`)?.classList.add('active-layout');
+    }
+
+    /* =========================================
+       MODAL UTILS
+       ========================================= */
+    function openModal() { document.getElementById('settingsModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function handleModalOutsideClick(e) { if (e.target.classList.contains('modal')) closeModal(e.target.id); }
+
+    function showMessage(msg, type = 'success') {
+        const el = document.createElement('div');
+        el.className = `message ${type}`;
+        el.textContent = msg;
+        document.getElementById('message-container').appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    /* =========================================
+       WORDLE GRID INTERACTION
+       ========================================= */
+    function selectPaletteColor(e) {
+        if (!e.target.classList.contains('palette-color')) return;
+        selectedColor = e.target.dataset.color;
+        // Update UI of all palettes to stay synced
+        document.querySelectorAll('.palette-color').forEach(c => {
+            c.classList.toggle('active-color', c.dataset.color === selectedColor);
+        });
+    }
+
+    function colorWordleBox(e) {
+        if (!e.target.classList.contains('wordle-box')) return;
+        e.target.dataset.color = selectedColor;
+    }
+
+    // Input Handling for Grid
+    function onBoxBeforeInput(e) {
+        if (e.inputType === 'deleteContentBackward') {
+            e.preventDefault();
+            const box = e.target;
+            if (box.value) box.value = '';
+            else if (box.previousElementSibling) {
+                box.previousElementSibling.value = '';
+                box.previousElementSibling.focus();
+            }
+        }
+    }
+
+    function onBoxInput(e) {
+        const box = e.target;
+        const val = box.value.slice(-1);
+        if (/^[a-zA-Z0-9]$/.test(val)) {
+            box.value = val.toUpperCase();
+            if (box.nextElementSibling) box.nextElementSibling.focus();
+        } else {
+            box.value = '';
+        }
+    }
+
+    function handleWordleBoxKeyDown(e) {
+        if (e.key === 'Backspace' && !e.target.value && e.target.previousElementSibling) {
+            e.target.previousElementSibling.focus();
+        }
+    }
+
+    /* =========================================
+       DATA PERSISTENCE
+       ========================================= */
+    function openSaveModal() {
+        const loadedId = document.getElementById('loadedCombinationId').value;
+        const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+        const currentCombo = combos.find(c => c.id.toString() === loadedId);
+
+        resetGrid('#saveCombinationModal');
+        
+        if (currentCombo) populateGrid('#saveCombinationModal', currentCombo);
+        
+        // Sync test word
+        document.getElementById('testWordInput').value = document.getElementById('mainTestWordInput').value;
+        document.getElementById('saveCombinationModal').style.display = 'flex';
+    }
+
+    function closeSaveModal() {
+        closeModal('saveCombinationModal');
+        document.getElementById('combinationId').value = '';
+    }
+
+    function saveCombinationData() {
+        const idInput = document.getElementById('combinationId').value;
+        const testWord = document.getElementById('testWordInput').value;
+        const rowsData = getGridData('#saveCombinationModal');
+        const originalWords = activeInputElement.value;
+        
+        let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+
+        // Helper to check grid equality
+        const isGridEqual = (g1, g2) => JSON.stringify(g1) === JSON.stringify(g2);
+
+        if (idInput) {
+            // Update Existing
+            const idx = combos.findIndex(c => c.id.toString() === idInput);
+            if (idx > -1) {
+                Object.assign(combos[idx], { rows: rowsData, testWord, originalWords });
+                showMessage('Updated successfully!');
+            }
+        } else {
+            // Check for duplicate grid to merge
+            const existingIdx = combos.findIndex(c => isGridEqual(c.rows, rowsData));
+            if (existingIdx > -1) {
+                // Merge logic
+                const existing = combos[existingIdx];
+                const mergedWords = [...new Set([...existing.originalWords.split('\n'), ...originalWords.split('\n')])].join('\n');
+                existing.originalWords = mergedWords;
+                if (testWord && !existing.testWord.includes(testWord)) existing.testWord += ` ${testWord}`;
+                showMessage('Merged with existing combination!');
+            } else {
+                // Create New
+                combos.push({ id: Date.now(), rows: rowsData, testWord, originalWords });
+                showMessage('Saved new combination!');
+            }
+        }
+
+        localStorage.setItem('savedCombinations', JSON.stringify(combos));
+        closeSaveModal();
+    }
+
+    /* =========================================
+       SEARCH & LOAD LOGIC
+       ========================================= */
+    function openSearchModal() {
+        resetGrid('#searchModal');
+        document.getElementById('searchModal').style.display = 'flex';
+    }
+
+    function openFirstMatchingCombination() {
+        const searchData = getGridData('#searchModal');
+        const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+
+        // Filter Logic
+        const match = combos.find(combo => {
+            return searchData.every((sRow, rIdx) => {
+                return sRow.every((sBox, bIdx) => {
+                    const savedBox = combo.rows[rIdx][bIdx];
+                    // Match if search box is empty/grey OR matches exactly
+                    const isEmpty = !sBox.letter && sBox.color === 'grey';
+                    if (isEmpty) return true;
+                    return (savedBox.letter === sBox.letter) && (savedBox.color === sBox.color);
+                });
+            });
+        });
+
+        if (match) loadCombinationToMainPage(match.id);
+        else showMessage('No matching combination found.', 'error');
+    }
+
+    function loadCombinationToMainPage(id) {
+        const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+        const combo = combos.find(c => c.id.toString() === id.toString());
+        if (!combo) return;
+
+        activeInputElement.value = combo.originalWords || '';
+        document.getElementById('mainTestWordInput').value = combo.testWord;
+        document.getElementById('loadedCombinationId').value = combo.id;
+        
+        handleWordInput(); // Refresh UI
+        closeModal('searchModal');
+        showMessage('Loaded successfully!');
+    }
+
+    function handleSavedListClick(e) {
+        const id = e.target.dataset.id;
+        if (!id) return;
+        if (e.target.classList.contains('open-btn')) loadCombinationToMainPage(id);
+        else if (e.target.classList.contains('delete-btn')) deleteCombination(id);
+    }
+
+    function deleteCombination(id) {
+        openConfirmationModal('Delete this combination?', () => {
+            let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
+            combos = combos.filter(c => c.id.toString() !== id.toString());
+            localStorage.setItem('savedCombinations', JSON.stringify(combos));
+            // In a real app we would re-render the list here if it was visible
+            showMessage('Deleted.');
+        });
+    }
+
+    function openConfirmationModal(msg, cb) {
+        confirmCallback = cb;
+        document.getElementById('confirmationMessage').textContent = msg;
+        document.getElementById('confirmationModal').style.display = 'flex';
+    }
+
+    /* =========================================
+       GRID HELPERS
+       ========================================= */
+    function resetGrid(modalId) {
+        document.querySelectorAll(`${modalId} .wordle-box`).forEach(box => {
+            box.value = '';
+            box.dataset.color = 'grey';
+            box.style.backgroundColor = ''; // Remove inline style to revert to CSS class
+        });
+    }
+
+    function populateGrid(modalId, data) {
+        const rows = document.querySelectorAll(`${modalId} .wordle-row`);
+        rows.forEach((row, rIdx) => {
+            const boxes = row.querySelectorAll('.wordle-box');
+            boxes.forEach((box, bIdx) => {
+                const cell = data.rows[rIdx][bIdx];
+                box.value = cell.letter;
+                box.dataset.color = cell.color;
+            });
+        });
+        document.getElementById('combinationId').value = data.id;
+    }
+
+    function getGridData(modalId) {
+        const rows = document.querySelectorAll(`${modalId} .wordle-row`);
+        return Array.from(rows).map(row => {
+            return Array.from(row.querySelectorAll('.wordle-box')).map(box => ({
+                letter: box.value.toUpperCase(),
+                color: box.dataset.color || 'grey'
+            }));
+        });
+    }
+  </script>
 </body>
 </html>

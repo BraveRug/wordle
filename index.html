@@ -103,18 +103,6 @@
     
     #wordInputTextarea { flex-basis: calc(50% - 10px); padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); resize: none; overflow-y: hidden; min-height: 50px; white-space: pre-wrap; word-wrap: break-word; font-family: 'Didact Gothic', sans-serif; }
     #wordInputText { width: 100%; padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); margin-bottom: 10px; display:none; }
-    
-    /* New Strikethrough/Interactive Box Styles */
-    #interactiveWordBox { flex-basis: calc(50% - 10px); padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); overflow-y: auto; display: none; white-space: pre-wrap; word-wrap: break-word; font-family: 'Didact Gothic', sans-serif; align-self: stretch; max-height: 500px; }
-    .word-token { cursor: pointer; display: inline-block; margin: 2px; padding: 2px 5px; border-radius: 4px; transition: 0.2s; }
-    .word-token:hover { background-color: rgba(128,128,128,0.1); }
-    .word-token.struck { text-decoration: line-through; opacity: 0.4; color: var(--delete-red); }
-    
-    /* Action Bar (Footer) */
-    .action-bar { display: flex; justify-content: space-between; width: 100%; margin-top: 15px; gap: 10px; }
-    .mode-toggle-btn { background: var(--input-bg); border: none; color: var(--text); padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 1.2em; display: flex; align-items: center; justify-content: center; }
-    .mode-toggle-btn:hover { background: var(--accent); color: white; }
-    
     ::placeholder { color: #888; }
 
     /* Layout overrides */
@@ -170,12 +158,10 @@
     .palette-color.green { background-color: var(--green-box); }
 
     /* Buttons & Lists */
-    #saveCombinationBtn, .save-data-btn, #confirmBtn, #cancelBtn, .open-btn, .delete-btn, .undo-btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 1em; cursor: pointer; transition: 0.2s; color: var(--btn-text); background-color: var(--accent); }
-    #saveCombinationBtn { width: 100%; }
+    #saveCombinationBtn, .save-data-btn, #confirmBtn, #cancelBtn, .open-btn, .delete-btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 1em; cursor: pointer; transition: 0.2s; color: var(--btn-text); background-color: var(--accent); }
+    #saveCombinationBtn { margin-top: 15px; }
     #saveCombinationBtn:hover { background-color: var(--text); color: var(--bg); }
     #confirmBtn, .delete-btn { background-color: var(--delete-red); color: white; }
-    .undo-btn { background-color: var(--grey-box); padding: 8px 12px; font-size: 0.9em; margin-top: 10px; margin-bottom: 10px; }
-    .undo-btn:hover { opacity: 0.8; }
     
     .test-word-input { width: 100%; max-width: 290px; margin: 0 auto; display: block; padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); }
     .main-page-input { width: 100%; max-width: 100%; margin-top: 20px; }
@@ -206,17 +192,11 @@
       <div class="content-area">
         <input type="text" id="wordInputText" placeholder="Type words here..." oninput="handleWordInput()" />
         <textarea id="wordInputTextarea" placeholder="Type words here..." oninput="handleWordInput()"></textarea>
-        <div id="interactiveWordBox"></div>
-        
         <div id="result" class="result-box"></div>
       </div>
       <input type="text" id="mainTestWordInput" placeholder="Enter test word here..." class="test-word-input main-page-input">
     </div>
-    
-    <div class="action-bar">
-        <button id="saveCombinationBtn">Save Combination</button>
-        <button class="mode-toggle-btn" onclick="toggleEliminationMode()">❌</button>
-    </div>
+    <button id="saveCombinationBtn">Save Combination</button>
   </div>
 
   <div class="modal" id="settingsModal">
@@ -291,8 +271,6 @@
             <div class="palette-color green" data-color="green"></div>
         </div>
 
-        <button class="undo-btn" onclick="undoGridChange('#saveCombinationModal')">↩ Undo</button>
-
         <div class="wordle-grid">
             <div class="wordle-row">
                 <input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" /><input type="text" maxlength="1" class="wordle-box" />
@@ -317,8 +295,6 @@
               <div class="palette-color yellow" data-color="yellow"></div>
               <div class="palette-color green" data-color="green"></div>
           </div>
-          
-          <button class="undo-btn" onclick="undoGridChange('#searchModal')">↩ Undo</button>
 
           <div class="wordle-grid">
               <div class="wordle-row">
@@ -352,8 +328,6 @@
     let selectedColor = 'grey';
     let confirmCallback = null;
     let inputDebounceTimer;
-    let gridHistory = []; // Stack for undo functionality
-    let eliminationMode = false;
 
     /* =========================================
        INITIALIZATION
@@ -369,9 +343,6 @@
         
         setTheme(savedTheme, false); // false = don't close modal on init
         applyLayout(savedLayout);
-        
-        // Ensure "No letters found" shows up immediately
-        countLetters();
     }
 
     function attachEventListeners() {
@@ -424,27 +395,14 @@
     }
 
     function countLetters() {
-        let text = "";
-        
-        // Elimination Mode Logic
-        if (eliminationMode) {
-             const interactiveBox = document.getElementById('interactiveWordBox');
-             // Only count tokens that are NOT struck through
-             const spans = interactiveBox.querySelectorAll('.word-token:not(.struck)');
-             spans.forEach(span => text += span.textContent + " ");
-        } else {
-             if (activeInputElement) {
-                 text = activeInputElement.value.toLowerCase();
-             }
-        }
-
+        if (!activeInputElement) return;
+        const text = activeInputElement.value.toLowerCase();
         // Regex adjusted to match words that are NOT followed by an asterisk
         const words = text.match(/\b\w+\b(?!\*)/g) || [];
         const letterMap = {};
         
         for (const word of words) {
-            const cleanWord = word.toLowerCase().replace(/[^a-z]/g, '');
-            const unique = new Set(cleanWord);
+            const unique = new Set(word.replace(/[^a-z]/g, ''));
             for (const letter of unique) {
                 letterMap[letter] = (letterMap[letter] || 0) + 1;
             }
@@ -460,71 +418,6 @@
         const maxHeight = Math.min(500, window.innerHeight * 0.6);
         el.style.height = (el.scrollHeight > maxHeight ? maxHeight : el.scrollHeight) + 'px';
         el.style.overflowY = el.scrollHeight > maxHeight ? 'auto' : 'hidden';
-    }
-
-    /* =========================================
-       ELIMINATION MODE LOGIC
-       ========================================= */
-    function toggleEliminationMode() {
-        const toggleBtn = document.querySelector('.mode-toggle-btn');
-        const interactiveBox = document.getElementById('interactiveWordBox');
-        
-        eliminationMode = !eliminationMode;
-
-        if (eliminationMode) {
-            // Switch to Elimination Mode
-            toggleBtn.textContent = '📝'; // Change to Notepad icon
-            const text = activeInputElement.value;
-            // Generate interactive tokens
-            interactiveBox.innerHTML = '';
-            // Basic whitespace split to preserve some structure
-            const tokens = text.split(/(\s+)/); 
-            
-            tokens.forEach(token => {
-                if (/\w/.test(token)) { // If it's a word
-                    const span = document.createElement('span');
-                    span.className = 'word-token';
-                    span.textContent = token;
-                    span.onclick = function() {
-                        this.classList.toggle('struck');
-                        countLetters(); // Re-calculate immediately
-                    };
-                    interactiveBox.appendChild(span);
-                } else {
-                    interactiveBox.appendChild(document.createTextNode(token));
-                }
-            });
-
-            activeInputElement.style.display = 'none';
-            interactiveBox.style.display = 'block';
-            
-        } else {
-            // Switch back to Edit Mode
-            toggleBtn.textContent = '❌'; // Change back to X icon
-            
-            // SAVE LOGIC: Reconstruct text WITHOUT struck words
-            let newText = "";
-            const nodes = interactiveBox.childNodes;
-            nodes.forEach(node => {
-                if (node.nodeType === Node.ELEMENT_NODE && node.classList.contains('word-token')) {
-                    if (!node.classList.contains('struck')) {
-                        newText += node.textContent;
-                    }
-                } else {
-                    newText += node.textContent;
-                }
-            });
-            
-            // Clean up double spaces that might occur from deletion
-            activeInputElement.value = newText.replace(/\s+/g, ' ').trim();
-            
-            interactiveBox.style.display = 'none';
-            // Restore visibility based on layout
-            const layout = localStorage.getItem('selectedLayout');
-            applyLayout(layout); // Resets the correct input display
-            handleWordInput(); // Force update/resize
-        }
-        countLetters(); // Update result box
     }
 
     /* =========================================
@@ -550,8 +443,7 @@
         applyLayout(layoutName);
         if (activeInputElement) {
             activeInputElement.value = oldVal;
-            // Don't call handleWordInput here if we are in elimination mode to prevent overwrite issues
-            if(!eliminationMode) handleWordInput(); 
+            handleWordInput(); // Restore height/count
         }
         localStorage.setItem('selectedLayout', layoutName);
         closeModal('settingsModal');
@@ -563,15 +455,6 @@
         const isOriginal = layout === 'original';
 
         document.body.classList.toggle('layout-original', isOriginal);
-        
-        // If in elimination mode, keep inputs hidden
-        if (eliminationMode) {
-             textInput.style.display = 'none';
-             areaInput.style.display = 'none';
-             activeInputElement = isOriginal ? textInput : areaInput; // Still track active input for value retrieval
-             return;
-        }
-
         textInput.style.display = isOriginal ? 'block' : 'none';
         areaInput.style.display = isOriginal ? 'none' : 'block';
         activeInputElement = isOriginal ? textInput : areaInput;
@@ -607,29 +490,8 @@
         });
     }
 
-    // Capture state before change
-    function saveGridState(modalSelector) {
-        const data = getGridData(modalSelector);
-        gridHistory.push({ modal: modalSelector, data: JSON.parse(JSON.stringify(data)) });
-    }
-
-    function undoGridChange(modalSelector) {
-        // Find last history item for this specific modal
-        const index = gridHistory.findLastIndex(item => item.modal === modalSelector);
-        if (index > -1) {
-            const historyItem = gridHistory[index];
-            populateGrid(modalSelector, { rows: historyItem.data }); // Using wrapper object to match populateGrid expectation
-            gridHistory.splice(index, 1); // Remove from stack
-        }
-    }
-
     function colorWordleBox(e) {
         if (!e.target.classList.contains('wordle-box')) return;
-        // Identify which modal we are in
-        const modal = e.target.closest('.modal');
-        if (modal) {
-            saveGridState('#' + modal.id);
-        }
         e.target.dataset.color = selectedColor;
     }
 
@@ -637,11 +499,6 @@
     function onBoxBeforeInput(e) {
         if (e.inputType === 'deleteContentBackward') {
             e.preventDefault();
-            
-            // Save state before delete
-             const modal = e.target.closest('.modal');
-             if (modal) saveGridState('#' + modal.id);
-
             const box = e.target;
             if (box.value) box.value = '';
             else if (box.previousElementSibling) {
@@ -652,16 +509,17 @@
     }
 
     function onBoxInput(e) {
-        // Handled by keydown generally
+        const box = e.target;
+        const val = box.value.slice(-1);
+        if (/^[a-zA-Z0-9]$/.test(val)) {
+            box.value = val.toUpperCase();
+            if (box.nextElementSibling) box.nextElementSibling.focus();
+        } else {
+            box.value = '';
+        }
     }
 
     function handleWordleBoxKeyDown(e) {
-        // Check if key is a letter/number and not a control key
-        if (/^[a-zA-Z0-9]$/.test(e.key)) {
-             const modal = e.target.closest('.modal');
-             if (modal) saveGridState('#' + modal.id);
-        }
-
         if (e.key === 'Backspace' && !e.target.value && e.target.previousElementSibling) {
             e.target.previousElementSibling.focus();
         }
@@ -674,8 +532,6 @@
         const loadedId = document.getElementById('loadedCombinationId').value;
         const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
         const currentCombo = combos.find(c => c.id.toString() === loadedId);
-        
-        gridHistory = []; // Reset history on open
 
         resetGrid('#saveCombinationModal');
         
@@ -734,7 +590,6 @@
        SEARCH & LOAD LOGIC
        ========================================= */
     function openSearchModal() {
-        gridHistory = []; // Reset history
         resetGrid('#searchModal');
         document.getElementById('searchModal').style.display = 'flex';
     }
@@ -764,9 +619,6 @@
         const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
         const combo = combos.find(c => c.id.toString() === id.toString());
         if (!combo) return;
-
-        // Reset to edit mode when loading
-        if (eliminationMode) toggleEliminationMode();
 
         activeInputElement.value = combo.originalWords || '';
         document.getElementById('mainTestWordInput').value = combo.testWord;
@@ -813,7 +665,6 @@
 
     function populateGrid(modalId, data) {
         const rows = document.querySelectorAll(`${modalId} .wordle-row`);
-        if (!data || !data.rows) return;
         rows.forEach((row, rIdx) => {
             const boxes = row.querySelectorAll('.wordle-box');
             boxes.forEach((box, bIdx) => {
@@ -822,7 +673,7 @@
                 box.dataset.color = cell.color;
             });
         });
-        if (data.id) document.getElementById('combinationId').value = data.id;
+        document.getElementById('combinationId').value = data.id;
     }
 
     function getGridData(modalId) {
@@ -833,16 +684,6 @@
                 color: box.dataset.color || 'grey'
             }));
         });
-    }
-
-    // Polyfill for findLastIndex
-    if (!Array.prototype.findLastIndex) {
-        Array.prototype.findLastIndex = function(callback, thisArg) {
-            for (let i = this.length - 1; i >= 0; i--) {
-                if (callback.call(thisArg, this[i], i, this)) return i;
-            }
-            return -1;
-        };
     }
   </script>
 </body>

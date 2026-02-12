@@ -103,6 +103,12 @@
     
     #wordInputTextarea { flex-basis: calc(50% - 10px); padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); resize: none; overflow-y: hidden; min-height: 50px; white-space: pre-wrap; word-wrap: break-word; font-family: 'Didact Gothic', sans-serif; }
     #wordInputText { width: 100%; padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); margin-bottom: 10px; display:none; }
+    
+    /* Strikethrough Mode Box */
+    #strikethrough-container { flex-basis: calc(50% - 10px); padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); min-height: 50px; white-space: pre-wrap; word-wrap: break-word; font-family: 'Didact Gothic', sans-serif; display: none; line-height: 2.5; cursor: default; }
+    .strikethrough-word { cursor: pointer; display: inline-block; padding: 0 2px; }
+    .strikethrough-word.struck { text-decoration: line-through; text-decoration-thickness: 2px; }
+
     ::placeholder { color: #888; }
 
     /* Layout overrides */
@@ -110,12 +116,14 @@
     body.layout-original #wordInputText { display: block; }
     body.layout-original #wordInputTextarea { display: none; }
     body.layout-original .result-box { width: 100%; flex-basis: auto; }
+    body.layout-original #strikethrough-container { width: 100%; flex-basis: auto; }
 
     /* Modals */
     .modal { position:fixed; top:0; left:0; right:0; bottom:0; display:none; justify-content:center; align-items:center; background:rgba(0,0,0,0.5); z-index:100; }
     .modal-content { background:var(--card-bg); padding:20px; border-radius:12px; width:90%; max-width:600px; text-align:center; position:relative; max-height:80vh; overflow-y:auto; }
     .close-btn { position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.2em; color:var(--text); cursor:pointer; }
-    
+    .undo-btn { position:absolute; top:10px; left:15px; background:none; border:none; font-size:1.4em; color:var(--text); cursor:pointer; display: flex; align-items: center; justify-content: center; height: 28px; width: 28px; }
+
     /* Settings & Theme Selection */
     .settings-section h3, .modal-content > h3 { margin: 20px 0 10px; font-size: 1.15em; color: var(--text); border-bottom: 1px solid var(--input-bg); padding-bottom: 8px; }
     .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
@@ -158,9 +166,11 @@
     .palette-color.green { background-color: var(--green-box); }
 
     /* Buttons & Lists */
-    #saveCombinationBtn, .save-data-btn, #confirmBtn, #cancelBtn, .open-btn, .delete-btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 1em; cursor: pointer; transition: 0.2s; color: var(--btn-text); background-color: var(--accent); }
-    #saveCombinationBtn { margin-top: 15px; }
-    #saveCombinationBtn:hover { background-color: var(--text); color: var(--bg); }
+    .action-row { display: flex; gap: 10px; margin-top: 15px; width: 100%; max-width: 500px; }
+    #saveCombinationBtn, .save-data-btn, #confirmBtn, #cancelBtn, .open-btn, .delete-btn, .mode-btn { border: none; border-radius: 8px; padding: 10px 18px; font-size: 1em; cursor: pointer; transition: 0.2s; color: var(--btn-text); background-color: var(--accent); }
+    #saveCombinationBtn { flex-grow: 1; }
+    .mode-btn { width: 44px; display: flex; align-items: center; justify-content: center; font-size: 1.2em; padding: 0; }
+    #saveCombinationBtn:hover, .mode-btn:hover { background-color: var(--text); color: var(--bg); }
     #confirmBtn, .delete-btn { background-color: var(--delete-red); color: white; }
     
     .test-word-input { width: 100%; max-width: 290px; margin: 0 auto; display: block; padding: 12px; font-size: 1em; border: 1px solid var(--input-bg); border-radius: 8px; background: var(--input-bg); color: var(--text); }
@@ -192,11 +202,15 @@
       <div class="content-area">
         <input type="text" id="wordInputText" placeholder="Type words here..." oninput="handleWordInput()" />
         <textarea id="wordInputTextarea" placeholder="Type words here..." oninput="handleWordInput()"></textarea>
+        <div id="strikethrough-container" onclick="handleStrikethroughClick(event)"></div>
         <div id="result" class="result-box"></div>
       </div>
       <input type="text" id="mainTestWordInput" placeholder="Enter test word here..." class="test-word-input main-page-input">
     </div>
-    <button id="saveCombinationBtn">Save Combination</button>
+    <div class="action-row">
+        <button id="saveCombinationBtn">Save Combination</button>
+        <button id="toggleStrikethroughBtn" class="mode-btn" onclick="toggleStrikethrough()">✕</button>
+    </div>
   </div>
 
   <div class="modal" id="settingsModal">
@@ -261,6 +275,7 @@
 
   <div class="modal" id="saveCombinationModal">
     <div class="modal-content">
+        <button class="undo-btn" onclick="undoGridState('saveCombinationModal')">↶</button>
         <button class="close-btn" onclick="closeSaveModal()">✕</button>
         <input type="hidden" id="combinationId">
         <h3>Save Wordle Combination</h3>
@@ -287,6 +302,7 @@
 
   <div class="modal" id="searchModal">
       <div class="modal-content">
+          <button class="undo-btn" onclick="undoGridState('searchModal')">↶</button>
           <button class="close-btn" onclick="closeModal('searchModal')">✕</button>
           <h3>Search Combinations</h3>
           
@@ -328,6 +344,14 @@
     let selectedColor = 'grey';
     let confirmCallback = null;
     let inputDebounceTimer;
+    let isStrikethroughMode = false;
+    let struckIndices = new Set();
+    
+    // Undo History Stacks
+    let gridHistory = {
+        'saveCombinationModal': [],
+        'searchModal': []
+    };
 
     /* =========================================
        INITIALIZATION
@@ -341,15 +365,18 @@
         const savedTheme = localStorage.getItem('selectedTheme') || 'light';
         const savedLayout = localStorage.getItem('selectedLayout') || 'side-by-side';
         
-        setTheme(savedTheme, false); // false = don't close modal on init
+        setTheme(savedTheme, false); 
         applyLayout(savedLayout);
+        
+        // Initial Count (to show "No letters found" immediately)
+        if (activeInputElement) countLetters();
     }
 
     function attachEventListeners() {
         // Debounce main input
         const handleInput = () => {
             clearTimeout(inputDebounceTimer);
-            inputDebounceTimer = setTimeout(handleWordInput, 300); // 300ms delay
+            inputDebounceTimer = setTimeout(handleWordInput, 300); 
         };
         document.getElementById('wordInputText').addEventListener('input', handleInput);
         document.getElementById('wordInputTextarea').addEventListener('input', handleInput);
@@ -373,13 +400,24 @@
         });
         document.getElementById('cancelBtn').addEventListener('click', () => closeModal('confirmationModal'));
 
-        // Palette Delegation (for both modals)
+        // Palette Delegation
         document.querySelectorAll('.palette').forEach(p => p.addEventListener('click', selectPaletteColor));
         
-        // Wordle Grid Delegation (Input handling)
+        // Wordle Grid Delegation
         document.querySelectorAll('.wordle-grid').forEach(grid => {
-            grid.addEventListener('click', colorWordleBox);
-            grid.addEventListener('keydown', handleWordleBoxKeyDown);
+            grid.addEventListener('click', (e) => {
+                const modalId = grid.closest('.modal').id;
+                pushGridState(modalId); // Save state before change
+                colorWordleBox(e);
+            });
+            grid.addEventListener('keydown', (e) => {
+                 // Capture state on keydown for printable keys
+                 if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                    const modalId = grid.closest('.modal').id;
+                    pushGridState(modalId);
+                 }
+                 handleWordleBoxKeyDown(e);
+            });
             grid.addEventListener('beforeinput', onBoxBeforeInput);
             grid.addEventListener('input', onBoxInput);
         });
@@ -397,16 +435,21 @@
     function countLetters() {
         if (!activeInputElement) return;
         const text = activeInputElement.value.toLowerCase();
-        // Regex adjusted to match words that are NOT followed by an asterisk
-        const words = text.match(/\b\w+\b(?!\*)/g) || [];
+        
+        // Regex to separate delimiters from words to track indices accurately
+        // We just need the words in order to map to struckIndices
+        const allWords = text.match(/\b\w+\b(?!\*)/g) || [];
+        
         const letterMap = {};
         
-        for (const word of words) {
+        allWords.forEach((word, index) => {
+            if (struckIndices.has(index)) return; // Skip struck words
+
             const unique = new Set(word.replace(/[^a-z]/g, ''));
             for (const letter of unique) {
                 letterMap[letter] = (letterMap[letter] || 0) + 1;
             }
-        }
+        });
         
         const sorted = Object.entries(letterMap).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
         const output = sorted.map(([l, c]) => `${l}: ${c}`).join('\n');
@@ -421,6 +464,87 @@
     }
 
     /* =========================================
+       STRIKETHROUGH MODE
+       ========================================= */
+    function toggleStrikethrough() {
+        const container = document.getElementById('strikethrough-container');
+        const btn = document.getElementById('toggleStrikethroughBtn');
+        
+        isStrikethroughMode = !isStrikethroughMode;
+
+        if (isStrikethroughMode) {
+            // Switch to Strikethrough View
+            activeInputElement.style.display = 'none';
+            container.style.display = 'block';
+            
+            // Render text
+            renderStrikethroughView();
+            
+            btn.textContent = '📝'; // Notepad icon
+        } else {
+            // Switch to Edit View
+            container.style.display = 'none';
+            activeInputElement.style.display = 'block';
+            
+            // Recalculate height if textarea
+            if (activeInputElement.id === 'wordInputTextarea') updateTextareaHeight(activeInputElement);
+            
+            btn.textContent = '✕';
+        }
+    }
+
+    function renderStrikethroughView() {
+        const text = activeInputElement.value;
+        const container = document.getElementById('strikethrough-container');
+        container.innerHTML = ''; // Clear
+
+        // We need to preserve newlines and spaces visual structure but wrap words
+        // Split by word boundaries capturing delimiters
+        const parts = text.split(/(\b\w+\b(?!\*))/g);
+        
+        let wordCount = 0;
+
+        parts.forEach(part => {
+            if (/\b\w+\b(?!\*)/.test(part)) {
+                // It's a word
+                const span = document.createElement('span');
+                span.textContent = part;
+                span.className = 'strikethrough-word';
+                span.dataset.index = wordCount;
+                if (struckIndices.has(wordCount)) {
+                    span.classList.add('struck');
+                }
+                container.appendChild(span);
+                wordCount++;
+            } else {
+                // It's delimiter/whitespace
+                container.appendChild(document.createTextNode(part));
+            }
+        });
+        
+        // Match height
+        if (activeInputElement.id === 'wordInputTextarea') {
+            container.style.height = activeInputElement.style.height;
+            container.style.overflowY = activeInputElement.style.overflowY;
+        }
+    }
+
+    function handleStrikethroughClick(e) {
+        if (!e.target.classList.contains('strikethrough-word')) return;
+        
+        const index = parseInt(e.target.dataset.index);
+        e.target.classList.toggle('struck');
+        
+        if (e.target.classList.contains('struck')) {
+            struckIndices.add(index);
+        } else {
+            struckIndices.delete(index);
+        }
+        
+        countLetters(); // Update logic immediately
+    }
+
+    /* =========================================
        THEMING & LAYOUT
        ========================================= */
     function setTheme(theme, autoClose = true) {
@@ -428,7 +552,6 @@
         document.body.className = `${theme} ${layoutClass}`;
         localStorage.setItem('selectedTheme', theme);
         
-        // Update Active Button UI
         document.querySelectorAll('.theme-option').forEach(btn => {
             const isMatch = btn.textContent.toLowerCase() === theme.replace(/-/g, ' ').toLowerCase() || 
                             btn.getAttribute('onclick').includes(`'${theme}'`);
@@ -443,7 +566,7 @@
         applyLayout(layoutName);
         if (activeInputElement) {
             activeInputElement.value = oldVal;
-            handleWordInput(); // Restore height/count
+            handleWordInput(); 
         }
         localStorage.setItem('selectedLayout', layoutName);
         closeModal('settingsModal');
@@ -453,18 +576,33 @@
         const textInput = document.getElementById('wordInputText');
         const areaInput = document.getElementById('wordInputTextarea');
         const isOriginal = layout === 'original';
+        
+        // Determine currently active value to transfer
+        const currentVal = activeInputElement ? activeInputElement.value : '';
 
         document.body.classList.toggle('layout-original', isOriginal);
         textInput.style.display = isOriginal ? 'block' : 'none';
         areaInput.style.display = isOriginal ? 'none' : 'block';
+        
+        // If in strike mode, inputs are hidden anyway, but we update reference
         activeInputElement = isOriginal ? textInput : areaInput;
+        activeInputElement.value = currentVal;
+        
+        // Ensure strike container visibility respects mode
+        const container = document.getElementById('strikethrough-container');
+        if (isStrikethroughMode) {
+             activeInputElement.style.display = 'none';
+             container.style.display = 'block';
+        } else {
+             container.style.display = 'none';
+        }
 
         document.querySelectorAll('.layout-option').forEach(btn => btn.classList.remove('active-layout'));
         document.getElementById(`layout-${layout}`)?.classList.add('active-layout');
     }
 
     /* =========================================
-       MODAL UTILS
+       MODAL UTILS & UNDO
        ========================================= */
     function openModal() { document.getElementById('settingsModal').style.display = 'flex'; }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -478,13 +616,26 @@
         setTimeout(() => el.remove(), 3000);
     }
 
+    // Undo Logic
+    function pushGridState(modalId) {
+        const currentData = getGridData(`#${modalId}`);
+        gridHistory[modalId].push(currentData);
+        // Limit history size if needed, e.g. 50
+        if (gridHistory[modalId].length > 50) gridHistory[modalId].shift();
+    }
+
+    function undoGridState(modalId) {
+        if (gridHistory[modalId].length === 0) return;
+        const previousState = gridHistory[modalId].pop();
+        populateGrid(`#${modalId}`, { rows: previousState });
+    }
+
     /* =========================================
        WORDLE GRID INTERACTION
        ========================================= */
     function selectPaletteColor(e) {
         if (!e.target.classList.contains('palette-color')) return;
         selectedColor = e.target.dataset.color;
-        // Update UI of all palettes to stay synced
         document.querySelectorAll('.palette-color').forEach(c => {
             c.classList.toggle('active-color', c.dataset.color === selectedColor);
         });
@@ -495,11 +646,14 @@
         e.target.dataset.color = selectedColor;
     }
 
-    // Input Handling for Grid
     function onBoxBeforeInput(e) {
         if (e.inputType === 'deleteContentBackward') {
             e.preventDefault();
             const box = e.target;
+            // Save state for undo
+            const modalId = box.closest('.modal').id;
+            pushGridState(modalId);
+            
             if (box.value) box.value = '';
             else if (box.previousElementSibling) {
                 box.previousElementSibling.value = '';
@@ -533,11 +687,13 @@
         const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
         const currentCombo = combos.find(c => c.id.toString() === loadedId);
 
+        // Reset History for this session
+        gridHistory['saveCombinationModal'] = [];
+
         resetGrid('#saveCombinationModal');
         
         if (currentCombo) populateGrid('#saveCombinationModal', currentCombo);
         
-        // Sync test word
         document.getElementById('testWordInput').value = document.getElementById('mainTestWordInput').value;
         document.getElementById('saveCombinationModal').style.display = 'flex';
     }
@@ -551,32 +707,27 @@
         const idInput = document.getElementById('combinationId').value;
         const testWord = document.getElementById('testWordInput').value;
         const rowsData = getGridData('#saveCombinationModal');
-        const originalWords = activeInputElement.value;
+        // Save raw text, ignoring strikethrough logic for content
+        const originalWords = activeInputElement.value; 
         
         let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-
-        // Helper to check grid equality
         const isGridEqual = (g1, g2) => JSON.stringify(g1) === JSON.stringify(g2);
 
         if (idInput) {
-            // Update Existing
             const idx = combos.findIndex(c => c.id.toString() === idInput);
             if (idx > -1) {
                 Object.assign(combos[idx], { rows: rowsData, testWord, originalWords });
                 showMessage('Updated successfully!');
             }
         } else {
-            // Check for duplicate grid to merge
             const existingIdx = combos.findIndex(c => isGridEqual(c.rows, rowsData));
             if (existingIdx > -1) {
-                // Merge logic
                 const existing = combos[existingIdx];
                 const mergedWords = [...new Set([...existing.originalWords.split('\n'), ...originalWords.split('\n')])].join('\n');
                 existing.originalWords = mergedWords;
                 if (testWord && !existing.testWord.includes(testWord)) existing.testWord += ` ${testWord}`;
                 showMessage('Merged with existing combination!');
             } else {
-                // Create New
                 combos.push({ id: Date.now(), rows: rowsData, testWord, originalWords });
                 showMessage('Saved new combination!');
             }
@@ -590,6 +741,8 @@
        SEARCH & LOAD LOGIC
        ========================================= */
     function openSearchModal() {
+        // Reset History
+        gridHistory['searchModal'] = [];
         resetGrid('#searchModal');
         document.getElementById('searchModal').style.display = 'flex';
     }
@@ -598,12 +751,10 @@
         const searchData = getGridData('#searchModal');
         const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
 
-        // Filter Logic
         const match = combos.find(combo => {
             return searchData.every((sRow, rIdx) => {
                 return sRow.every((sBox, bIdx) => {
                     const savedBox = combo.rows[rIdx][bIdx];
-                    // Match if search box is empty/grey OR matches exactly
                     const isEmpty = !sBox.letter && sBox.color === 'grey';
                     if (isEmpty) return true;
                     return (savedBox.letter === sBox.letter) && (savedBox.color === sBox.color);
@@ -624,7 +775,10 @@
         document.getElementById('mainTestWordInput').value = combo.testWord;
         document.getElementById('loadedCombinationId').value = combo.id;
         
-        handleWordInput(); // Refresh UI
+        // Reset strikethrough state on new load (optional, but cleaner)
+        struckIndices.clear();
+        
+        handleWordInput();
         closeModal('searchModal');
         showMessage('Loaded successfully!');
     }
@@ -641,7 +795,6 @@
             let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
             combos = combos.filter(c => c.id.toString() !== id.toString());
             localStorage.setItem('savedCombinations', JSON.stringify(combos));
-            // In a real app we would re-render the list here if it was visible
             showMessage('Deleted.');
         });
     }
@@ -659,21 +812,23 @@
         document.querySelectorAll(`${modalId} .wordle-box`).forEach(box => {
             box.value = '';
             box.dataset.color = 'grey';
-            box.style.backgroundColor = ''; // Remove inline style to revert to CSS class
+            box.style.backgroundColor = ''; 
         });
     }
 
     function populateGrid(modalId, data) {
+        // Handle both simple row data or full object
+        const rowsData = data.rows || data; 
         const rows = document.querySelectorAll(`${modalId} .wordle-row`);
         rows.forEach((row, rIdx) => {
             const boxes = row.querySelectorAll('.wordle-box');
             boxes.forEach((box, bIdx) => {
-                const cell = data.rows[rIdx][bIdx];
+                const cell = rowsData[rIdx][bIdx];
                 box.value = cell.letter;
                 box.dataset.color = cell.color;
             });
         });
-        document.getElementById('combinationId').value = data.id;
+        if (data.id) document.getElementById('combinationId').value = data.id;
     }
 
     function getGridData(modalId) {

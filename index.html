@@ -448,49 +448,43 @@
         document.getElementById('wordInputText').addEventListener('input', handleInput);
         document.getElementById('wordInputTextarea').addEventListener('input', handleInput);
         
-        // Enter Key Handler (Fixes Strikethrough Glitch)
+        // Enter Key Handler - Single press creates new line
         const handleEnterKey = (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 
                 // Get current selection
                 const sel = window.getSelection();
+                if (!sel.rangeCount) return;
                 const range = sel.getRangeAt(0);
                 
-                // Create a new line break
+                // Check if we're inside a struck span
+                let currentNode = range.startContainer;
+                let parentSpan = null;
+                
+                if (currentNode.nodeType === Node.TEXT_NODE && currentNode.parentNode.classList && currentNode.parentNode.classList.contains('struck')) {
+                    parentSpan = currentNode.parentNode;
+                } else if (currentNode.nodeType === Node.ELEMENT_NODE && currentNode.classList && currentNode.classList.contains('struck')) {
+                    parentSpan = currentNode;
+                }
+                
+                // If we're in a struck span, move to the end of it first
+                if (parentSpan) {
+                    range.setStartAfter(parentSpan);
+                    range.collapse(true);
+                }
+                
+                // Create line break
                 const br = document.createElement('br');
                 range.deleteContents();
                 range.insertNode(br);
                 
-                // Create a second br if we're at the end to ensure cursor moves down
-                const container = br.parentNode;
-                if (!br.nextSibling || (br.nextSibling.nodeType === Node.ELEMENT_NODE && br.nextSibling.tagName === 'BR')) {
-                    const br2 = document.createElement('br');
-                    container.insertBefore(br2, br.nextSibling);
-                    range.setStartAfter(br2);
-                } else {
-                    range.setStartAfter(br);
-                }
-                
+                // Move cursor after the br
+                range.setStartAfter(br);
                 range.collapse(true);
+                
                 sel.removeAllRanges();
                 sel.addRange(range);
-                
-                // Ensure we're not in a struck span
-                let node = range.startContainer;
-                if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('struck')) {
-                    // Move cursor outside the struck span
-                    range.setStartAfter(node);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                } else if (node.parentNode && node.parentNode.classList && node.parentNode.classList.contains('struck')) {
-                    // If we're inside a struck span, move outside
-                    range.setStartAfter(node.parentNode);
-                    range.collapse(true);
-                    sel.removeAllRanges();
-                    sel.addRange(range);
-                }
                 
                 handleWordInput();
             }
@@ -698,45 +692,38 @@
         return clone.textContent || "";
     }
 
-    /* Helper to get text for saving (preserves actual newlines) */
-    function getTextForSaving(element) {
+    /* Helper to get HTML for saving (preserves strikethroughs and newlines) */
+    function getHTMLForSaving(element) {
         if (!element) return "";
-        let clone = element.cloneNode(true);
-        
-        // Remove struck words
-        clone.querySelectorAll('.struck').forEach(el => el.remove());
-
-        // Convert BRs to actual newlines
-        const brs = clone.querySelectorAll('br');
-        brs.forEach(br => {
-            const newline = document.createTextNode('\n');
-            br.parentNode.replaceChild(newline, br);
-        });
-
-        // Convert divs to newlines (but not the first one if it's the root)
-        const divs = clone.querySelectorAll('div');
-        divs.forEach((div, index) => {
-            if (index > 0 || div.parentNode !== clone) {
-                const newline = document.createTextNode('\n');
-                if (div.parentNode) {
-                    div.parentNode.insertBefore(newline, div);
-                }
-            }
-        });
-
-        return clone.textContent || "";
+        return element.innerHTML;
     }
 
     function countLetters() {
         if (!activeInputElement) return;
         
-        // Use the new clean text extractor that properly handles newlines
+        // Use the clean text extractor that properly handles newlines
         let text = getCleanText(activeInputElement).toLowerCase();
         
-        // Extract words - treats newlines and spaces as word boundaries
-        // Remove asterisks before word extraction
-        text = text.replace(/\*/g, '');
-        const words = text.match(/[a-z]+/g) || [];
+        // Extract words with their surrounding context to check for asterisks
+        const words = [];
+        let currentPos = 0;
+        const wordRegex = /[a-z]+/g;
+        let match;
+        
+        while ((match = wordRegex.exec(text)) !== null) {
+            const word = match[0];
+            const startPos = match.index;
+            const endPos = startPos + word.length;
+            
+            // Check if there's an asterisk immediately before or after the word
+            const charBefore = startPos > 0 ? text[startPos - 1] : '';
+            const charAfter = endPos < text.length ? text[endPos] : '';
+            
+            // Only include word if NO asterisk is adjacent
+            if (charBefore !== '*' && charAfter !== '*') {
+                words.push(word);
+            }
+        }
         
         const letterMap = {};
         
@@ -928,8 +915,8 @@
         const idInput = document.getElementById('combinationId').value;
         const testWord = document.getElementById('testWordInput').value;
         const rowsData = getGridData('#saveCombinationModal');
-        // Use text for saving that preserves newlines
-        const originalWords = getTextForSaving(activeInputElement);
+        // Save HTML to preserve strikethroughs
+        const originalWordsHTML = getHTMLForSaving(activeInputElement);
         
         let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
 
@@ -938,19 +925,19 @@
         if (idInput) {
             const idx = combos.findIndex(c => c.id.toString() === idInput);
             if (idx > -1) {
-                Object.assign(combos[idx], { rows: rowsData, testWord, originalWords });
+                Object.assign(combos[idx], { rows: rowsData, testWord, originalWordsHTML });
                 showMessage('Updated successfully!');
             }
         } else {
             const existingIdx = combos.findIndex(c => isGridEqual(c.rows, rowsData));
             if (existingIdx > -1) {
                 const existing = combos[existingIdx];
-                const mergedWords = [...new Set([...existing.originalWords.split('\n'), ...originalWords.split('\n')])].join('\n');
-                existing.originalWords = mergedWords;
+                // Just use the new HTML instead of trying to merge
+                existing.originalWordsHTML = originalWordsHTML;
                 if (testWord && !existing.testWord.includes(testWord)) existing.testWord += ` ${testWord}`;
                 showMessage('Merged with existing combination!');
             } else {
-                combos.push({ id: Date.now(), rows: rowsData, testWord, originalWords });
+                combos.push({ id: Date.now(), rows: rowsData, testWord, originalWordsHTML });
                 showMessage('Saved new combination!');
             }
         }
@@ -992,14 +979,9 @@
         const combo = combos.find(c => c.id.toString() === id.toString());
         if (!combo) return;
 
-        // Convert newlines to BR tags for proper display in contenteditable
-        const text = combo.originalWords || '';
-        const htmlContent = text.split('\n').map(line => {
-            return line || '<br>'; // Empty lines become <br>
-        }).join('<br>');
-        
-        activeInputElement.innerHTML = htmlContent;
-        document.getElementById('mainTestWordInput').value = combo.testWord;
+        // Load HTML directly to preserve strikethroughs and formatting
+        activeInputElement.innerHTML = combo.originalWordsHTML || combo.originalWords || '';
+        document.getElementById('mainTestWordInput').value = combo.testWord || '';
         document.getElementById('loadedCombinationId').value = combo.id;
         
         handleWordInput();

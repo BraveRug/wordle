@@ -440,6 +440,8 @@
                 activeInputElement.innerHTML = '';
             }
             
+            // CRITICAL: Clean up empty struck spans immediately on input
+            cleanupEmptyStruckSpans();
             sanitizeFormatting();
             
             clearTimeout(inputDebounceTimer);
@@ -489,18 +491,19 @@
                 range.deleteContents();
                 range.insertNode(br);
                 
-                // Check if we need a trailing BR (when at end or followed by another BR)
-                if (!br.nextSibling || (br.nextSibling && br.nextSibling.nodeName === 'BR')) {
+                // ALWAYS check if we need a trailing BR for proper line break
+                // We need it when: at end of container, or next sibling is also a BR
+                const parent = br.parentNode;
+                const nextSibling = br.nextSibling;
+                
+                if (!nextSibling || nextSibling.nodeName === 'BR') {
+                    // Add trailing BR to create visible line break
                     const br2 = document.createElement('br');
-                    br.parentNode.insertBefore(br2, br.nextSibling);
-                    // Move cursor after the first BR, before the second
-                    range.setStartAfter(br);
-                    range.setEndBefore(br2);
-                } else {
-                    // Move cursor after the br
-                    range.setStartAfter(br);
+                    parent.insertBefore(br2, nextSibling);
                 }
                 
+                // Move cursor after the first br
+                range.setStartAfter(br);
                 range.collapse(true);
                 sel.removeAllRanges();
                 sel.addRange(range);
@@ -600,6 +603,10 @@
         if (parentSpan && parentSpan.textContent.trim().length === 0) {
             const nextSibling = parentSpan.nextSibling;
             const parentNode = parentSpan.parentNode;
+            
+            // Save cursor offset if we're in a text node
+            const cursorOffset = currentNode.nodeType === Node.TEXT_NODE ? range.startOffset : 0;
+            
             parentSpan.remove();
             
             // Place cursor where the span was
@@ -609,6 +616,25 @@
             } else {
                 newRange.setStart(parentNode, parentNode.childNodes.length);
             }
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            return;
+        }
+        
+        // CRITICAL: If we just typed in an empty struck span, unwrap the text
+        // This happens when you delete all text and type new text - we need to unwrap it
+        if (parentSpan && parentSpan.childNodes.length === 1 && parentSpan.childNodes[0].nodeType === Node.TEXT_NODE) {
+            const textNode = parentSpan.childNodes[0];
+            const offset = range.startOffset;
+            const parent = parentSpan.parentNode;
+            
+            // Replace span with its text content
+            parent.replaceChild(textNode, parentSpan);
+            
+            // Restore cursor position
+            const newRange = document.createRange();
+            newRange.setStart(textNode, offset);
             newRange.collapse(true);
             sel.removeAllRanges();
             sel.addRange(newRange);
@@ -755,8 +781,11 @@
         if (!element) return "";
         let clone = element.cloneNode(true);
         
-        // Remove struck words
-        clone.querySelectorAll('.struck').forEach(el => el.remove());
+        // Replace struck words with their text content (remove formatting but keep the text!)
+        clone.querySelectorAll('.struck').forEach(el => {
+            const textNode = document.createTextNode(el.textContent);
+            el.parentNode.replaceChild(textNode, el);
+        });
 
         // Convert BRs to newlines
         const brs = clone.querySelectorAll('br');

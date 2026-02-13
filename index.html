@@ -413,8 +413,14 @@
     function attachEventListeners() {
         // Debounce main input
         const handleInput = () => {
-            // Logic to prevent struck style bleeding
+            // Fix: Check for empty content to restore placeholder
+            if (activeInputElement && !activeInputElement.textContent.trim()) {
+                activeInputElement.innerHTML = '';
+            }
+            
+            // Logic to clean up formatting
             sanitizeFormatting();
+            
             clearTimeout(inputDebounceTimer);
             inputDebounceTimer = setTimeout(handleWordInput, 300); // 300ms delay
         };
@@ -458,10 +464,24 @@
         
         // Wordle Grid Delegation (Input handling)
         document.querySelectorAll('.wordle-grid').forEach(grid => {
-            grid.addEventListener('click', (e) => { pushHistory(); colorWordleBox(e); });
-            grid.addEventListener('keydown', handleWordleBoxKeyDown);
+            // Fix Undo: Capture state on MOUSE DOWN (before click/color change)
+            grid.addEventListener('mousedown', (e) => {
+                if(e.target.classList.contains('wordle-box') || e.target.classList.contains('palette-color')) {
+                    pushHistory();
+                }
+            });
+            grid.addEventListener('click', colorWordleBox);
+
+            // Fix Undo: Capture state on KEY DOWN (before value change)
+            grid.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' || /^[a-zA-Z0-9]$/.test(e.key)) {
+                    pushHistory();
+                }
+                handleWordleBoxKeyDown(e);
+            });
+            
             grid.addEventListener('beforeinput', onBoxBeforeInput);
-            grid.addEventListener('input', (e) => { pushHistory(); onBoxInput(e); });
+            grid.addEventListener('input', onBoxInput);
         });
     }
 
@@ -474,61 +494,55 @@
         countLetters();
     }
 
-    // Prevents strikethrough from bleeding into new words/lines
+    // Prevents strikethrough from bleeding and handles removal of empty struck words
     function sanitizeFormatting() {
         if (!activeInputElement) return;
         const spans = activeInputElement.querySelectorAll('.struck');
         spans.forEach(span => {
-            // If a struck span contains a space or newline, split it or remove the formatting for whitespace
+            // 1. Remove empty struck spans (user deleted the word)
+            if (span.textContent.length === 0) {
+                span.remove();
+                return;
+            }
+
+            // 2. Handle spaces: If user types space, break the span
+            // This prevents "jumping to end" by manually handling the split
             if (/[\s\n]/.test(span.textContent)) {
                 const text = span.textContent;
-                // Just unwrap it, logic elsewhere will handle restriking if needed,
-                // or simpler: just remove the class. But user wants words struck.
-                // We basically assume a struck span should ONLY contain word characters.
-                // If the user typed a space at the end, the browser often puts it inside the span.
-                // We move that space out.
+                const parts = text.split(/(\s+)/); // split by whitespace, keeping it
                 
-                // Simple approach: if it has whitespace, replace with text node.
-                // User will have to re-strike if they messed it up, but usually this happens 
-                // when typing AFTER a struck word. 
-                // Since editing is disabled in strike mode, this only happens if they
-                // strike -> switch to edit -> type space.
-                
-                // We will iterate and break it apart.
                 const fragment = document.createDocumentFragment();
-                const parts = text.split(/(\s+)/); // split by whitespace, keep delimiter
+                let lastNode = null;
+
                 parts.forEach(part => {
                     if (!part) return;
                     if (/\s/.test(part)) {
-                        fragment.appendChild(document.createTextNode(part));
+                        // Create text node for space (not struck)
+                        lastNode = document.createTextNode(part);
+                        fragment.appendChild(lastNode);
                     } else {
+                        // Keep word struck
                         const s = document.createElement('span');
                         s.className = 'struck';
                         s.textContent = part;
                         fragment.appendChild(s);
+                        lastNode = s; // Track last node
                     }
                 });
+
                 span.replaceWith(fragment);
                 
-                // Restore cursor position is tricky in contenteditable after DOM manip.
-                // For this tool, simply normalizing at the end might be acceptable 
-                // or we rely on the fact that if they just typed a space, caret is at end.
-                placeCaretAtEnd(activeInputElement); 
+                // Restore cursor: If we just made a space, put cursor after it
+                if (lastNode && lastNode.nodeType === Node.TEXT_NODE) {
+                    const range = document.createRange();
+                    range.setStartAfter(lastNode);
+                    range.collapse(true);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
             }
         });
-    }
-    
-    function placeCaretAtEnd(el) {
-        el.focus();
-        if (typeof window.getSelection != "undefined"
-                && typeof document.createRange != "undefined") {
-            var range = document.createRange();
-            range.selectNodeContents(el);
-            range.collapse(false);
-            var sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
-        }
     }
 
     function toggleStrikethroughMode() {
@@ -545,9 +559,6 @@
     function handleEditorClick(e) {
         if (!isStrikethroughMode) return;
         
-        // Since contentEditable is false, we can't trust native selection anchorOffset as easily for ranges
-        // But click target gives us the node.
-        
         let target = e.target;
         
         // Handle clicking on an existing struck word (Unstrike)
@@ -559,23 +570,13 @@
         }
         
         // Handle clicking on a plain word (Strike)
-        // Since we can't select text in read-only mode, we look at the text node clicked
-        // Note: In Chrome, clicking a non-editable text node might not give accurate caret position easily
-        // without selection API. However, `window.getSelection()` often still works for "collapsed" cursor placement
-        // even if not visually editable.
-        
         const sel = window.getSelection();
         if (!sel.rangeCount) return;
         const range = sel.getRangeAt(0);
         let node = range.startContainer;
         let offset = range.startOffset;
 
-        // Normalize if clicked element vs text
-        if (node.nodeType === Node.ELEMENT_NODE) {
-             // If clicked the container, finding the exact word is hard without exact coordinates
-             // But usually it lands on a text node.
-             return; 
-        }
+        if (node.nodeType === Node.ELEMENT_NODE) return;
 
         if (node.nodeType === Node.TEXT_NODE) {
              const text = node.textContent;
@@ -611,9 +612,8 @@
         // Remove struck words entirely from calculation
         clone.querySelectorAll('.struck').forEach(el => el.remove());
         
-        // Get text content, replacing newlines with spaces to ensure regex sees boundary
-        // innerText usually handles newlines well, but explicit replacement guarantees it
         let text = clone.innerText || ""; 
+        // Explicitly replace newlines with spaces to separate words on different lines
         text = text.replace(/[\n\r]+/g, ' ').toLowerCase();
         
         const words = text.match(/\b\w+\b(?!\*)/g) || [];
@@ -708,7 +708,7 @@
         if (!activeModal) return;
         const gridData = getGridData('#' + activeModal.id);
         gridHistory.push(JSON.stringify(gridData));
-        if (gridHistory.length > 20) gridHistory.shift();
+        if (gridHistory.length > 50) gridHistory.shift();
     }
 
     function undoWordleGrid() {
@@ -730,6 +730,7 @@
 
     function colorWordleBox(e) {
         if (!e.target.classList.contains('wordle-box')) return;
+        // Don't push history here, handled by mousedown
         e.target.dataset.color = selectedColor;
     }
 
@@ -746,6 +747,7 @@
     }
 
     function onBoxInput(e) {
+        // Don't push history here, handled by keydown
         const box = e.target;
         const val = box.value.slice(-1);
         if (/^[a-zA-Z0-9]$/.test(val)) {
@@ -758,7 +760,6 @@
 
     function handleWordleBoxKeyDown(e) {
         if (e.key === 'Backspace' && !e.target.value && e.target.previousElementSibling) {
-            pushHistory();
             e.target.previousElementSibling.focus();
         }
     }
@@ -789,7 +790,6 @@
         const idInput = document.getElementById('combinationId').value;
         const testWord = document.getElementById('testWordInput').value;
         const rowsData = getGridData('#saveCombinationModal');
-        // Use innerText to get clean text for saving, ignoring span tags
         const originalWords = activeInputElement.innerText;
         
         let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];

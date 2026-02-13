@@ -18,7 +18,7 @@
       --input-bg: #f0f0f0;
       --card-bg: #ffffff;
       --settings-icon-bg: rgba(128, 128, 128, 0.2);
-      --btn-text: white; /* Default button text color */
+      --btn-text: white;
       
       /* Static Colors */
       --grey-box: #787c7e;
@@ -116,7 +116,7 @@
         content: attr(placeholder);
         color: #888;
         pointer-events: none;
-        display: block; /* For Firefox */
+        display: block;
     }
 
     /* Strikethrough Styling */
@@ -125,15 +125,16 @@
         background-color: rgba(255, 0, 0, 0.1);
         text-decoration-color: red;
         text-decoration-thickness: 2px;
-        text-decoration-skip-ink: none; /* Ensures line goes through letters */
+        text-decoration-skip-ink: none;
         border-radius: 3px;
         padding: 0 2px;
     }
 
-    /* Strikethrough Mode Cursor */
+    /* Strikethrough Mode Cursors & Interactions */
     body.mode-strikethrough #wordInputText, 
     body.mode-strikethrough #wordInputTextarea {
-        cursor: alias; /* Looks like a pointer/selection button */
+        cursor: pointer; /* Acts like a button */
+        caret-color: transparent; /* Hide text caret */
     }
 
     /* Layout overrides */
@@ -148,8 +149,15 @@
     .close-btn { position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.2em; color:var(--text); cursor:pointer; }
     
     /* Undo Button */
-    .undo-btn { position:absolute; top:10px; left:15px; background:none; border:none; font-size:1.2em; color:var(--text); cursor:pointer; transform: scaleX(-1); /* Mirror to look like undo */ }
-    .undo-btn:hover { color: var(--accent); }
+    .undo-btn { 
+        position:absolute; top:10px; left:15px; 
+        background:none; border:none; 
+        width: 30px; height: 30px;
+        display: flex; align-items: center; justify-content: center;
+        cursor:pointer; padding: 0;
+    }
+    .undo-btn svg { width: 20px; height: 20px; fill: var(--text); transition: fill 0.2s; }
+    .undo-btn:hover svg { fill: var(--accent); }
 
     /* Settings & Theme Selection */
     .settings-section h3, .modal-content > h3 { margin: 20px 0 10px; font-size: 1.15em; color: var(--text); border-bottom: 1px solid var(--input-bg); padding-bottom: 8px; }
@@ -170,7 +178,7 @@
     .ash-btn { background: #607d8b; } .ashblue-btn { background: #64748b; } .ashred-btn { background: #b08d8d; } .ashgreen-btn { background: #8db096; } .ashpurple-btn { background: #a58db0; } .ashorange-btn { background: #b09e8d; }
     .dark-btn { background:#333; } .midnight-btn { background:#415a77; } .reddark-btn { background:#e57373; } .orangedark-btn { background:#ffb74d; color: #333; } .yellowdark-btn { background:#ffd54f; color: #333; } .greendark-btn { background:#81c784; color: #333; } .cyandark-btn { background:#4dd0e1; color: #333; } .azuredark-btn { background:#64b5f6; color: #333; } .deepsea-btn { background:#4fc3f7; color: #333; } .violetnight-btn { background:#9575cd; } .purpledark-btn { background:#ba68c8; } .merlot-btn { background:#f06292; } .browndark-btn { background:#a1887f; } .charcoal-btn { background:#9e9e9e; color: #111; }
     
-    /* Onyx Buttons (Dimmed & Contrast Adjusted) */
+    /* Onyx Buttons */
     .onyx-btn { background: #000; border: 1px solid #333; } 
     .onyxred-btn { background: #cc0033; } 
     .onyxblue-btn { background: #00b8cc; color:#000; } 
@@ -305,7 +313,11 @@
 
   <div class="modal" id="saveCombinationModal">
     <div class="modal-content">
-        <button class="undo-btn" onclick="undoWordleGrid()">↩️</button>
+        <button class="undo-btn" onclick="undoWordleGrid()">
+            <svg viewBox="0 0 24 24">
+                <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
+            </svg>
+        </button>
         <button class="close-btn" onclick="closeSaveModal()">✕</button>
         <input type="hidden" id="combinationId">
         <h3>Save Wordle Combination</h3>
@@ -332,7 +344,11 @@
 
   <div class="modal" id="searchModal">
       <div class="modal-content">
-          <button class="undo-btn" onclick="undoWordleGrid()">↩️</button>
+          <button class="undo-btn" onclick="undoWordleGrid()">
+             <svg viewBox="0 0 24 24">
+                <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
+            </svg>
+          </button>
           <button class="close-btn" onclick="closeModal('searchModal')">✕</button>
           <h3>Search Combinations</h3>
           
@@ -397,6 +413,8 @@
     function attachEventListeners() {
         // Debounce main input
         const handleInput = () => {
+            // Logic to prevent struck style bleeding
+            sanitizeFormatting();
             clearTimeout(inputDebounceTimer);
             inputDebounceTimer = setTimeout(handleWordInput, 300); // 300ms delay
         };
@@ -456,37 +474,111 @@
         countLetters();
     }
 
+    // Prevents strikethrough from bleeding into new words/lines
+    function sanitizeFormatting() {
+        if (!activeInputElement) return;
+        const spans = activeInputElement.querySelectorAll('.struck');
+        spans.forEach(span => {
+            // If a struck span contains a space or newline, split it or remove the formatting for whitespace
+            if (/[\s\n]/.test(span.textContent)) {
+                const text = span.textContent;
+                // Just unwrap it, logic elsewhere will handle restriking if needed,
+                // or simpler: just remove the class. But user wants words struck.
+                // We basically assume a struck span should ONLY contain word characters.
+                // If the user typed a space at the end, the browser often puts it inside the span.
+                // We move that space out.
+                
+                // Simple approach: if it has whitespace, replace with text node.
+                // User will have to re-strike if they messed it up, but usually this happens 
+                // when typing AFTER a struck word. 
+                // Since editing is disabled in strike mode, this only happens if they
+                // strike -> switch to edit -> type space.
+                
+                // We will iterate and break it apart.
+                const fragment = document.createDocumentFragment();
+                const parts = text.split(/(\s+)/); // split by whitespace, keep delimiter
+                parts.forEach(part => {
+                    if (!part) return;
+                    if (/\s/.test(part)) {
+                        fragment.appendChild(document.createTextNode(part));
+                    } else {
+                        const s = document.createElement('span');
+                        s.className = 'struck';
+                        s.textContent = part;
+                        fragment.appendChild(s);
+                    }
+                });
+                span.replaceWith(fragment);
+                
+                // Restore cursor position is tricky in contenteditable after DOM manip.
+                // For this tool, simply normalizing at the end might be acceptable 
+                // or we rely on the fact that if they just typed a space, caret is at end.
+                placeCaretAtEnd(activeInputElement); 
+            }
+        });
+    }
+    
+    function placeCaretAtEnd(el) {
+        el.focus();
+        if (typeof window.getSelection != "undefined"
+                && typeof document.createRange != "undefined") {
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
     function toggleStrikethroughMode() {
         isStrikethroughMode = !isStrikethroughMode;
         document.getElementById('strikethroughBtn').classList.toggle('active-strike', isStrikethroughMode);
         document.body.classList.toggle('mode-strikethrough', isStrikethroughMode);
+        
+        // Lock/Unlock editing
+        if (activeInputElement) {
+            activeInputElement.contentEditable = !isStrikethroughMode;
+        }
     }
 
     function handleEditorClick(e) {
         if (!isStrikethroughMode) return;
         
-        const sel = window.getSelection();
-        if (!sel.isCollapsed) return;
-
-        let node = sel.anchorNode;
-        // Navigate up to text node or span
-        if (node.nodeType !== Node.TEXT_NODE && node.nodeType !== Node.ELEMENT_NODE) return;
+        // Since contentEditable is false, we can't trust native selection anchorOffset as easily for ranges
+        // But click target gives us the node.
         
-        // If clicked on a span.struck, unwrap it
-        if (node.parentNode && node.parentNode.classList.contains('struck')) {
-            const span = node.parentNode;
-            const text = span.textContent;
-            span.replaceWith(document.createTextNode(text));
-            activeInputElement.normalize(); // Merge text nodes
+        let target = e.target;
+        
+        // Handle clicking on an existing struck word (Unstrike)
+        if (target.classList.contains('struck')) {
+            const text = target.textContent;
+            target.replaceWith(document.createTextNode(text));
             handleWordInput();
             return;
+        }
+        
+        // Handle clicking on a plain word (Strike)
+        // Since we can't select text in read-only mode, we look at the text node clicked
+        // Note: In Chrome, clicking a non-editable text node might not give accurate caret position easily
+        // without selection API. However, `window.getSelection()` often still works for "collapsed" cursor placement
+        // even if not visually editable.
+        
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        let node = range.startContainer;
+        let offset = range.startOffset;
+
+        // Normalize if clicked element vs text
+        if (node.nodeType === Node.ELEMENT_NODE) {
+             // If clicked the container, finding the exact word is hard without exact coordinates
+             // But usually it lands on a text node.
+             return; 
         }
 
         if (node.nodeType === Node.TEXT_NODE) {
              const text = node.textContent;
-             // Regex to find word boundaries
-             const offset = sel.anchorOffset;
-             
              // Find start of word
              let start = offset;
              while (start > 0 && /\w/.test(text[start - 1])) start--;
@@ -495,7 +587,8 @@
              let end = offset;
              while (end < text.length && /\w/.test(text[end])) end++;
              
-             if (start === end) return; // Not on a word
+             // Check valid word
+             if (start === end) return; 
 
              const rng = document.createRange();
              rng.setStart(node, start);
@@ -505,7 +598,7 @@
              span.className = 'struck';
              rng.surroundContents(span);
              
-             sel.removeAllRanges(); // Clear selection so it looks clean
+             sel.removeAllRanges(); 
              handleWordInput();
         }
     }
@@ -513,12 +606,16 @@
     function countLetters() {
         if (!activeInputElement) return;
         
-        // Logic to ignore struck-through text
+        // Clone to manipulate without altering view
         const clone = activeInputElement.cloneNode(true);
+        // Remove struck words entirely from calculation
         clone.querySelectorAll('.struck').forEach(el => el.remove());
-        const text = clone.innerText.toLowerCase();
         
-        // Regex adjusted to match words that are NOT followed by an asterisk
+        // Get text content, replacing newlines with spaces to ensure regex sees boundary
+        // innerText usually handles newlines well, but explicit replacement guarantees it
+        let text = clone.innerText || ""; 
+        text = text.replace(/[\n\r]+/g, ' ').toLowerCase();
+        
         const words = text.match(/\b\w+\b(?!\*)/g) || [];
         const letterMap = {};
         
@@ -535,7 +632,6 @@
     }
 
     function updateTextareaHeight(el) {
-        // Contenteditable auto-grows, just limit height
         el.style.height = 'auto';
         const maxHeight = Math.min(500, window.innerHeight * 0.6);
         el.style.height = (el.scrollHeight > maxHeight ? maxHeight : el.scrollHeight) + 'px';
@@ -567,7 +663,9 @@
         applyLayout(layoutName);
         if (activeInputElement) {
             activeInputElement.innerHTML = oldContent;
-            handleWordInput(); // Restore height/count
+            // Ensure editable state matches current mode
+            activeInputElement.contentEditable = !isStrikethroughMode;
+            handleWordInput();
         }
         localStorage.setItem('selectedLayout', layoutName);
         closeModal('settingsModal');
@@ -618,7 +716,6 @@
         const lastState = JSON.parse(gridHistory.pop());
         const activeModal = document.querySelector('.modal[style*="display: flex"]');
         if (activeModal) {
-            // Re-populate without adding to history again immediately
             populateGrid('#' + activeModal.id, { rows: lastState });
         }
     }
@@ -626,7 +723,6 @@
     function selectPaletteColor(e) {
         if (!e.target.classList.contains('palette-color')) return;
         selectedColor = e.target.dataset.color;
-        // Update UI of all palettes to stay synced
         document.querySelectorAll('.palette-color').forEach(c => {
             c.classList.toggle('active-color', c.dataset.color === selectedColor);
         });
@@ -637,7 +733,6 @@
         e.target.dataset.color = selectedColor;
     }
 
-    // Input Handling for Grid
     function onBoxBeforeInput(e) {
         if (e.inputType === 'deleteContentBackward') {
             e.preventDefault();
@@ -672,7 +767,7 @@
        DATA PERSISTENCE
        ========================================= */
     function openSaveModal() {
-        gridHistory = []; // Reset history
+        gridHistory = []; 
         const loadedId = document.getElementById('loadedCombinationId').value;
         const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
         const currentCombo = combos.find(c => c.id.toString() === loadedId);
@@ -681,7 +776,6 @@
         
         if (currentCombo) populateGrid('#saveCombinationModal', currentCombo);
         
-        // Sync test word
         document.getElementById('testWordInput').value = document.getElementById('mainTestWordInput').value;
         document.getElementById('saveCombinationModal').style.display = 'flex';
     }
@@ -695,33 +789,28 @@
         const idInput = document.getElementById('combinationId').value;
         const testWord = document.getElementById('testWordInput').value;
         const rowsData = getGridData('#saveCombinationModal');
-        // use innerText to get raw text without html tags (ignoring strikethrough logic effectively for saving)
+        // Use innerText to get clean text for saving, ignoring span tags
         const originalWords = activeInputElement.innerText;
         
         let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
 
-        // Helper to check grid equality
         const isGridEqual = (g1, g2) => JSON.stringify(g1) === JSON.stringify(g2);
 
         if (idInput) {
-            // Update Existing
             const idx = combos.findIndex(c => c.id.toString() === idInput);
             if (idx > -1) {
                 Object.assign(combos[idx], { rows: rowsData, testWord, originalWords });
                 showMessage('Updated successfully!');
             }
         } else {
-            // Check for duplicate grid to merge
             const existingIdx = combos.findIndex(c => isGridEqual(c.rows, rowsData));
             if (existingIdx > -1) {
-                // Merge logic
                 const existing = combos[existingIdx];
                 const mergedWords = [...new Set([...existing.originalWords.split('\n'), ...originalWords.split('\n')])].join('\n');
                 existing.originalWords = mergedWords;
                 if (testWord && !existing.testWord.includes(testWord)) existing.testWord += ` ${testWord}`;
                 showMessage('Merged with existing combination!');
             } else {
-                // Create New
                 combos.push({ id: Date.now(), rows: rowsData, testWord, originalWords });
                 showMessage('Saved new combination!');
             }
@@ -735,7 +824,7 @@
        SEARCH & LOAD LOGIC
        ========================================= */
     function openSearchModal() {
-        gridHistory = []; // Reset history
+        gridHistory = [];
         resetGrid('#searchModal');
         document.getElementById('searchModal').style.display = 'flex';
     }
@@ -744,12 +833,10 @@
         const searchData = getGridData('#searchModal');
         const combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
 
-        // Filter Logic
         const match = combos.find(combo => {
             return searchData.every((sRow, rIdx) => {
                 return sRow.every((sBox, bIdx) => {
                     const savedBox = combo.rows[rIdx][bIdx];
-                    // Match if search box is empty/grey OR matches exactly
                     const isEmpty = !sBox.letter && sBox.color === 'grey';
                     if (isEmpty) return true;
                     return (savedBox.letter === sBox.letter) && (savedBox.color === sBox.color);
@@ -766,12 +853,11 @@
         const combo = combos.find(c => c.id.toString() === id.toString());
         if (!combo) return;
 
-        // Use innerText to set content, this removes any old strikethroughs if they existed
         activeInputElement.innerText = combo.originalWords || '';
         document.getElementById('mainTestWordInput').value = combo.testWord;
         document.getElementById('loadedCombinationId').value = combo.id;
         
-        handleWordInput(); // Refresh UI
+        handleWordInput();
         closeModal('searchModal');
         showMessage('Loaded successfully!');
     }
@@ -788,7 +874,6 @@
             let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
             combos = combos.filter(c => c.id.toString() !== id.toString());
             localStorage.setItem('savedCombinations', JSON.stringify(combos));
-            // In a real app we would re-render the list here if it was visible
             showMessage('Deleted.');
         });
     }
@@ -806,7 +891,7 @@
         document.querySelectorAll(`${modalId} .wordle-box`).forEach(box => {
             box.value = '';
             box.dataset.color = 'grey';
-            box.style.backgroundColor = ''; // Remove inline style to revert to CSS class
+            box.style.backgroundColor = '';
         });
     }
 

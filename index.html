@@ -112,6 +112,7 @@
     #wordInputTextarea { flex-basis: calc(50% - 10px); min-height: 50px; resize: none; }
     #wordInputText { width: 100%; margin-bottom: 10px; display:none; min-height: 46px; }
     
+    /* Placeholder Logic */
     #wordInputText:empty:before, #wordInputTextarea:empty:before {
         content: attr(placeholder);
         color: #888;
@@ -119,15 +120,16 @@
         display: block;
     }
 
-    /* Strikethrough Styling */
+    /* Strikethrough Styling - STRICT */
     .struck {
         text-decoration: line-through;
-        background-color: rgba(255, 0, 0, 0.1);
-        text-decoration-color: red;
-        text-decoration-thickness: 2px;
+        background-color: rgba(255, 0, 0, 0.15) !important;
+        text-decoration-color: red !important;
+        text-decoration-thickness: 2px !important;
         text-decoration-skip-ink: none;
         border-radius: 3px;
         padding: 0 2px;
+        color: var(--text);
     }
 
     /* Strikethrough Mode Cursors & Interactions */
@@ -418,7 +420,6 @@
                 activeInputElement.innerHTML = '';
             }
             
-            // Logic to clean up formatting
             sanitizeFormatting();
             
             clearTimeout(inputDebounceTimer);
@@ -427,6 +428,20 @@
         document.getElementById('wordInputText').addEventListener('input', handleInput);
         document.getElementById('wordInputTextarea').addEventListener('input', handleInput);
         
+        // Enter Key Handler (Fixes Strikethrough Glitch)
+        const handleEnterKey = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Insert a clean paragraph break
+                document.execCommand('insertParagraph', false);
+                // Immediately remove formatting from the new line
+                document.execCommand('removeFormat', false);
+                handleWordInput();
+            }
+        };
+        document.getElementById('wordInputText').addEventListener('keydown', handleEnterKey);
+        document.getElementById('wordInputTextarea').addEventListener('keydown', handleEnterKey);
+
         // Strikethrough Click Handler
         document.getElementById('wordInputText').addEventListener('click', handleEditorClick);
         document.getElementById('wordInputTextarea').addEventListener('click', handleEditorClick);
@@ -494,20 +509,18 @@
         countLetters();
     }
 
-    // Prevents strikethrough from bleeding and handles removal of empty struck words
     function sanitizeFormatting() {
         if (!activeInputElement) return;
         const spans = activeInputElement.querySelectorAll('.struck');
         spans.forEach(span => {
-            // 1. Remove empty struck spans (user deleted the word)
+            // 1. Remove empty struck spans (user deleted the word) -> Fixes "highlight is less red" ghosting
             if (span.textContent.length === 0) {
                 span.remove();
                 return;
             }
 
             // 2. Handle spaces: If user types space, break the span
-            // This prevents "jumping to end" by manually handling the split
-            if (/[\s\n]/.test(span.textContent)) {
+            if (/[\s]/.test(span.textContent)) {
                 const text = span.textContent;
                 const parts = text.split(/(\s+)/); // split by whitespace, keeping it
                 
@@ -526,13 +539,13 @@
                         s.className = 'struck';
                         s.textContent = part;
                         fragment.appendChild(s);
-                        lastNode = s; // Track last node
+                        lastNode = s; 
                     }
                 });
 
                 span.replaceWith(fragment);
                 
-                // Restore cursor: If we just made a space, put cursor after it
+                // Restore cursor after space
                 if (lastNode && lastNode.nodeType === Node.TEXT_NODE) {
                     const range = document.createRange();
                     range.setStartAfter(lastNode);
@@ -604,17 +617,35 @@
         }
     }
 
+    /* Helper to get clean text with proper spacing for newlines */
+    function getCleanText(element) {
+        if (!element) return "";
+        let clone = element.cloneNode(true);
+        
+        // Remove struck words first
+        clone.querySelectorAll('.struck').forEach(el => el.remove());
+
+        // Replace block-level tags with newlines/spaces
+        const blockTags = ['div', 'p', 'br', 'li', 'tr'];
+        blockTags.forEach(tag => {
+            const elements = clone.querySelectorAll(tag);
+            elements.forEach(el => {
+                const space = document.createTextNode(" ");
+                if (el.parentNode) {
+                    el.parentNode.insertBefore(space, el);
+                }
+            });
+        });
+
+        // Use textContent which now has spaces between block elements
+        return clone.textContent || "";
+    }
+
     function countLetters() {
         if (!activeInputElement) return;
         
-        // Clone to manipulate without altering view
-        const clone = activeInputElement.cloneNode(true);
-        // Remove struck words entirely from calculation
-        clone.querySelectorAll('.struck').forEach(el => el.remove());
-        
-        let text = clone.innerText || ""; 
-        // Explicitly replace newlines with spaces to separate words on different lines
-        text = text.replace(/[\n\r]+/g, ' ').toLowerCase();
+        // Use the new clean text extractor
+        let text = getCleanText(activeInputElement).toLowerCase();
         
         const words = text.match(/\b\w+\b(?!\*)/g) || [];
         const letterMap = {};
@@ -790,7 +821,8 @@
         const idInput = document.getElementById('combinationId').value;
         const testWord = document.getElementById('testWordInput').value;
         const rowsData = getGridData('#saveCombinationModal');
-        const originalWords = activeInputElement.innerText;
+        // Use clean text for save
+        const originalWords = getCleanText(activeInputElement);
         
         let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
 

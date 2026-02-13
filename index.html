@@ -448,6 +448,16 @@
         document.getElementById('wordInputText').addEventListener('input', handleInput);
         document.getElementById('wordInputTextarea').addEventListener('input', handleInput);
         
+        // Keydown handler to clean up empty struck spans before typing
+        const handleKeyDown = (e) => {
+            // For any printable character, clean up empty struck spans first
+            if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') {
+                cleanupEmptyStruckSpans();
+            }
+        };
+        document.getElementById('wordInputText').addEventListener('keydown', handleKeyDown);
+        document.getElementById('wordInputTextarea').addEventListener('keydown', handleKeyDown);
+        
         // Enter Key Handler - Single press creates new line
         const handleEnterKey = (e) => {
             if (e.key === 'Enter') {
@@ -479,10 +489,19 @@
                 range.deleteContents();
                 range.insertNode(br);
                 
-                // Move cursor after the br
-                range.setStartAfter(br);
-                range.collapse(true);
+                // Check if we need a trailing BR (when at end or followed by another BR)
+                if (!br.nextSibling || (br.nextSibling && br.nextSibling.nodeName === 'BR')) {
+                    const br2 = document.createElement('br');
+                    br.parentNode.insertBefore(br2, br.nextSibling);
+                    // Move cursor after the first BR, before the second
+                    range.setStartAfter(br);
+                    range.setEndBefore(br2);
+                } else {
+                    // Move cursor after the br
+                    range.setStartAfter(br);
+                }
                 
+                range.collapse(true);
                 sel.removeAllRanges();
                 sel.addRange(range);
                 
@@ -559,16 +578,55 @@
         countLetters();
     }
 
+    // NEW: Clean up empty struck spans and move cursor outside if needed
+    function cleanupEmptyStruckSpans() {
+        if (!activeInputElement) return;
+        
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        
+        const range = sel.getRangeAt(0);
+        let currentNode = range.startContainer;
+        
+        // Check if cursor is in a struck span
+        let parentSpan = null;
+        if (currentNode.nodeType === Node.TEXT_NODE && currentNode.parentNode.classList && currentNode.parentNode.classList.contains('struck')) {
+            parentSpan = currentNode.parentNode;
+        } else if (currentNode.nodeType === Node.ELEMENT_NODE && currentNode.classList && currentNode.classList.contains('struck')) {
+            parentSpan = currentNode;
+        }
+        
+        // If we're in a struck span that's empty or only whitespace, remove it and move cursor
+        if (parentSpan && parentSpan.textContent.trim().length === 0) {
+            const nextSibling = parentSpan.nextSibling;
+            const parentNode = parentSpan.parentNode;
+            parentSpan.remove();
+            
+            // Place cursor where the span was
+            const newRange = document.createRange();
+            if (nextSibling) {
+                newRange.setStartBefore(nextSibling);
+            } else {
+                newRange.setStart(parentNode, parentNode.childNodes.length);
+            }
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+        }
+        
+        // Also clean up any other empty struck spans
+        const spans = activeInputElement.querySelectorAll('.struck');
+        spans.forEach(span => {
+            if (span.textContent.trim().length === 0) {
+                span.remove();
+            }
+        });
+    }
+
     function sanitizeFormatting() {
         if (!activeInputElement) return;
         const spans = activeInputElement.querySelectorAll('.struck');
         spans.forEach(span => {
-            // Only remove empty struck spans that don't have any text at all
-            if (span.textContent.trim().length === 0) {
-                span.remove();
-                return;
-            }
-
             // Handle spaces: If user types space, break the span
             if (/[\s]/.test(span.textContent)) {
                 const text = span.textContent;
@@ -692,10 +750,33 @@
         return clone.textContent || "";
     }
 
-    /* Helper to get HTML for saving (preserves strikethroughs and newlines) */
-    function getHTMLForSaving(element) {
+    /* Helper to get clean text for saving (removes strikethrough, preserves newlines) */
+    function getCleanTextForSaving(element) {
         if (!element) return "";
-        return element.innerHTML;
+        let clone = element.cloneNode(true);
+        
+        // Remove struck words
+        clone.querySelectorAll('.struck').forEach(el => el.remove());
+
+        // Convert BRs to newlines
+        const brs = clone.querySelectorAll('br');
+        brs.forEach(br => {
+            const newline = document.createTextNode('\n');
+            br.parentNode.replaceChild(newline, br);
+        });
+
+        // Convert divs to newlines
+        const divs = clone.querySelectorAll('div');
+        divs.forEach((div, index) => {
+            if (index > 0 || div.parentNode !== clone) {
+                const newline = document.createTextNode('\n');
+                if (div.parentNode) {
+                    div.parentNode.insertBefore(newline, div);
+                }
+            }
+        });
+
+        return clone.textContent || "";
     }
 
     function countLetters() {
@@ -915,8 +996,8 @@
         const idInput = document.getElementById('combinationId').value;
         const testWord = document.getElementById('testWordInput').value;
         const rowsData = getGridData('#saveCombinationModal');
-        // Save HTML to preserve strikethroughs
-        const originalWordsHTML = getHTMLForSaving(activeInputElement);
+        // Save clean text without strikethroughs but with newlines preserved
+        const originalWords = getCleanTextForSaving(activeInputElement);
         
         let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
 
@@ -925,19 +1006,20 @@
         if (idInput) {
             const idx = combos.findIndex(c => c.id.toString() === idInput);
             if (idx > -1) {
-                Object.assign(combos[idx], { rows: rowsData, testWord, originalWordsHTML });
+                Object.assign(combos[idx], { rows: rowsData, testWord, originalWords });
                 showMessage('Updated successfully!');
             }
         } else {
             const existingIdx = combos.findIndex(c => isGridEqual(c.rows, rowsData));
             if (existingIdx > -1) {
                 const existing = combos[existingIdx];
-                // Just use the new HTML instead of trying to merge
-                existing.originalWordsHTML = originalWordsHTML;
+                // Restore proper merging logic
+                const mergedWords = [...new Set([...existing.originalWords.split('\n'), ...originalWords.split('\n')])].join('\n');
+                existing.originalWords = mergedWords;
                 if (testWord && !existing.testWord.includes(testWord)) existing.testWord += ` ${testWord}`;
                 showMessage('Merged with existing combination!');
             } else {
-                combos.push({ id: Date.now(), rows: rowsData, testWord, originalWordsHTML });
+                combos.push({ id: Date.now(), rows: rowsData, testWord, originalWords });
                 showMessage('Saved new combination!');
             }
         }
@@ -979,8 +1061,20 @@
         const combo = combos.find(c => c.id.toString() === id.toString());
         if (!combo) return;
 
-        // Load HTML directly to preserve strikethroughs and formatting
-        activeInputElement.innerHTML = combo.originalWordsHTML || combo.originalWords || '';
+        // Convert plain text newlines to BR tags for contenteditable
+        const text = combo.originalWords || '';
+        const lines = text.split('\n');
+        
+        // Build HTML with BR tags between lines
+        let html = '';
+        lines.forEach((line, index) => {
+            html += line;
+            if (index < lines.length - 1) {
+                html += '<br>';
+            }
+        });
+        
+        activeInputElement.innerHTML = html;
         document.getElementById('mainTestWordInput').value = combo.testWord || '';
         document.getElementById('loadedCombinationId').value = combo.id;
         

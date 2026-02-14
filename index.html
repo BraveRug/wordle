@@ -452,64 +452,75 @@
         
         // Keydown handler to clean up empty struck spans before typing
         const handleKeyDown = (e) => {
-            // For any printable character, clean up empty struck spans first
+            // Preemptively ensure caret is not inside a .struck span so inserted text doesn't inherit formatting.
+            const sel = window.getSelection();
+            if (!sel || !sel.rangeCount) {
+                // still run existing cleanup behavior for Delete/Backspace
+                if (e.key === 'Backspace' || e.key === 'Delete') cleanupEmptyStruckSpans();
+                return;
+            }
+        
+            const range = sel.getRangeAt(0);
+            let startNode = range.startContainer;
+        
+            // If inside a struck span, move caret immediately after that span BEFORE the key input occurs.
+            const parentStruck = findClosestStruck(startNode);
+            if (parentStruck) {
+                const newRange = document.createRange();
+                newRange.setStartAfter(parentStruck);
+                newRange.collapse(true);
+        
+                sel.removeAllRanges();
+                sel.addRange(newRange);
+            }
+        
+            // Run existing cleanup early for keys that commonly change structure
             if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') {
                 cleanupEmptyStruckSpans();
             }
         };
-        document.getElementById('wordInputText').addEventListener('keydown', handleKeyDown);
-        document.getElementById('wordInputTextarea').addEventListener('keydown', handleKeyDown);
         
         // Enter Key Handler - Single press creates new line
         const handleEnterKey = (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                
-                // Get current selection
-                const sel = window.getSelection();
-                if (!sel.rangeCount) return;
-                const range = sel.getRangeAt(0);
-                
-                // Check if we're inside a struck span
-                let currentNode = range.startContainer;
-                let parentSpan = null;
-                
-                if (currentNode.nodeType === Node.TEXT_NODE && currentNode.parentNode.classList && currentNode.parentNode.classList.contains('struck')) {
-                    parentSpan = currentNode.parentNode;
-                } else if (currentNode.nodeType === Node.ELEMENT_NODE && currentNode.classList && currentNode.classList.contains('struck')) {
-                    parentSpan = currentNode;
-                }
-                
-                // If we're in a struck span, move to the end of it first
-                if (parentSpan) {
-                    range.setStartAfter(parentSpan);
-                    range.collapse(true);
-                }
-                
-                // Create line break
-                const br = document.createElement('br');
-                range.deleteContents();
-                range.insertNode(br);
-                
-                // ALWAYS check if we need a trailing BR for proper line break
-                // We need it when: at end of container, or next sibling is also a BR
-                const parent = br.parentNode;
-                const nextSibling = br.nextSibling;
-                
-                if (!nextSibling || nextSibling.nodeName === 'BR') {
-                    // Add trailing BR to create visible line break
-                    const br2 = document.createElement('br');
-                    parent.insertBefore(br2, nextSibling);
-                }
-                
-                // Move cursor after the first br
-                range.setStartAfter(br);
+            if (e.key !== 'Enter') return;
+        
+            e.preventDefault();
+        
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+            const range = sel.getRangeAt(0);
+        
+            // If inside a struck span, move caret out first (defensive)
+            const parentStruck = findClosestStruck(range.startContainer);
+            if (parentStruck) {
+                range.setStartAfter(parentStruck);
                 range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                
-                handleWordInput();
             }
+        
+            // Insert exactly one BR and then an empty text node - place caret into that node.
+            const br = document.createElement('br');
+            const textNode = document.createTextNode(''); // empty node to receive the caret
+        
+            range.deleteContents();
+            range.insertNode(br);
+        
+            // Insert the empty text node after the BR (guarantees caret lands on a place you can type)
+            if (br.nextSibling) {
+                br.parentNode.insertBefore(textNode, br.nextSibling);
+            } else {
+                br.parentNode.appendChild(textNode);
+            }
+        
+            // Place caret into the empty text node
+            const newRange = document.createRange();
+            newRange.setStart(textNode, 0);
+            newRange.collapse(true);
+        
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+        
+            // Fire update
+            handleWordInput();
         };
         document.getElementById('wordInputText').addEventListener('keydown', handleEnterKey);
         document.getElementById('wordInputTextarea').addEventListener('keydown', handleEnterKey);
@@ -521,8 +532,24 @@
         // Paste plain text only
         const handlePaste = (e) => {
             e.preventDefault();
-            const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-            document.execCommand("insertText", false, text);
+            const text = (e.clipboardData && e.clipboardData.getData('text/plain')) ||
+                         ((window.clipboardData && window.clipboardData.getData('Text')) || '');
+            // Use execCommand fallback for wider browser support
+            if (document.queryCommandSupported && document.queryCommandSupported('insertText')) {
+                document.execCommand('insertText', false, text);
+            } else {
+                // Last resort: insert text node at selection
+                const sel = window.getSelection();
+                if (!sel.rangeCount) return;
+                const range = sel.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(text));
+                // move caret after inserted text node
+                range.setStart(range.endContainer, range.endOffset);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
         };
         document.getElementById('wordInputText').addEventListener('paste', handlePaste);
         document.getElementById('wordInputTextarea').addEventListener('paste', handlePaste);
@@ -648,7 +675,17 @@
             }
         });
     }
-
+    // ====================== helper: findClosestStruck ======================
+    function findClosestStruck(node) {
+        if (!node) return null;
+        // If we were given a text node, move to its parent element first
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        try {
+            return node ? node.closest('.struck') : null;
+        } catch (err) {
+            return null;
+        }
+    }
     function sanitizeFormatting() {
         if (!activeInputElement) return;
         const spans = activeInputElement.querySelectorAll('.struck');
@@ -697,9 +734,14 @@
         document.getElementById('strikethroughBtn').classList.toggle('active-strike', isStrikethroughMode);
         document.body.classList.toggle('mode-strikethrough', isStrikethroughMode);
         
-        // Lock/Unlock editing
-        if (activeInputElement) {
-            activeInputElement.contentEditable = !isStrikethroughMode;
+        // Ensure both content editables are locked/unlocked correctly
+        document.getElementById('wordInputText').contentEditable = !isStrikethroughMode;
+        document.getElementById('wordInputTextarea').contentEditable = !isStrikethroughMode;
+    
+        // If we toggled ON strikethrough mode and focus is inside an input, blur to avoid caret confusion
+        if (isStrikethroughMode) {
+            document.getElementById('wordInputText').blur();
+            document.getElementById('wordInputTextarea').blur();
         }
     }
 

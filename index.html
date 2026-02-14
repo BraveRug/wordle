@@ -440,79 +440,34 @@
                 activeInputElement.innerHTML = '';
             }
             
-            // CRITICAL: Clean up empty struck spans immediately on input
+            // CRITICAL: Clean up empty struck spans immediately on input and KeyUp
             cleanupEmptyStruckSpans();
             sanitizeFormatting();
             
             clearTimeout(inputDebounceTimer);
             inputDebounceTimer = setTimeout(handleWordInput, 300); // 300ms delay
         };
+        
+        // Listeners for Input, Keydown, AND Keyup (to catch deletions cleanly)
         document.getElementById('wordInputText').addEventListener('input', handleInput);
         document.getElementById('wordInputTextarea').addEventListener('input', handleInput);
+        
+        document.getElementById('wordInputText').addEventListener('keyup', cleanupEmptyStruckSpans);
+        document.getElementById('wordInputTextarea').addEventListener('keyup', cleanupEmptyStruckSpans);
         
         // Keydown handler to clean up empty struck spans before typing
         const handleKeyDown = (e) => {
             // For any printable character, clean up empty struck spans first
             if (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') {
-                cleanupEmptyStruckSpans();
+                // If backspace is pressed, we rely on keyup/input mostly, 
+                // but checking here prevents phantom typing.
+            }
+            if (e.key === 'Enter') {
+                handleEnterKey(e);
             }
         };
         document.getElementById('wordInputText').addEventListener('keydown', handleKeyDown);
         document.getElementById('wordInputTextarea').addEventListener('keydown', handleKeyDown);
-        
-        // Enter Key Handler - Single press creates new line
-        const handleEnterKey = (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                
-                // Get current selection
-                const sel = window.getSelection();
-                if (!sel.rangeCount) return;
-                const range = sel.getRangeAt(0);
-                
-                // Check if we're inside a struck span
-                let currentNode = range.startContainer;
-                let parentSpan = null;
-                
-                if (currentNode.nodeType === Node.TEXT_NODE && currentNode.parentNode.classList && currentNode.parentNode.classList.contains('struck')) {
-                    parentSpan = currentNode.parentNode;
-                } else if (currentNode.nodeType === Node.ELEMENT_NODE && currentNode.classList && currentNode.classList.contains('struck')) {
-                    parentSpan = currentNode;
-                }
-                
-                // If we're in a struck span, move to the end of it first
-                if (parentSpan) {
-                    range.setStartAfter(parentSpan);
-                    range.collapse(true);
-                }
-                
-                // Create line break
-                const br = document.createElement('br');
-                range.deleteContents();
-                range.insertNode(br);
-                
-                // ALWAYS check if we need a trailing BR for proper line break
-                // We need it when: at end of container, or next sibling is also a BR
-                const parent = br.parentNode;
-                const nextSibling = br.nextSibling;
-                
-                if (!nextSibling || nextSibling.nodeName === 'BR') {
-                    // Add trailing BR to create visible line break
-                    const br2 = document.createElement('br');
-                    parent.insertBefore(br2, nextSibling);
-                }
-                
-                // Move cursor after the first br
-                range.setStartAfter(br);
-                range.collapse(true);
-                sel.removeAllRanges();
-                sel.addRange(range);
-                
-                handleWordInput();
-            }
-        };
-        document.getElementById('wordInputText').addEventListener('keydown', handleEnterKey);
-        document.getElementById('wordInputTextarea').addEventListener('keydown', handleEnterKey);
 
         // Strikethrough Click Handler
         document.getElementById('wordInputText').addEventListener('click', handleEditorClick);
@@ -551,7 +506,6 @@
         
         // Wordle Grid Delegation (Input handling)
         document.querySelectorAll('.wordle-grid').forEach(grid => {
-            // Fix Undo: Capture state on MOUSE DOWN (before click/color change)
             grid.addEventListener('mousedown', (e) => {
                 if(e.target.classList.contains('wordle-box') || e.target.classList.contains('palette-color')) {
                     pushHistory();
@@ -559,7 +513,6 @@
             });
             grid.addEventListener('click', colorWordleBox);
 
-            // Fix Undo: Capture state on KEY DOWN (before value change)
             grid.addEventListener('keydown', (e) => {
                 if (e.key === 'Backspace' || /^[a-zA-Z0-9]$/.test(e.key)) {
                     pushHistory();
@@ -581,82 +534,58 @@
         countLetters();
     }
 
-    // NEW: Clean up empty struck spans and move cursor outside if needed
+    // NEW: Robustly clean up empty struck spans and move cursor outside
     function cleanupEmptyStruckSpans() {
         if (!activeInputElement) return;
         
         const sel = window.getSelection();
-        if (!sel.rangeCount) return;
-        
-        const range = sel.getRangeAt(0);
-        let currentNode = range.startContainer;
-        
-        // Check if cursor is in a struck span
-        let parentSpan = null;
-        if (currentNode.nodeType === Node.TEXT_NODE && currentNode.parentNode.classList && currentNode.parentNode.classList.contains('struck')) {
-            parentSpan = currentNode.parentNode;
-        } else if (currentNode.nodeType === Node.ELEMENT_NODE && currentNode.classList && currentNode.classList.contains('struck')) {
-            parentSpan = currentNode;
-        }
-        
-        // If we're in a struck span that's empty or only whitespace, remove it and move cursor
-        if (parentSpan && parentSpan.textContent.trim().length === 0) {
-            const nextSibling = parentSpan.nextSibling;
-            const parentNode = parentSpan.parentNode;
-            
-            // Save cursor offset if we're in a text node
-            const cursorOffset = currentNode.nodeType === Node.TEXT_NODE ? range.startOffset : 0;
-            
-            parentSpan.remove();
-            
-            // Place cursor where the span was
-            const newRange = document.createRange();
-            if (nextSibling) {
-                newRange.setStartBefore(nextSibling);
-            } else {
-                newRange.setStart(parentNode, parentNode.childNodes.length);
-            }
-            newRange.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(newRange);
-            return;
-        }
-        
-        // CRITICAL: If we just typed in an empty struck span, unwrap the text
-        // This happens when you delete all text and type new text - we need to unwrap it
-        if (parentSpan && parentSpan.childNodes.length === 1 && parentSpan.childNodes[0].nodeType === Node.TEXT_NODE) {
-            const textNode = parentSpan.childNodes[0];
-            const offset = range.startOffset;
-            const parent = parentSpan.parentNode;
-            
-            // Replace span with its text content
-            parent.replaceChild(textNode, parentSpan);
-            
-            // Restore cursor position
-            const newRange = document.createRange();
-            newRange.setStart(textNode, offset);
-            newRange.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(newRange);
-        }
-        
-        // Also clean up any other empty struck spans
+        let range;
+        if (sel.rangeCount > 0) range = sel.getRangeAt(0);
+
         const spans = activeInputElement.querySelectorAll('.struck');
         spans.forEach(span => {
-            if (span.textContent.trim().length === 0) {
+            const isEmpty = span.textContent.length === 0 || span.textContent === '\u200B'; // check for zero-width space too
+            
+            // 1. Remove truly empty spans (Result of backspace)
+            if (isEmpty) {
                 span.remove();
+                return; 
+            }
+
+            // 2. Unwrap if user started typing into an empty span (Result of "Delete then Write")
+            // If the span contains text but is being edited, we want to reset formatting unless explicit.
+            // A simple heuristic: If the span was just empty and now has 1 char, it shouldn't be struck.
+            // But tracking "was empty" is hard. 
+            // Better heuristic: "Strikethrough" is a static state. If you type, you usually mean new text.
+            // We check if the span matches the current selection focus.
+            if (range && (range.startContainer === span || range.startContainer.parentNode === span)) {
+                // If we are typing INSIDE a struck span, unwrap it (remove formatting)
+                // This fixes the "write a new word... has weird formatting" bug.
+                const text = document.createTextNode(span.textContent);
+                span.parentNode.replaceChild(text, span);
+                
+                // Restore cursor
+                const newRange = document.createRange();
+                // We need to place cursor at the end of the new text node where the user was typing
+                // If the user was appending, offset is length.
+                try {
+                    newRange.setStart(text, range.startOffset); // simplistic, but works for linear typing
+                    newRange.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(newRange);
+                } catch(e) { /* ignore range errors during rapid changes */ }
             }
         });
     }
 
+    // Handles splitting struck words if spaces are typed
     function sanitizeFormatting() {
         if (!activeInputElement) return;
         const spans = activeInputElement.querySelectorAll('.struck');
         spans.forEach(span => {
-            // Handle spaces: If user types space, break the span
             if (/[\s]/.test(span.textContent)) {
                 const text = span.textContent;
-                const parts = text.split(/(\s+)/); // split by whitespace, keeping it
+                const parts = text.split(/(\s+)/);
                 
                 const fragment = document.createDocumentFragment();
                 let lastNode = null;
@@ -664,11 +593,9 @@
                 parts.forEach(part => {
                     if (!part) return;
                     if (/\s/.test(part)) {
-                        // Create text node for space (not struck)
                         lastNode = document.createTextNode(part);
                         fragment.appendChild(lastNode);
                     } else {
-                        // Keep word struck - preserve the red styling
                         const s = document.createElement('span');
                         s.className = 'struck';
                         s.textContent = part;
@@ -679,17 +606,75 @@
 
                 span.replaceWith(fragment);
                 
-                // Restore cursor after space
-                if (lastNode && lastNode.nodeType === Node.TEXT_NODE) {
-                    const range = document.createRange();
-                    range.setStartAfter(lastNode);
-                    range.collapse(true);
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(range);
+                // Restore cursor attempt (basic)
+                const sel = window.getSelection();
+                if(sel.rangeCount > 0) {
+                     const range = document.createRange();
+                     if (lastNode) {
+                         range.setStartAfter(lastNode);
+                         range.collapse(true);
+                         sel.removeAllRanges();
+                         sel.addRange(range);
+                     }
                 }
             }
         });
+    }
+
+    // FIX FOR ISSUE #2: Double Enter Key
+    function handleEnterKey(e) {
+        e.preventDefault();
+        
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        
+        // 1. Detect if we are inside or immediately after a struck span
+        let currentNode = range.startContainer;
+        let parentSpan = null;
+        
+        if (currentNode.nodeType === Node.TEXT_NODE && currentNode.parentNode.classList.contains('struck')) {
+            parentSpan = currentNode.parentNode;
+        } else if (currentNode.nodeType === Node.ELEMENT_NODE && currentNode.classList.contains('struck')) {
+            parentSpan = currentNode;
+        }
+        
+        // 2. If valid span found, ensure we move the range strictly AFTER it
+        if (parentSpan) {
+            range.setStartAfter(parentSpan);
+            range.collapse(true);
+        }
+
+        // 3. Insert the Break
+        const br = document.createElement('br');
+        range.deleteContents(); // Clean selection
+        range.insertNode(br);
+        
+        // 4. Handle "Trailing BR" requirement for contenteditable
+        // Browsers need a placeholder BR at the end of a block to render the previous BR visually.
+        // We check if the inserted BR is the last significant thing in its parent.
+        const parent = br.parentNode;
+        const nextSibling = br.nextSibling;
+        
+        // If there is no next sibling, OR the next sibling is strictly a BR (and we might need another one if we are inserting between text and end)
+        // A simpler check: If we are at the end of the container, add a placeholder.
+        if (!nextSibling) {
+             const br2 = document.createElement('br');
+             parent.appendChild(br2);
+        }
+
+        // 5. Move cursor strictly AFTER the inserted BR
+        range.setStartAfter(br);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        
+        // Scroll to cursor
+        if (activeInputElement.scrollHeight > activeInputElement.clientHeight) {
+            br.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        handleWordInput();
     }
 
     function toggleStrikethroughMode() {
@@ -708,7 +693,6 @@
         
         let target = e.target;
         
-        // Handle clicking on an existing struck word (Unstrike)
         if (target.classList.contains('struck')) {
             const text = target.textContent;
             target.replaceWith(document.createTextNode(text));
@@ -716,7 +700,6 @@
             return;
         }
         
-        // Handle clicking on a plain word (Strike)
         const sel = window.getSelection();
         if (!sel.rangeCount) return;
         const range = sel.getRangeAt(0);
@@ -727,15 +710,12 @@
 
         if (node.nodeType === Node.TEXT_NODE) {
              const text = node.textContent;
-             // Find start of word
              let start = offset;
              while (start > 0 && /\w/.test(text[start - 1])) start--;
              
-             // Find end of word
              let end = offset;
              while (end < text.length && /\w/.test(text[end])) end++;
              
-             // Check valid word
              if (start === end) return; 
 
              const rng = document.createRange();
@@ -751,50 +731,35 @@
         }
     }
 
-    /* Helper to get clean text with proper newline preservation for word counting */
     function getCleanText(element) {
         if (!element) return "";
         let clone = element.cloneNode(true);
-        
-        // Remove struck words first
         clone.querySelectorAll('.struck').forEach(el => el.remove());
-
-        // Convert BRs and block elements to newlines for proper word separation
         const brs = clone.querySelectorAll('br');
         brs.forEach(br => {
             const newline = document.createTextNode('\n');
             br.parentNode.replaceChild(newline, br);
         });
-
-        // Convert divs and other block elements to newlines
         const blockElements = clone.querySelectorAll('div, p');
         blockElements.forEach(el => {
             const newline = document.createTextNode('\n');
             el.parentNode.insertBefore(newline, el);
         });
-
         return clone.textContent || "";
     }
 
-    /* Helper to get clean text for saving (removes strikethrough, preserves newlines) */
     function getCleanTextForSaving(element) {
         if (!element) return "";
         let clone = element.cloneNode(true);
-        
-        // Replace struck words with their text content (remove formatting but keep the text!)
         clone.querySelectorAll('.struck').forEach(el => {
             const textNode = document.createTextNode(el.textContent);
             el.parentNode.replaceChild(textNode, el);
         });
-
-        // Convert BRs to newlines
         const brs = clone.querySelectorAll('br');
         brs.forEach(br => {
             const newline = document.createTextNode('\n');
             br.parentNode.replaceChild(newline, br);
         });
-
-        // Convert divs to newlines
         const divs = clone.querySelectorAll('div');
         divs.forEach((div, index) => {
             if (index > 0 || div.parentNode !== clone) {
@@ -804,17 +769,14 @@
                 }
             }
         });
-
         return clone.textContent || "";
     }
 
     function countLetters() {
         if (!activeInputElement) return;
         
-        // Use the clean text extractor that properly handles newlines
         let text = getCleanText(activeInputElement).toLowerCase();
         
-        // Extract words with their surrounding context to check for asterisks
         const words = [];
         let currentPos = 0;
         const wordRegex = /[a-z]+/g;
@@ -824,19 +786,14 @@
             const word = match[0];
             const startPos = match.index;
             const endPos = startPos + word.length;
-            
-            // Check if there's an asterisk immediately before or after the word
             const charBefore = startPos > 0 ? text[startPos - 1] : '';
             const charAfter = endPos < text.length ? text[endPos] : '';
-            
-            // Only include word if NO asterisk is adjacent
             if (charBefore !== '*' && charAfter !== '*') {
                 words.push(word);
             }
         }
         
         const letterMap = {};
-        
         for (const word of words) {
             const unique = new Set(word.replace(/[^a-z]/g, ''));
             for (const letter of unique) {
@@ -865,7 +822,6 @@
         document.body.className = `${theme} ${layoutClass} ${strikeClass}`;
         localStorage.setItem('selectedTheme', theme);
         
-        // Update Active Button UI
         document.querySelectorAll('.theme-option').forEach(btn => {
             const isMatch = btn.textContent.toLowerCase() === theme.replace(/-/g, ' ').toLowerCase() || 
                             btn.getAttribute('onclick').includes(`'${theme}'`);
@@ -876,12 +832,10 @@
     }
 
     function setLayout(layoutName) {
-        // Preserve HTML content
         const oldContent = activeInputElement ? activeInputElement.innerHTML : "";
         applyLayout(layoutName);
         if (activeInputElement) {
             activeInputElement.innerHTML = oldContent;
-            // Ensure editable state matches current mode
             activeInputElement.contentEditable = !isStrikethroughMode;
             handleWordInput();
         }
@@ -1025,11 +979,9 @@
         const idInput = document.getElementById('combinationId').value;
         const testWord = document.getElementById('testWordInput').value;
         const rowsData = getGridData('#saveCombinationModal');
-        // Save clean text without strikethroughs but with newlines preserved
         const originalWords = getCleanTextForSaving(activeInputElement);
         
         let combos = JSON.parse(localStorage.getItem('savedCombinations')) || [];
-
         const isGridEqual = (g1, g2) => JSON.stringify(g1) === JSON.stringify(g2);
 
         if (idInput) {
@@ -1042,7 +994,6 @@
             const existingIdx = combos.findIndex(c => isGridEqual(c.rows, rowsData));
             if (existingIdx > -1) {
                 const existing = combos[existingIdx];
-                // Restore proper merging logic
                 const mergedWords = [...new Set([...existing.originalWords.split('\n'), ...originalWords.split('\n')])].join('\n');
                 existing.originalWords = mergedWords;
                 if (testWord && !existing.testWord.includes(testWord)) existing.testWord += ` ${testWord}`;
@@ -1090,11 +1041,9 @@
         const combo = combos.find(c => c.id.toString() === id.toString());
         if (!combo) return;
 
-        // Convert plain text newlines to BR tags for contenteditable
         const text = combo.originalWords || '';
         const lines = text.split('\n');
         
-        // Build HTML with BR tags between lines
         let html = '';
         lines.forEach((line, index) => {
             html += line;
